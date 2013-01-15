@@ -10,12 +10,12 @@ public class Rule2 extends Rule1 {
 
 	static final Logger log = LoggerFactory.getLogger(Rule2.class);
 
-	public Pattern GENERIC_PATTERN;
+	public Pattern PRECOMPUTED_PATTERN;
 
-	public Rule2(int id, String head, String[] precomps, String generic_pattern)
-			throws Exception {
-		super(id, head, precomps);
-		GENERIC_PATTERN = Utils.parsePattern(generic_pattern);
+	public Rule2(int id, String head, String precomputed_pattern,
+			String generic_pattern) throws Exception {
+		super(id, head, generic_pattern);
+		type = 2;
+		PRECOMPUTED_PATTERN = Utils.parsePattern(precomputed_pattern);
 	}
-
 }

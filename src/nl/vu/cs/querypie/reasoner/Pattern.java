@@ -20,7 +20,6 @@ public class Pattern {
 	}
 
 	private boolean isEquivalent = false;
-	private String location = null;
 
 	public Pattern copyOf() {
 		Pattern p = new Pattern();
@@ -40,14 +39,6 @@ public class Pattern {
 			}
 		}
 		return list;
-	}
-
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
 	}
 
 	public void setEquivalent(boolean isEquivalent) {

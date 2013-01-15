@@ -10,15 +10,11 @@ public class Rule1 extends Rule {
 
 	static final Logger log = LoggerFactory.getLogger(Rule1.class);
 
-	public Pattern[] PRECOMPS;
+	public Pattern GENERIC_PATTERN;
 
-	public Rule1(int id, String head, String[] precomps) throws Exception {
+	public Rule1(int id, String head, String generic) throws Exception {
 		super(id, head);
 		type = 1;
-
-		PRECOMPS = new Pattern[precomps.length];
-		for (int i = 0; i < precomps.length; ++i) {
-			PRECOMPS[i] = Utils.parsePattern(precomps[i]);
-		}
+		GENERIC_PATTERN = Utils.parsePattern(generic);
 	}
 }
