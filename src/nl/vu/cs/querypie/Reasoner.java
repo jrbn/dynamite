@@ -1,13 +1,11 @@
 package nl.vu.cs.querypie;
 
+import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import arch.Arch;
-import arch.utils.Configuration;
 
 public class Reasoner {
 
@@ -37,14 +35,7 @@ public class Reasoner {
 		rc.init(rules);
 
 		// Start the architecture
-		Configuration conf = new Configuration();
-		Arch arch = new Arch();
-		arch.startup(conf);
-
-		if (arch.isFirst()) {
-			String inputDir = args[0];
-			// TODO Launch the reasoning code
-		}
-
+		Ajira arch = new Ajira();
+		arch.startup();
 	}
 }
