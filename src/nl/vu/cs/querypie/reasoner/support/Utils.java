@@ -21,6 +21,10 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 			}
 			p.setTerm(i, t);
 		}
+
+		if (sp.endsWith("*")) {
+			p.setPrecomputed(true);
+		}
 		return p;
 
 	}

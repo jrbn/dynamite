@@ -1,8 +1,11 @@
 package nl.vu.cs.querypie;
 
 import nl.vu.cs.ajira.Ajira;
+import nl.vu.cs.ajira.utils.Configuration;
+import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
+import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +21,12 @@ public class Reasoner {
 			return;
 		}
 
-		// Create the global context
-		ReasoningContext rc = new ReasoningContext();
+		// Start the architecture
+		Ajira arch = new Ajira();
+		Configuration conf = arch.getConfiguration();
+		conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+		conf.set(BerkeleydbLayer.DB_INPUT, args[0]);
+		arch.startup();
 
 		// Parse the rules from the file
 		Rule[] rules = null;
@@ -32,10 +39,8 @@ public class Reasoner {
 		}
 
 		// Init the global context
-		rc.init(rules);
+		ReasoningContext.getInstance().init(arch, rules);
 
-		// Start the architecture
-		Ajira arch = new Ajira();
-		arch.startup();
+		// TODO: Launch the reasoning
 	}
 }

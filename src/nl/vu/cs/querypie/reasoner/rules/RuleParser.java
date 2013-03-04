@@ -26,13 +26,8 @@ public class RuleParser {
 		int i = 0;
 
 		while (line != null) {
-			String[] type = line.split("\t");
-			// Get the type
-			int typeRule = Integer.valueOf(type[0]);
-
 			// Parse the signature
-			String signature = type[1];
-			String[] split = signature.split(" :- ");
+			String[] split = line.split(" :- ");
 			String head = split[0].substring(1, split[0].length() - 1);
 
 			String[] sBody = split[1].split(",");
@@ -43,11 +38,6 @@ public class RuleParser {
 
 			Rule rule = new Rule(i, Utils.parsePattern(head), body);
 			output.add(rule);
-
-			// Add additional constraints depending on the type of rule
-			if (typeRule == 1) {
-			} else if (typeRule == 2) {
-			}
 
 			line = f.readLine();
 			i++;
