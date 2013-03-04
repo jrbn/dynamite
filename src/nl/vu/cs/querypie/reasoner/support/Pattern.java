@@ -1,5 +1,9 @@
 package nl.vu.cs.querypie.reasoner.support;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public class Pattern {
 
 	private final Term[] terms = new Term[3];
@@ -19,5 +23,23 @@ public class Pattern {
 
 	public boolean isPrecomputed() {
 		return isPrecomputed;
+	}
+
+	public Collection<String> getVariables() {
+		List<String> vars = new ArrayList<String>();
+		for (Term t : terms) {
+			if (t.getName() != null) {
+				// Check for duplicates
+				boolean unique = true;
+				for (String s : vars) {
+					if (s.equals(t.getName())) {
+						unique = false;
+					}
+				}
+				if (unique)
+					vars.add(t.getName());
+			}
+		}
+		return vars;
 	}
 }

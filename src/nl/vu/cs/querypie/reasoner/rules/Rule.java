@@ -3,7 +3,10 @@ package nl.vu.cs.querypie.reasoner.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
+import nl.vu.cs.querypie.reasoner.support.Tuples;
+import nl.vu.cs.querypie.reasoner.support.Utils;
 
 public class Rule {
 
@@ -11,6 +14,18 @@ public class Rule {
 	private Pattern head;
 	private Pattern[] precomputedPatterns;
 	private Pattern[] genericPatterns;
+
+	// Contains the set of precomputed triples
+	private Tuples precomputedTuples = null;
+
+	// Positions shared variables in the first generic pattern that are used in
+	// the head
+	private int[][] pos_gen_head = null;
+
+	// Positions of the shared variables between the first generic pattern and
+	// the precomputed triples. This is used to filter generic triples that will
+	// not produce any derivation
+	private int[][] pos_gen_precomp = null;
 
 	public Rule(int id, Pattern head, Pattern[] body) {
 		this.id = id;
@@ -44,5 +59,43 @@ public class Rule {
 
 	public Pattern[] getGenericBodyPatterns() {
 		return genericPatterns;
+	}
+
+	public int[][] getSharedVariablesGen_Precomp() {
+		return pos_gen_precomp;
+	}
+
+	public int[][] getSharedVariablesGen_Head() {
+		return pos_gen_head;
+	}
+
+	public Tuples getPrecomputedTuples() {
+		return precomputedTuples;
+	}
+
+	public void init(ReasoningContext c) {
+
+		// If there are more precomputed patterns, precompute the join in
+		// memory.
+		if (precomputedPatterns != null) {
+			precomputedTuples = c.getSchemaManager().getTuples(
+					precomputedPatterns);
+		}
+
+		if (genericPatterns != null && genericPatterns.length > 0) {
+			// Calculate the positions of the shared variables between the head
+			// and the first generic pattern (it will be the key of the "map"
+			// phase)
+			pos_gen_head = Utils.getPositionSharedVariables(genericPatterns[0],
+					head);
+
+			// Calculate the positions of the shared variables between the first
+			// generic pattern and the precomputed triples
+			if (precomputedTuples != null) {
+				pos_gen_precomp = Utils.getPositionSharedVariables(
+						genericPatterns[0], precomputedTuples.getSignature());
+			}
+		}
+
 	}
 }

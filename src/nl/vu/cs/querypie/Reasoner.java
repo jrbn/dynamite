@@ -39,7 +39,10 @@ public class Reasoner {
 		}
 
 		// Init the global context
+		long t = System.currentTimeMillis();
 		ReasoningContext.getInstance().init(arch, rules);
+		log.info("Time to initialize the rules: "
+				+ (System.currentTimeMillis() - t));
 
 		// TODO: Launch the reasoning
 	}

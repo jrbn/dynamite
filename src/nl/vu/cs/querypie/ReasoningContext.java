@@ -19,6 +19,9 @@ public class ReasoningContext {
 		this.arch = arch;
 		this.ruleset = ruleset;
 		manager = new SchemaManager(arch);
+		for (Rule r : ruleset) {
+			r.init(this);
+		}
 	}
 
 	public Ajira getFramework() {
@@ -35,5 +38,9 @@ public class ReasoningContext {
 
 	public static ReasoningContext getInstance() {
 		return context;
+	}
+
+	public Rule getRule(int id) {
+		return ruleset[id];
 	}
 }
