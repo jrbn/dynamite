@@ -1,31 +1,33 @@
 package nl.vu.cs.querypie;
 
-import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.schema.SchemaManager;
+import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 public class ReasoningContext {
 
 	private static final ReasoningContext context = new ReasoningContext();
 
 	private Rule[] ruleset;
-	private Ajira arch;
+	private BerkeleydbLayer kb;
 	private SchemaManager manager;
 
 	private ReasoningContext() {
 	}
 
-	public void init(Ajira arch, Rule[] ruleset) {
-		this.arch = arch;
+	public void setRuleset(Rule[] ruleset) {
 		this.ruleset = ruleset;
-		manager = new SchemaManager(arch);
+	}
+
+	public void setKB(BerkeleydbLayer kb) {
+		this.kb = kb;
+	}
+
+	public void init() {
+		manager = new SchemaManager(kb);
 		for (Rule r : ruleset) {
 			r.init(this);
 		}
-	}
-
-	public Ajira getFramework() {
-		return arch;
 	}
 
 	public Rule[] getRuleset() {

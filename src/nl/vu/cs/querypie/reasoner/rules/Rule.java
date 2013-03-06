@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
 import nl.vu.cs.querypie.reasoner.support.Utils;
@@ -83,13 +84,17 @@ public class Rule {
 		return precomputedTuples;
 	}
 
+	public void reloadPrecomputation(ReasoningContext c, ActionContext context) {
+		if (precomputedPatterns != null)
+			precomputedTuples = c.getSchemaManager().getTuples(
+					precomputedPatterns, context);
+	}
+
 	public void init(ReasoningContext c) {
 
 		// If there are more precomputed patterns, precompute the join in
 		// memory.
 		if (precomputedPatterns != null) {
-			precomputedTuples = c.getSchemaManager().getTuples(
-					precomputedPatterns);
 			precomputedSignatures = Utils
 					.concatenateVariables(precomputedPatterns);
 

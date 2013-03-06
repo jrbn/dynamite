@@ -7,6 +7,8 @@ import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
+import nl.vu.cs.ajira.buckets.TupleSerializer;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
@@ -48,10 +50,13 @@ public class Reasoner {
 		}
 
 		// Init the global context
-		long t = System.currentTimeMillis();
-		ReasoningContext.getInstance().init(arch, rules);
-		log.info("Time to initialize the rules: "
-				+ (System.currentTimeMillis() - t));
+		ReasoningContext.getInstance().setRuleset(rules);
+		ReasoningContext.getInstance().setKB(
+				(BerkeleydbLayer) arch.getContext().getInputLayer(
+						Consts.DEFAULT_INPUT_LAYER_ID));
+
+		// The first time we initialize all the rules
+		ReasoningContext.getInstance().init();
 
 		// Launch the reasoning
 		Job job = new Job();
@@ -60,6 +65,8 @@ public class Reasoner {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
 		a.setParamInt(QueryInputLayer.INPUT_LAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		a.setParamWritable(QueryInputLayer.TUPLE, new TupleSerializer(
+				TupleFactory.newTuple()));
 		actions.add(a);
 
 		// Start the rule controller that handles the execution of the rules

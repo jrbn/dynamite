@@ -9,7 +9,9 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.GroupBy;
+import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
+import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.buckets.TupleSerializer;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -65,6 +67,8 @@ public class RulesController extends Action {
 			}
 
 			Rule r = rules[lastExecutedRule];
+			r.reloadPrecomputation(ReasoningContext.getInstance(), context);
+
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
 			c.setParamWritable(QueryInputLayer.TUPLE,
@@ -95,6 +99,21 @@ public class RulesController extends Action {
 			c = ActionFactory.getActionConf(RuleExecutor2.class);
 			c.setParamInt(RuleExecutor2.RULE_ID, r.getId());
 			actions.add(c);
+
+			// Sort the derivation to be inserted in the B-Tree
+			c = ActionFactory.getActionConf(PartitionToNodes.class);
+			c.setParamBoolean(PartitionToNodes.SORT, true);
+			c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 6);
+			actions.add(c);
+
+			// Remove possible duplicates
+			c = ActionFactory.getActionConf(RemoveDuplicates.class);
+			actions.add(c);
+
+			// Add the triples to one index (and verify they do not
+			// already exist)
+
+			// TODO: Add only the new ones to the other indices
 
 			// Controller
 			c = ActionFactory.getActionConf(RulesController.class);

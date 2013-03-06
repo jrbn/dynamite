@@ -2,12 +2,11 @@ package nl.vu.cs.querypie.schema;
 
 import java.util.Arrays;
 
-import nl.vu.cs.ajira.Ajira;
+import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
 import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
@@ -21,12 +20,11 @@ public class SchemaManager {
 
 	private BerkeleydbLayer kb;
 
-	public SchemaManager(Ajira arch) {
-		kb = (BerkeleydbLayer) arch.getContext().getInputLayer(
-				Consts.DEFAULT_INPUT_LAYER_ID);
+	public SchemaManager(BerkeleydbLayer kb) {
+		this.kb = kb;
 	}
 
-	public Tuples getTuples(Pattern[] patterns) {
+	public Tuples getTuples(Pattern[] patterns, ActionContext context) {
 
 		// Retrieve the triples for each pattern
 		int i = 0;
@@ -49,13 +47,13 @@ public class SchemaManager {
 			}
 			pos_vars[i] = Arrays.copyOf(posToCopy, nvars);
 			Tuple t = TupleFactory.newTuple(query);
-			TupleIterator itr = kb.getIterator(t, null);
+			TupleIterator itr = kb.getIterator(t, context);
 
 			// Copy the bindings on a new data structure
 			long[] rawValues = new long[1];
 			int counter = 0;
 			try {
-				while (itr.isReady() && itr.nextTuple()) {
+				while (itr != null && itr.isReady() && itr.nextTuple()) {
 					itr.getTuple(t);
 					if (rawValues.length <= counter + nvars) {
 						rawValues = Arrays.copyOf(rawValues,
