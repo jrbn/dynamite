@@ -1,8 +1,16 @@
 package nl.vu.cs.querypie;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import nl.vu.cs.ajira.Ajira;
+import nl.vu.cs.ajira.actions.ActionConf;
+import nl.vu.cs.ajira.actions.ActionFactory;
+import nl.vu.cs.ajira.actions.QueryInputLayer;
+import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.reasoner.actions.RulesController;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
@@ -44,6 +52,28 @@ public class Reasoner {
 		log.info("Time to initialize the rules: "
 				+ (System.currentTimeMillis() - t));
 
-		// TODO: Launch the reasoning
+		// Launch the reasoning
+		Job job = new Job();
+
+		// Read a fake tuple from the dummy layer
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
+		a.setParamInt(QueryInputLayer.INPUT_LAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		actions.add(a);
+
+		// Start the rule controller that handles the execution of the rules
+		a = ActionFactory.getActionConf(RulesController.class);
+		actions.add(a);
+
+		// Add actions to the job configuration file
+		job.setActions(actions);
+
+		if (arch.amItheServer()) {
+			try {
+				arch.waitForCompletion(job);
+			} catch (Exception e) {
+				log.error("The job is failed!", e);
+			}
+		}
 	}
 }
