@@ -113,7 +113,7 @@ public class Rule {
 
 			// Calculate the positions of the shared variables between the first
 			// generic pattern and the precomputed triples
-			if (precomputedTuples != null) {
+			if (precomputedPatterns != null) {
 				pos_gen_precomp = Utils.getPositionSharedVariables(
 						genericPatterns[0], precomputedSignatures);
 			}

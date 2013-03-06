@@ -61,7 +61,8 @@ public class SchemaManager {
 					}
 
 					for (int m = 0; m < nvars; ++m) {
-						rawValues[counter++] = query[posToCopy[m]].getValue();
+						rawValues[counter++] = ((TLong) t.get(posToCopy[m]))
+								.getValue();
 					}
 
 				}

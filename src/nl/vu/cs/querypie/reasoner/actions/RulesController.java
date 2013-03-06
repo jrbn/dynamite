@@ -104,6 +104,9 @@ public class RulesController extends Action {
 			c = ActionFactory.getActionConf(PartitionToNodes.class);
 			c.setParamBoolean(PartitionToNodes.SORT, true);
 			c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 6);
+			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
 			actions.add(c);
 
 			// Remove possible duplicates

@@ -42,4 +42,9 @@ public class Pattern {
 		}
 		return vars;
 	}
+
+	@Override
+	public String toString() {
+		return terms[0] + " " + terms[1] + " " + terms[2];
+	}
 }
