@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Pattern {
 
-	private final Term[] terms = new Term[3];
+	private final Term[] terms = { new Term(), new Term(), new Term() };
 	private boolean isPrecomputed = false;
 
 	public void setTerm(int pos, Term term) {

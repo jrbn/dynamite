@@ -13,6 +13,12 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 
 	public static Pattern parsePattern(String sp) {
 		Pattern p = new Pattern();
+		if (sp.endsWith("*")) {
+			p.setPrecomputed(true);
+			sp = sp.substring(0, sp.length() - 1);
+		}
+		sp = sp.substring(1, sp.length() - 1);
+
 		String[] sterms = sp.split(" ");
 		for (int i = 0; i < 3; ++i) {
 			Term t = new Term();
@@ -26,9 +32,6 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 			p.setTerm(i, t);
 		}
 
-		if (sp.endsWith("*")) {
-			p.setPrecomputed(true);
-		}
 		return p;
 	}
 

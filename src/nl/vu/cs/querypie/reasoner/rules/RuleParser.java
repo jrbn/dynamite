@@ -28,7 +28,7 @@ public class RuleParser {
 		while (line != null) {
 			// Parse the signature
 			String[] split = line.split(" :- ");
-			String head = split[0].substring(1, split[0].length() - 1);
+			String head = split[0];
 
 			String[] sBody = split[1].split(",");
 			Pattern[] body = new Pattern[sBody.length];

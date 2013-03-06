@@ -24,7 +24,7 @@ public class Reasoner {
 
 	public static void main(String[] args) {
 
-		if (args.length < 3) {
+		if (args.length < 2) {
 			System.out.println("Usage: Reasoner <KB_dir> <ruleset>");
 			return;
 		}
@@ -42,8 +42,9 @@ public class Reasoner {
 			String ruleFile = args[1];
 			rules = new RuleParser().parseRules(ruleFile);
 		} catch (Exception e) {
+			log.error("Error parsing... ", e);
 			log.error("Failed parsing the ruleset file. Exiting... ");
-			return;
+			System.exit(1);
 		}
 
 		// Init the global context
