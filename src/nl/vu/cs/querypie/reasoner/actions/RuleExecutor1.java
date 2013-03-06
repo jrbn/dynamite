@@ -1,9 +1,12 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
+import java.util.Collection;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
@@ -15,6 +18,7 @@ public class RuleExecutor1 extends Action {
 	private Rule rule;
 	private int[] key_positions;
 	private int[] positions_to_check;
+	private Collection<Long> acceptableValues;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -41,18 +45,30 @@ public class RuleExecutor1 extends Action {
 			positions_to_check[i] = shared_vars[i][0];
 		}
 
+		// Get the elements from the precomputed tuples that should be checked
+		if (shared_vars.length > 1) {
+			throw new Exception("Not implemented yet");
+		}
+		acceptableValues = rule.getPrecomputedTuples().getSortedSet(
+				shared_vars[0][1]);
+
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		// TODO Auto-generated method stub
+		TLong t = (TLong) tuple.get(positions_to_check[0]);
+		if (acceptableValues.contains(t.getValue())) {
 
+		}
 	}
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
 		rule = null;
+		acceptableValues = null;
+		key_positions = null;
+		positions_to_check = null;
 	}
 }

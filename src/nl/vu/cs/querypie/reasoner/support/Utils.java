@@ -79,7 +79,7 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 		return positions.toArray(new int[positions.size()][]);
 	}
 
-	public Collection<String> concatenateVariables(Pattern... patterns) {
+	public static Collection<String> concatenateVariables(Pattern... patterns) {
 		List<String> variables = new ArrayList<String>();
 
 		// First add the variables of the first pattern

@@ -1,12 +1,13 @@
 package nl.vu.cs.querypie.reasoner.rules;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
-import nl.vu.cs.querypie.reasoner.support.Tuples;
 import nl.vu.cs.querypie.reasoner.support.Utils;
+import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
 public class Rule {
 
@@ -17,6 +18,7 @@ public class Rule {
 
 	// Contains the set of precomputed triples
 	private Tuples precomputedTuples = null;
+	private Collection<String> precomputedSignatures = null;
 
 	// Positions shared variables in the first generic pattern that are used in
 	// the head
@@ -80,6 +82,8 @@ public class Rule {
 		if (precomputedPatterns != null) {
 			precomputedTuples = c.getSchemaManager().getTuples(
 					precomputedPatterns);
+			precomputedSignatures = Utils
+					.concatenateVariables(precomputedPatterns);
 		}
 
 		if (genericPatterns != null && genericPatterns.length > 0) {
@@ -93,7 +97,7 @@ public class Rule {
 			// generic pattern and the precomputed triples
 			if (precomputedTuples != null) {
 				pos_gen_precomp = Utils.getPositionSharedVariables(
-						genericPatterns[0], precomputedTuples.getSignature());
+						genericPatterns[0], precomputedSignatures);
 			}
 		}
 
