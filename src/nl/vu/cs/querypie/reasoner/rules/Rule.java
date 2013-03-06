@@ -24,6 +24,10 @@ public class Rule {
 	// the head
 	private int[][] pos_gen_head = null;
 
+	// Positions shared variables of the precomputed patters that appear in the
+	// head of the rule
+	private int[][] pos_head_precomp = null;
+
 	// Positions of the shared variables between the first generic pattern and
 	// the precomputed triples. This is used to filter generic triples that will
 	// not produce any derivation
@@ -71,6 +75,10 @@ public class Rule {
 		return pos_gen_head;
 	}
 
+	public int[][] getSharedVariablesHead_Precomp() {
+		return pos_head_precomp;
+	}
+
 	public Tuples getPrecomputedTuples() {
 		return precomputedTuples;
 	}
@@ -84,6 +92,11 @@ public class Rule {
 					precomputedPatterns);
 			precomputedSignatures = Utils
 					.concatenateVariables(precomputedPatterns);
+
+			// Calculate the positions of the precomputed patterns that appear
+			// in the head
+			pos_head_precomp = Utils.getPositionSharedVariables(head,
+					precomputedSignatures);
 		}
 
 		if (genericPatterns != null && genericPatterns.length > 0) {

@@ -6,6 +6,7 @@ import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
@@ -19,6 +20,8 @@ public class RuleExecutor1 extends Action {
 	private int[] key_positions;
 	private int[] positions_to_check;
 	private Collection<Long> acceptableValues;
+
+	private SimpleData[] outputTuple;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -52,6 +55,9 @@ public class RuleExecutor1 extends Action {
 		acceptableValues = rule.getPrecomputedTuples().getSortedSet(
 				shared_vars[0][1]);
 
+		// Prepare the tuple to be sent in output
+		outputTuple = new TLong[key_positions.length
+				+ positions_to_check.length];
 	}
 
 	@Override
@@ -59,7 +65,15 @@ public class RuleExecutor1 extends Action {
 			ActionOutput actionOutput) throws Exception {
 		TLong t = (TLong) tuple.get(positions_to_check[0]);
 		if (acceptableValues.contains(t.getValue())) {
-
+			// Forward the triple to the "reduce" phase
+			for (int i = 0; i < key_positions.length; ++i) {
+				outputTuple[i] = tuple.get(key_positions[i]);
+			}
+			for (int i = 0; i < positions_to_check.length; ++i) {
+				outputTuple[key_positions.length + i] = tuple
+						.get(positions_to_check[i]);
+			}
+			actionOutput.output(outputTuple);
 		}
 	}
 
@@ -70,5 +84,6 @@ public class RuleExecutor1 extends Action {
 		acceptableValues = null;
 		key_positions = null;
 		positions_to_check = null;
+		outputTuple = null;
 	}
 }

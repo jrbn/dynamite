@@ -28,15 +28,13 @@ public class Tuples {
 			for (int i = 0; i < values.length; i += lengthTuple) {
 				set.add(values[i + pos]);
 			}
-
-			// long[] output = new long[set.size()];
-			// int n = 0;
-			// for (long v : set) {
-			// output[n++] = v;
-			// }
-			// LongSet oSet = new LongSet(output);
 			indexes.put(pos, set);
 			return set;
 		}
+	}
+
+	public RowSet get(int pos, long value) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
