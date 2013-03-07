@@ -12,10 +12,10 @@ import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
 public class Rule {
 
-	private int id;
-	private Pattern head;
-	private Pattern[] precomputedPatterns;
-	private Pattern[] genericPatterns;
+	private final int id;
+	private final Pattern head;
+	private final Pattern[] precomputedPatterns;
+	private final Pattern[] genericPatterns;
 
 	// Contains the set of precomputed triples
 	private Tuples precomputedTuples = null;
@@ -85,9 +85,11 @@ public class Rule {
 	}
 
 	public void reloadPrecomputation(ReasoningContext c, ActionContext context) {
-		if (precomputedPatterns != null)
-			precomputedTuples = c.getSchemaManager().getTuples(
-					precomputedPatterns, context);
+		if (precomputedPatterns != null) try {
+			precomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void init(ReasoningContext c) {
@@ -95,27 +97,23 @@ public class Rule {
 		// If there are more precomputed patterns, precompute the join in
 		// memory.
 		if (precomputedPatterns != null) {
-			precomputedSignatures = Utils
-					.concatenateVariables(precomputedPatterns);
+			precomputedSignatures = Utils.concatenateVariables(precomputedPatterns);
 
 			// Calculate the positions of the precomputed patterns that appear
 			// in the head
-			pos_head_precomp = Utils.getPositionSharedVariables(head,
-					precomputedSignatures);
+			pos_head_precomp = Utils.getPositionSharedVariables(head, precomputedSignatures);
 		}
 
 		if (genericPatterns != null && genericPatterns.length > 0) {
 			// Calculate the positions of the shared variables between the head
 			// and the first generic pattern (it will be the key of the "map"
 			// phase)
-			pos_gen_head = Utils.getPositionSharedVariables(genericPatterns[0],
-					head);
+			pos_gen_head = Utils.getPositionSharedVariables(genericPatterns[0], head);
 
 			// Calculate the positions of the shared variables between the first
 			// generic pattern and the precomputed triples
 			if (precomputedPatterns != null) {
-				pos_gen_precomp = Utils.getPositionSharedVariables(
-						genericPatterns[0], precomputedSignatures);
+				pos_gen_precomp = Utils.getPositionSharedVariables(genericPatterns[0], precomputedSignatures);
 			}
 		}
 
