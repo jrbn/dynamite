@@ -83,5 +83,7 @@ public class Reasoner {
 				log.error("The job is failed!", e);
 			}
 		}
+
+		arch.shutdown();
 	}
 }

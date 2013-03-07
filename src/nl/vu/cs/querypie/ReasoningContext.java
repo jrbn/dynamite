@@ -23,6 +23,10 @@ public class ReasoningContext {
 		this.kb = kb;
 	}
 
+	public BerkeleydbLayer getKB() {
+		return kb;
+	}
+
 	public void init() {
 		manager = new SchemaManager(kb);
 		for (Rule r : ruleset) {

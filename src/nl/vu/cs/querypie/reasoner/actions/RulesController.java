@@ -8,6 +8,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
@@ -62,7 +63,7 @@ public class RulesController extends Action {
 			}
 
 			lastExecutedRule++;
-			if (lastExecutedRule < rules.length) {
+			if (lastExecutedRule == rules.length) {
 				lastExecutedRule = 0;
 			}
 
@@ -115,8 +116,15 @@ public class RulesController extends Action {
 
 			// Add the triples to one index (and verify they do not
 			// already exist)
+			c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+			actions.add(c);
 
-			// TODO: Add only the new ones to the other indices
+			// Collect the results to one node
+			c = ActionFactory.getActionConf(CollectToNode.class);
+			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
+			actions.add(c);
 
 			// Controller
 			c = ActionFactory.getActionConf(RulesController.class);
