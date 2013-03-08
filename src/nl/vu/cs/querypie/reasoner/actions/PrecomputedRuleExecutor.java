@@ -70,6 +70,10 @@ public class PrecomputedRuleExecutor extends Action {
         }
       }
     }
+
+    for (SimpleData[] result : results) {
+      actionOutput.output(result);
+    }
   }
 
 }
