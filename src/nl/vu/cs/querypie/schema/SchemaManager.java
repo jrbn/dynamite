@@ -20,6 +20,8 @@ import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.primitives.Longs;
+
 public class SchemaManager {
 
 	static final Logger log = LoggerFactory.getLogger(SchemaManager.class);
@@ -66,10 +68,7 @@ public class SchemaManager {
 			} catch (Exception e) {
 				log.error("Error", e);
 			}
-			tuples[i] = new long[rawValues.size()];
-			for (int j = 0; j < rawValues.size(); ++j) {
-				tuples[i][j] = rawValues.get(j);
-			}
+			tuples[i] = Longs.toArray(rawValues);
 		}
 
 		if (patterns.length == 1) {
@@ -146,10 +145,7 @@ public class SchemaManager {
 			}
 
 			// Update current results
-			currentResults = new long[resultList.size()];
-			for (int j = 0; j < resultList.size(); j++) {
-				currentResults[j] = resultList.get(j);
-			}
+			currentResults = Longs.toArray(resultList);
 
 			// Update current names
 			currentNames.clear();
