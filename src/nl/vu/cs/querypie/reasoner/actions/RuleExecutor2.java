@@ -58,8 +58,7 @@ public class RuleExecutor2 extends Action {
 		for (int i = 0; i < 3; ++i) {
 			Term t = head.getTerm(i);
 			if (t.getName() == null) {
-				outputTriple[i] = supportTriple[i];
-				supportTriple[i].setValue(t.getValue());
+				outputTriple[i] = new TLong(t.getValue());
 			}
 		}
 	}
@@ -67,6 +66,7 @@ public class RuleExecutor2 extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
+
 		// First copy the "key" in the output triple.
 		for (int i = 0; i < pos_gen_head.length; ++i) {
 			outputTriple[pos_gen_head[i][1]] = tuple.get(i);
