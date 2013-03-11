@@ -1,5 +1,5 @@
 *.class
 .classpath
 .project
-/build.xml
+.DS_Store
 /querypie-reasoning-0.1.jar

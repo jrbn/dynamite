@@ -26,19 +26,24 @@ public class RulesController extends Action {
 
 	static final Logger log = LoggerFactory.getLogger(RulesController.class);
 	public static final int LAST_EXECUTED_RULE = 0;
+	private static final int NUMBER_NOT_DERIVED = 1;
 
 	private boolean hasDerived;
 	private int lastExecutedRule;
+	private int notDerivation;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(LAST_EXECUTED_RULE, "rule", -1, false);
+		conf.registerParameter(NUMBER_NOT_DERIVED,
+				"rules that did not derive anything", 0, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		hasDerived = false;
 		lastExecutedRule = getParamInt(LAST_EXECUTED_RULE);
+		notDerivation = getParamInt(NUMBER_NOT_DERIVED);
 	}
 
 	@Override
@@ -50,14 +55,21 @@ public class RulesController extends Action {
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
-		if (hasDerived) {
-			// Continue applying the rules...
 
-			Rule[] rules = ReasoningContext.getInstance().getRuleset();
-			if (rules.length == 0) {
-				log.warn("No rule to execute!");
-				return;
-			}
+		Rule[] rules = ReasoningContext.getInstance().getRuleset();
+		if (rules.length == 0) {
+			log.warn("No rule to execute!");
+			return;
+		}
+
+		if (!hasDerived) {
+			notDerivation++;
+		} else {
+			notDerivation = 0;
+		}
+
+		if (notDerivation != rules.length) {
+			// Continue applying the rules...
 
 			lastExecutedRule++;
 			if (lastExecutedRule == rules.length) {
@@ -130,6 +142,7 @@ public class RulesController extends Action {
 			// Controller
 			c = ActionFactory.getActionConf(RulesController.class);
 			c.setParamInt(LAST_EXECUTED_RULE, lastExecutedRule);
+			c.setParamInt(NUMBER_NOT_DERIVED, notDerivation);
 			actions.add(c);
 
 			// Execute the rule
