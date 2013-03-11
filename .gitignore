@@ -1,3 +1,5 @@
 *.class
 .classpath
 .project
+/build.xml
+/querypie-reasoning-0.1.jar
