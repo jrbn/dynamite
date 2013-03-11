@@ -24,4 +24,9 @@ public class Term {
 		term.name = name;
 		term.value = value;
 	}
+
+	@Override
+	public String toString() {
+		return value + "(" + name + ")";
+	}
 }

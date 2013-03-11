@@ -8,9 +8,9 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
-import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.buckets.TupleSerializer;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -62,17 +62,20 @@ public class RulesController extends Action {
 			}
 
 			lastExecutedRule++;
-			if (lastExecutedRule < rules.length) {
+			if (lastExecutedRule == rules.length) {
 				lastExecutedRule = 0;
 			}
 
+			// Set up the rule
 			Rule r = rules[lastExecutedRule];
 			r.reloadPrecomputation(ReasoningContext.getInstance(), context);
 
+			// Read the input
 			List<ActionConf> actions = new ArrayList<ActionConf>();
-			ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
-			c.setParamWritable(QueryInputLayer.TUPLE,
+			ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
+			c.setParamWritable(ReadFromBtree.TUPLE,
 					getTuple(r.getGenericBodyPatterns()[0]));
+			c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
 			actions.add(c);
 
 			// Map
@@ -103,7 +106,7 @@ public class RulesController extends Action {
 			// Sort the derivation to be inserted in the B-Tree
 			c = ActionFactory.getActionConf(PartitionToNodes.class);
 			c.setParamBoolean(PartitionToNodes.SORT, true);
-			c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 6);
+			c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
 			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
 					TLong.class.getName(), TLong.class.getName(),
 					TLong.class.getName());
@@ -115,8 +118,15 @@ public class RulesController extends Action {
 
 			// Add the triples to one index (and verify they do not
 			// already exist)
+			c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+			actions.add(c);
 
-			// TODO: Add only the new ones to the other indices
+			// Collect the results to one node
+			c = ActionFactory.getActionConf(CollectToNode.class);
+			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
+			actions.add(c);
 
 			// Controller
 			c = ActionFactory.getActionConf(RulesController.class);

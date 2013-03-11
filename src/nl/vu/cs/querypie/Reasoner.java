@@ -10,6 +10,7 @@ import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.buckets.TupleSerializer;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.submissions.Job;
+import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.reasoner.actions.RulesController;
@@ -36,6 +37,7 @@ public class Reasoner {
 		Configuration conf = arch.getConfiguration();
 		conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
 		conf.set(BerkeleydbLayer.DB_INPUT, args[0]);
+		conf.setInt(Consts.N_PROC_THREADS, 4);
 		arch.startup();
 
 		// Parse the rules from the file
@@ -78,10 +80,14 @@ public class Reasoner {
 
 		if (arch.amItheServer()) {
 			try {
-				arch.waitForCompletion(job);
+				Submission s = arch.waitForCompletion(job);
+				s.printStatistics();
+				ReasoningContext.getInstance().getKB().closeAll();
 			} catch (Exception e) {
 				log.error("The job is failed!", e);
 			}
 		}
+
+		arch.shutdown();
 	}
 }
