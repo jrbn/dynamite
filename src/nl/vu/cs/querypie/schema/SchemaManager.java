@@ -80,13 +80,14 @@ public class SchemaManager {
 
     // If more than one pattern, than join the bindings using a hash join
     long[] currentResults = tuples[0];
-    Map<Integer, String> currentNames = new HashMap<Integer, String>();
-    for (int i = 0; i < pos_vars[0].length; i++) {
-      Integer key = pos_vars[0][i];
-      String val = patterns[0].getTerm(key).getName();
-      currentNames.put(key, val);
-    }
+
     for (int i = 1; i < patterns.length; ++i) {
+      Map<Integer, String> currentNames = new HashMap<Integer, String>();
+      for (int j = 0; j < pos_vars[i - 1].length; j++) {
+        Integer key = pos_vars[0][j];
+        String val = patterns[0].getTerm(key).getName();
+        currentNames.put(key, val);
+      }
       Pattern p = patterns[i];
 
       // Retrieve the position of the variables to use for join
@@ -110,8 +111,8 @@ public class SchemaManager {
       Map<Long, Set<Long>> firstMap = new HashMap<Long, Set<Long>>();
       Map<Long, Set<Long>> secondMap = new HashMap<Long, Set<Long>>();
       for (int j = 0; j < currentResults.length; j += 2) {
-        Long key = currentResults[j + var1];
-        Long val = currentResults[j + 1 - var1];
+        Long key = currentResults[j];
+        Long val = currentResults[j + 1];
         if (firstMap.containsKey(key)) {
           firstMap.get(key).add(val);
         } else {
@@ -121,8 +122,8 @@ public class SchemaManager {
         }
       }
       for (int j = 0; j < tuples[i].length; j += 2) {
-        Long key = tuples[i][j + var2];
-        Long val = tuples[i][j + 1 - var2];
+        Long key = tuples[i][j];
+        Long val = tuples[i][j + 1];
         if (secondMap.containsKey(key)) {
           secondMap.get(key).add(val);
         } else {
@@ -146,12 +147,6 @@ public class SchemaManager {
 
       // Update current results
       currentResults = Longs.toArray(resultList);
-
-      // Update current names
-      currentNames.clear();
-      currentNames.put(0, patterns[i - 1].getTerm(1 - var1).getName());
-      currentNames.put(1, patterns[i - 1].getTerm(1 - var2).getName());
-
     }
 
     return new Tuples(2, currentResults);
