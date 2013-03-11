@@ -90,7 +90,7 @@ public class RulesController extends Action {
         // Read the input
         ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
         c.setParamWritable(ReadFromBtree.TUPLE, getTuple(r.getGenericBodyPatterns()[0]));
-        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
+        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 1);
         actions.add(c);
 
         // Map
