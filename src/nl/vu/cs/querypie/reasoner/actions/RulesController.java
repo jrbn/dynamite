@@ -28,7 +28,7 @@ public class RulesController extends Action {
   public static final int LAST_EXECUTED_RULE = 0;
   private static final int NUMBER_NOT_DERIVED = 1;
 
-  private static final int NUM_DB_READ_TASKS = 1;
+  private static final int NUM_DB_READ_TASKS = 4;
 
   private boolean hasDerived;
   private int lastExecutedRule;
@@ -90,7 +90,6 @@ public class RulesController extends Action {
         actions.add(c);
 
         // Add the triples to one index (and verify they do not already exist)
-        // FIXME Is it correct to write schema derivations in the BTree?
         c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
         actions.add(c);
       }
