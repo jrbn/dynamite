@@ -31,7 +31,7 @@ public class GenericRuleExecutor extends Action {
     rule = ReasoningContext.getInstance().getRule(getParamInt(RULE_ID));
     pos_gen_head = rule.getSharedVariablesGen_Head();
     Pattern head = rule.getHead();
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 3; i++) {
       Term t = head.getTerm(i);
       if (t.getName() == null) {
         outputTriple[i] = new TLong(t.getValue());
@@ -46,7 +46,6 @@ public class GenericRuleExecutor extends Action {
       outputTriple[pos_gen_head[i][1]] = tuple.get(i);
     }
     actionOutput.output(outputTriple);
-    System.out.println(outputTriple[0] + " " + outputTriple[1] + " " + outputTriple[2]);
   }
 
 }
