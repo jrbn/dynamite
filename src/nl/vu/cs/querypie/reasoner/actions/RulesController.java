@@ -86,6 +86,11 @@ public class RulesController extends Action {
         c = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
         c.setParamInt(PrecomputedRuleExecutor.RULE_ID, r.getId());
         actions.add(c);
+
+        // Add the triples to one index (and verify they do not already exist)
+        // FIXME Is it correct to write schema derivations in the BTree?
+        c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+        actions.add(c);
       }
       // The rule only contains generic patterns
       else if (r.getPrecomputedBodyPatterns().length == 0) {
