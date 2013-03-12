@@ -85,7 +85,7 @@ public class Rule {
   }
 
   public void reloadPrecomputation(ReasoningContext c, ActionContext context) {
-    if (precomputedPatterns != null) try {
+    if (precomputedPatterns != null && precomputedPatterns.length > 0) try {
       precomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context);
     } catch (Exception e) {
       e.printStackTrace();
