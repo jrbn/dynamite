@@ -78,19 +78,38 @@ public class RulesController extends Action {
       r.reloadPrecomputation(ReasoningContext.getInstance(), context);
 
       List<ActionConf> actions = new ArrayList<ActionConf>();
+      ActionConf c = null;
+
+      // The rule only contains precomputed patterns
       if (r.getGenericBodyPatterns().length == 0) {
-        ActionConf c = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
+        // Execute the computation
+        c = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
         c.setParamInt(PrecomputedRuleExecutor.RULE_ID, r.getId());
         actions.add(c);
-      } else if (r.getPrecomputedBodyPatterns().length == 0) {
-        ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
+      }
+      // The rule only contains generic patterns
+      else if (r.getPrecomputedBodyPatterns().length == 0) {
+        // Read the input
+        c = ActionFactory.getActionConf(ReadFromBtree.class);
+        c.setParamWritable(ReadFromBtree.TUPLE, getTuple(r.getGenericBodyPatterns()[0]));
+        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 1);
+        actions.add(c);
+
+        // Execute the computation
+        c = ActionFactory.getActionConf(GenericRuleExecutor.class);
         c.setParamInt(GenericRuleExecutor.RULE_ID, r.getId());
         actions.add(c);
-      } else {
+
+        // Add the triples to one index (and verify they do not already exist)
+        c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+        actions.add(c);
+      }
+      // The rule contains both generic and precomputed patterns
+      else {
         // Read the input
-        ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
+        c = ActionFactory.getActionConf(ReadFromBtree.class);
         c.setParamWritable(ReadFromBtree.TUPLE, getTuple(r.getGenericBodyPatterns()[0]));
-        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
+        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 1);
         actions.add(c);
 
         // Map
@@ -131,8 +150,7 @@ public class RulesController extends Action {
         // c = ActionFactory.getActionConf(RemoveDuplicates.class);
         // actions.add(c);
 
-        // Add the triples to one index (and verify they do not
-        // already exist)
+        // Add the triples to one index (and verify they do not already exist)
         c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
         actions.add(c);
 
@@ -141,12 +159,13 @@ public class RulesController extends Action {
         c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
         actions.add(c);
 
-        // Controller
-        c = ActionFactory.getActionConf(RulesController.class);
-        c.setParamInt(LAST_EXECUTED_RULE, lastExecutedRule);
-        c.setParamInt(NUMBER_NOT_DERIVED, notDerivation);
-        actions.add(c);
       }
+
+      // Controller
+      c = ActionFactory.getActionConf(RulesController.class);
+      c.setParamInt(LAST_EXECUTED_RULE, lastExecutedRule);
+      c.setParamInt(NUMBER_NOT_DERIVED, notDerivation);
+      actions.add(c);
 
       // Execute the rule
       actionOutput.branch(actions);
