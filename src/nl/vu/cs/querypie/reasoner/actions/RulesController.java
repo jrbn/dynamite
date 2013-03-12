@@ -28,6 +28,8 @@ public class RulesController extends Action {
   public static final int LAST_EXECUTED_RULE = 0;
   private static final int NUMBER_NOT_DERIVED = 1;
 
+  private static final int NUM_DB_READ_TASKS = 1;
+
   private boolean hasDerived;
   private int lastExecutedRule;
   private int notDerivation;
@@ -97,7 +99,7 @@ public class RulesController extends Action {
         // Read the input
         c = ActionFactory.getActionConf(ReadFromBtree.class);
         c.setParamWritable(ReadFromBtree.TUPLE, getTuple(r.getGenericBodyPatterns()[0]));
-        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 1);
+        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, NUM_DB_READ_TASKS);
         actions.add(c);
 
         // Execute the computation
@@ -114,7 +116,7 @@ public class RulesController extends Action {
         // Read the input
         c = ActionFactory.getActionConf(ReadFromBtree.class);
         c.setParamWritable(ReadFromBtree.TUPLE, getTuple(r.getGenericBodyPatterns()[0]));
-        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 1);
+        c.setParamInt(ReadFromBtree.PARALLEL_TASKS, NUM_DB_READ_TASKS);
         actions.add(c);
 
         // Map
