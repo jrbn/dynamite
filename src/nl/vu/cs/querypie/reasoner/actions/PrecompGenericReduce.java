@@ -3,7 +3,6 @@ package nl.vu.cs.querypie.reasoner.actions;
 import java.util.Collection;
 
 import nl.vu.cs.ajira.actions.Action;
-import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TBag;
@@ -19,19 +18,12 @@ import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
 public class PrecompGenericReduce extends Action {
 
-	public static final int RULE_ID = 0;
-
 	private int[][][] pos_head_precomps;
 	private int[][][] pos_gen_precomps;
 	private int[][][] pos_gen_head;
 	private Tuples[] precompTuples;
 
 	private TLong[][] outputTuples;
-
-	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(RULE_ID, "rule", null, true);
-	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
