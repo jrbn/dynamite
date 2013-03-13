@@ -12,7 +12,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
-public class RuleExecutor1 extends Action {
+public class PrecompGenericMap extends Action {
 
 	public static final int RULE_ID = 0;
 

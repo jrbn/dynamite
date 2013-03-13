@@ -16,7 +16,7 @@ import nl.vu.cs.querypie.reasoner.support.Pattern;
 import nl.vu.cs.querypie.reasoner.support.Term;
 import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
-public class RuleExecutor2 extends Action {
+public class PrecompGenericReduce extends Action {
 
 	public static final int RULE_ID = 0;
 

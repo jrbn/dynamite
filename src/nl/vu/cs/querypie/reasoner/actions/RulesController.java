@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.buckets.TupleSerializer;
+import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
@@ -78,26 +79,18 @@ public class RulesController extends Action {
 		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
 
 		// Map
-		actions.add(ActionFactory.getActionConf(RuleExecutor1.class));
+		actions.add(ActionFactory.getActionConf(PrecompGenericMap.class));
 
 		// Group by
 		c = ActionFactory.getActionConf(GroupBy.class);
-		byte[] grouping_fields = new byte[r.getSharedVariablesGen_Head().length];
-		for (byte i = 0; i < grouping_fields.length; ++i)
-			grouping_fields[i] = i;
-		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, 0);
-		int lengthTuple = grouping_fields.length
-				+ r.getSharedVariablesGen_Precomp().length;
-		String[] fields = new String[lengthTuple];
-		for (int i = 0; i < lengthTuple; ++i) {
-			fields[i] = TLong.class.getName();
-		}
-		c.setParamStringArray(GroupBy.TUPLE_FIELDS, fields);
+		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
+		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
+				TByteArray.class.getName());
 		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
 		actions.add(c);
 
 		// Reduce
-		actions.add(ActionFactory.getActionConf(RuleExecutor2.class));
+		actions.add(ActionFactory.getActionConf(PrecompGenericReduce.class));
 	}
 
 	private void applyRulesSchemaOnly(List<ActionConf> actions) {
