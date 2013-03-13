@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.reasoner.actions.RulesController;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
+import nl.vu.cs.querypie.reasoner.rules.Ruleset;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 import org.slf4j.Logger;
@@ -52,7 +53,8 @@ public class Reasoner {
 		}
 
 		// Init the global context
-		ReasoningContext.getInstance().setRuleset(rules);
+		Ruleset set = new Ruleset(rules);
+		ReasoningContext.getInstance().setRuleset(set);
 		ReasoningContext.getInstance().setKB(
 				(BerkeleydbLayer) arch.getContext().getInputLayer(
 						Consts.DEFAULT_INPUT_LAYER_ID));

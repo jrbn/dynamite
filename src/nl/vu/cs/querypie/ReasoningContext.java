@@ -1,6 +1,6 @@
 package nl.vu.cs.querypie;
 
-import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.querypie.reasoner.rules.Ruleset;
 import nl.vu.cs.querypie.schema.SchemaManager;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
@@ -8,14 +8,14 @@ public class ReasoningContext {
 
 	private static final ReasoningContext context = new ReasoningContext();
 
-	private Rule[] ruleset;
+	private Ruleset ruleset;
 	private BerkeleydbLayer kb;
 	private SchemaManager manager;
 
 	private ReasoningContext() {
 	}
 
-	public void setRuleset(Rule[] ruleset) {
+	public void setRuleset(Ruleset ruleset) {
 		this.ruleset = ruleset;
 	}
 
@@ -29,12 +29,10 @@ public class ReasoningContext {
 
 	public void init() {
 		manager = new SchemaManager(kb);
-		for (Rule r : ruleset) {
-			r.init(this);
-		}
+		ruleset.init(this);
 	}
 
-	public Rule[] getRuleset() {
+	public Ruleset getRuleset() {
 		return ruleset;
 	}
 
@@ -44,9 +42,5 @@ public class ReasoningContext {
 
 	public static ReasoningContext getInstance() {
 		return context;
-	}
-
-	public Rule getRule(int id) {
-		return ruleset[id];
 	}
 }

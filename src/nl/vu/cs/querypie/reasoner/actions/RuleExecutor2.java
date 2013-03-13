@@ -36,8 +36,13 @@ public class RuleExecutor2 extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		// Get the rule
-		Rule rule = ReasoningContext.getInstance()
-				.getRule(getParamInt(RULE_ID));
+		Rule[] rules = ReasoningContext.getInstance().getRuleset()
+				.getAllRulesWithSchemaAndGeneric();
+		if (rules == null) {
+			return;
+		}
+		Rule rule = rules[0];
+
 		pos_head_precomps = rule.getSharedVariablesHead_Precomp();
 		pos_gen_precomps = rule.getSharedVariablesGen_Precomp();
 		pos_gen_head = rule.getSharedVariablesGen_Head();

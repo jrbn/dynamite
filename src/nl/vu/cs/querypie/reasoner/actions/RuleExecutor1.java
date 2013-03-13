@@ -31,7 +31,14 @@ public class RuleExecutor1 extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		// Get the rule
-		rule = ReasoningContext.getInstance().getRule(getParamInt(RULE_ID));
+
+		// FIXME: This code is broken. Currently it executes only one rule
+		Rule[] rules = ReasoningContext.getInstance().getRuleset()
+				.getAllRulesWithSchemaAndGeneric();
+		if (rules == null) {
+			return;
+		}
+		rule = rules[0];
 
 		// Get the positions of the generic patterns that are used in the head
 		int[][] shared_vars = rule.getSharedVariablesGen_Head();
