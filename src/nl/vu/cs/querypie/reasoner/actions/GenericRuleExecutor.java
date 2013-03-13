@@ -1,7 +1,9 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
-import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.SimpleData;
@@ -14,40 +16,41 @@ import nl.vu.cs.querypie.reasoner.support.Term;
 
 public class GenericRuleExecutor extends Action {
 
-	public static final int RULE_ID = 0;
+  List<int[][]> positions_gen_head = new ArrayList<int[][]>();
+  List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
 
-	private Rule rule;
-	private int[][] pos_gen_head;
+  @Override
+  public void startProcess(ActionContext context) throws Exception {
+    Rule[] rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
+    for (int r = 0; r < rules.length; ++r) {
+      // Extract the rule
+      Rule rule = rules[r];
+      // Determines positions of variables
+      int[][] pos_gen_head = rule.getSharedVariablesGen_Head();
+      positions_gen_head.add(pos_gen_head);
+      // Prepares the known parts of the output triples
+      Pattern head = rule.getHead();
+      SimpleData[] outputTriple = new SimpleData[3];
+      for (int i = 0; i < 3; i++) {
+        Term t = head.getTerm(i);
+        if (t.getName() == null) {
+          outputTriple[i] = new TLong(t.getValue());
+        }
+      }
+      outputTriples.add(outputTriple);
+    }
+  }
 
-	private final SimpleData[] outputTriple = new SimpleData[3];
-
-	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(RULE_ID, "rule", null, true);
-	}
-
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		rule = ReasoningContext.getInstance().getRuleset()
-				.getAllRulesWithOneAntecedent()[getParamInt(RULE_ID)];
-		pos_gen_head = rule.getSharedVariablesGen_Head();
-		Pattern head = rule.getHead();
-		for (int i = 0; i < 3; i++) {
-			Term t = head.getTerm(i);
-			if (t.getName() == null) {
-				outputTriple[i] = new TLong(t.getValue());
-			}
-		}
-	}
-
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		// Copy the "key" in the output triple
-		for (int i = 0; i < pos_gen_head.length; ++i) {
-			outputTriple[pos_gen_head[i][1]] = tuple.get(i);
-		}
-		actionOutput.output(outputTriple);
-	}
-
+  @Override
+  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+    // Bind the variables in the output triple
+    for (int r = 0; r < outputTriples.size(); r++) {
+      int[][] pos_gen_head = positions_gen_head.get(r);
+      SimpleData[] outputTriple = outputTriples.get(r);
+      for (int i = 0; i < pos_gen_head.length; ++i) {
+        outputTriple[pos_gen_head[i][1]] = tuple.get(pos_gen_head[i][0]);
+      }
+      actionOutput.output(outputTriple);
+    }
+  }
 }
