@@ -29,7 +29,7 @@ public class ParallelExecutionSchemaOnly extends Action {
 		// Create n branches, one per every rule
 		Rule[] rules = ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules();
-		for (Rule rule : rules) {
+		for (int i = 0; i < rules.length; ++i) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 
 			ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
@@ -39,7 +39,9 @@ public class ParallelExecutionSchemaOnly extends Action {
 					TupleFactory.newTuple()));
 			actions.add(a);
 
-			// TODO: Add the action of Alessandro that executes a single rule
+			a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
+			a.setParamInt(PrecomputedRuleExecutor.RULE_ID, i);
+			actions.add(a);
 
 			actionOutput.branch(actions);
 		}

@@ -55,9 +55,12 @@ public class RulesController extends Action {
 
 		// Forward the input to the Map action
 		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.RECONNECT_AFTER_ACTIONS, 3);
+		c.setParamInt(Split.RECONNECT_AFTER_ACTIONS, 4);
+		actions.add(c);
 
-		// TODO: First apply the rules that do not require any join
+		// First apply only the rules that use one antecedent
+		c = ActionFactory.getActionConf(GenericRuleExecutor.class);
+		actions.add(c);
 
 		// Sort the derivation
 		c = ActionFactory.getActionConf(PartitionToNodes.class);
