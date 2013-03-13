@@ -6,10 +6,11 @@ import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TBag;
+import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
@@ -20,13 +21,12 @@ public class PrecompGenericReduce extends Action {
 
 	public static final int RULE_ID = 0;
 
-	private int[][] pos_head_precomps;
-	private int[][] pos_gen_precomps;
-	private int[][] pos_gen_head;
-	private Tuples precompTuples;
-	private final SimpleData[] outputTriple = new SimpleData[3];
-	private final TLong[] supportTriple = { new TLong(), new TLong(),
-			new TLong() };
+	private int[][][] pos_head_precomps;
+	private int[][][] pos_gen_precomps;
+	private int[][][] pos_gen_head;
+	private Tuples[] precompTuples;
+
+	private TLong[][] outputTuples;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -38,32 +38,33 @@ public class PrecompGenericReduce extends Action {
 		// Get the rule
 		Rule[] rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
-		if (rules == null) {
-			return;
-		}
-		Rule rule = rules[0];
 
-		pos_head_precomps = rule.getSharedVariablesHead_Precomp();
-		pos_gen_precomps = rule.getSharedVariablesGen_Precomp();
-		pos_gen_head = rule.getSharedVariablesGen_Head();
-		precompTuples = rule.getPrecomputedTuples();
+		pos_head_precomps = new int[rules.length][][];
+		pos_gen_precomps = new int[rules.length][][];
+		pos_gen_head = new int[rules.length][][];
+		precompTuples = new Tuples[rules.length];
+		outputTuples = new TLong[rules.length][];
 
-		if (pos_gen_precomps.length > 1) {
-			throw new Exception("Not supported");
-		}
+		for (int m = 0; m < rules.length; ++m) {
+			Rule rule = rules[m];
+			pos_head_precomps[m] = rule.getSharedVariablesHead_Precomp();
+			pos_gen_precomps[m] = rule.getSharedVariablesGen_Precomp();
+			pos_gen_head[m] = rule.getSharedVariablesGen_Head();
+			precompTuples[m] = rule.getPrecomputedTuples();
+			if (pos_gen_precomps[m].length > 1) {
+				throw new Exception("Not supported");
+			}
 
-		// Set up the the triple that should be returned in output
-		for (int i = 0; i < pos_head_precomps.length; ++i) {
-			outputTriple[pos_head_precomps[i][0]] = supportTriple[i];
-		}
-
-		// Fill the outputTriple with the constants that come from the head of
-		// the rule
-		Pattern head = rule.getHead();
-		for (int i = 0; i < 3; ++i) {
-			Term t = head.getTerm(i);
-			if (t.getName() == null) {
-				outputTriple[i] = new TLong(t.getValue());
+			// Fill the outputTriple with the constants that come from the head
+			// of the rule
+			Pattern head = rule.getHead();
+			for (int i = 0; i < 3; ++i) {
+				Term t = head.getTerm(i);
+				if (t.getName() == null) {
+					outputTuples[m][i] = new TLong(t.getValue());
+				} else {
+					outputTuples[m][i] = new TLong();
+				}
 			}
 		}
 	}
@@ -72,9 +73,14 @@ public class PrecompGenericReduce extends Action {
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
 
+		TByteArray key = (TByteArray) tuple.get(0);
+
+		int m = key.getArray()[0];
+
 		// First copy the "key" in the output triple.
-		for (int i = 0; i < pos_gen_head.length; ++i) {
-			outputTriple[pos_gen_head[i][1]] = tuple.get(i);
+		for (int i = 0; i < pos_gen_head[m].length; ++i) {
+			outputTuples[m][pos_gen_head[m][i][1]].setValue(Utils.decodeLong(
+					key.getArray(), 1 + 8 * i));
 		}
 
 		// Perform the join between the "value" part of the triple and the
@@ -83,15 +89,16 @@ public class PrecompGenericReduce extends Action {
 		TBag values = (TBag) tuple.get(tuple.getNElements() - 1);
 		for (Tuple t : values) {
 			TLong elementToJoin = (TLong) t.get(0);
-			Collection<long[]> set = precompTuples.get(pos_gen_precomps[0][1],
-					elementToJoin.getValue());
+			Collection<long[]> set = precompTuples[m].get(
+					pos_gen_precomps[m][0][1], elementToJoin.getValue());
 			if (set != null) {
 				for (long[] row : set) {
 					// Get current values
-					for (int i = 0; i < pos_head_precomps.length; ++i) {
-						supportTriple[i].setValue(row[pos_head_precomps[i][1]]);
+					for (int i = 0; i < pos_head_precomps[m].length; ++i) {
+						outputTuples[m][pos_head_precomps[m][i][0]]
+								.setValue(row[pos_head_precomps[m][i][1]]);
 					}
-					actionOutput.output(outputTriple);
+					actionOutput.output(outputTuples[m]);
 				}
 			}
 		}
@@ -104,5 +111,6 @@ public class PrecompGenericReduce extends Action {
 		pos_gen_precomps = null;
 		pos_gen_head = null;
 		precompTuples = null;
+		outputTuples = null;
 	}
 }

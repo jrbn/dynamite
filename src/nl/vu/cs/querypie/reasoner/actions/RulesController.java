@@ -85,7 +85,7 @@ public class RulesController extends Action {
 		c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
-				TByteArray.class.getName());
+				TLong.class.getName());
 		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
 		actions.add(c);
 
