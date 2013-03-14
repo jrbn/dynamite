@@ -7,8 +7,7 @@ import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
-import nl.vu.cs.ajira.buckets.TupleSerializer;
-import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
@@ -68,9 +67,8 @@ public class Reasoner {
 		// Read a fake tuple from the dummy layer
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-		a.setParamInt(QueryInputLayer.INPUT_LAYER, Consts.DUMMY_INPUT_LAYER_ID);
-		a.setParamWritable(QueryInputLayer.TUPLE, new TupleSerializer(
-				TupleFactory.newTuple()));
+		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 
 		// Start the rule controller that handles the execution of the rules

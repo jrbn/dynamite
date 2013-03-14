@@ -14,12 +14,11 @@ import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
+import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
-import nl.vu.cs.ajira.buckets.TupleSerializer;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
-import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 
@@ -48,15 +47,13 @@ public class RulesController extends Action {
 		// Read everything from the knowledge base
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
 		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
-		c.setParamWritable(
-				ReadFromBtree.TUPLE,
-				new TupleSerializer(TupleFactory.newTuple(new TLong(-1),
-						new TLong(-1), new TLong(-1))));
+		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1),
+				new TLong(-1), new TLong(-1)));
 		actions.add(c);
 
 		// Forward the input to the Map action
 		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.RECONNECT_AFTER_ACTIONS, 4);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 4);
 		actions.add(c);
 
 		// First apply only the rules that use one antecedent
@@ -97,9 +94,8 @@ public class RulesController extends Action {
 
 		// Read a fake triple in input
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-		a.setParamInt(QueryInputLayer.INPUT_LAYER, Consts.DUMMY_INPUT_LAYER_ID);
-		a.setParamWritable(QueryInputLayer.TUPLE, new TupleSerializer(
-				TupleFactory.newTuple()));
+		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 
 		// Launch the schema-only rules in parallel
@@ -130,6 +126,7 @@ public class RulesController extends Action {
 
 		// Launch only-schema rules
 		if (hasDerived) {
+
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 
 			if (ReasoningContext.getInstance().getRuleset()

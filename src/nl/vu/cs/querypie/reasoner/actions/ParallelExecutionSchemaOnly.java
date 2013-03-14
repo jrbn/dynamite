@@ -9,9 +9,8 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
-import nl.vu.cs.ajira.buckets.TupleSerializer;
+import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.data.types.Tuple;
-import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
@@ -33,10 +32,9 @@ public class ParallelExecutionSchemaOnly extends Action {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 
 			ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-			a.setParamInt(QueryInputLayer.INPUT_LAYER,
+			a.setParamInt(QueryInputLayer.I_INPUTLAYER,
 					Consts.DUMMY_INPUT_LAYER_ID);
-			a.setParamWritable(QueryInputLayer.TUPLE, new TupleSerializer(
-					TupleFactory.newTuple()));
+			a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 			actions.add(a);
 
 			a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);

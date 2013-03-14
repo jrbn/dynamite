@@ -23,13 +23,14 @@ public class Ruleset {
 
 		for (Rule r : rules) {
 			// Check if all the antecedents are "schema".
-			if (r.getGenericBodyPatterns() == null) {
+			if (r.getGenericBodyPatterns().length == 0) {
 				schemaOnly.add(r);
 				continue;
 			}
 
 			// If only one antecedent...
-			if (r.getGenericBodyPatterns().length == 1) {
+			if (r.getGenericBodyPatterns().length == 1
+					&& r.getPrecomputedBodyPatterns().length == 0) {
 				oneAntecedent.add(r);
 				continue;
 			}
