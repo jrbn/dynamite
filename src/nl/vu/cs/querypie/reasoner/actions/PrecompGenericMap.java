@@ -73,7 +73,7 @@ public class PrecompGenericMap extends Action {
 			TLong t = (TLong) tuple.get(positions_to_check[m][0]);
 			if (acceptableValues[m].contains(t.getValue())) {
 
-				if (key_positions.length == 1) {
+				if (key_positions[m].length == 1) {
 					oneKey.getArray()[0] = (byte) m;
 					Utils.encodeLong(oneKey.getArray(), 1,
 							((TLong) tuple.get(key_positions[m][0])).getValue());

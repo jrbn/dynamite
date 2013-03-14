@@ -50,6 +50,7 @@ public class PrecompGenericReduce extends Action {
 			// Fill the outputTriple with the constants that come from the head
 			// of the rule
 			Pattern head = rule.getHead();
+			outputTuples[m] = new TLong[3];
 			for (int i = 0; i < 3; ++i) {
 				Term t = head.getTerm(i);
 				if (t.getName() == null) {

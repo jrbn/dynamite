@@ -9,6 +9,7 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.Branch;
+import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
@@ -88,6 +89,21 @@ public class RulesController extends Action {
 
 		// Reduce
 		actions.add(ActionFactory.getActionConf(PrecompGenericReduce.class));
+
+		// Sort the derivation
+		c = ActionFactory.getActionConf(PartitionToNodes.class);
+		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
+		c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+				TLong.class.getName(), TLong.class.getName(),
+				TLong.class.getName());
+		c.setParamBoolean(PartitionToNodes.SORT, true);
+		actions.add(c);
+
+		// Remove the duplicates
+		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+
+		// Write the derivation on the BTree
+		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
 	}
 
 	private void applyRulesSchemaOnly(List<ActionConf> actions) {
@@ -133,6 +149,9 @@ public class RulesController extends Action {
 					.getAllSchemaOnlyRules() != null) {
 				applyRulesSchemaOnly(actions);
 
+				// Reload the schema
+				actions.add(ActionFactory.getActionConf(ReloadSchema.class));
+
 				// Create a branch to process the rules that use generic
 				// patterns
 				List<ActionConf> actions2 = new ArrayList<ActionConf>();
@@ -146,8 +165,15 @@ public class RulesController extends Action {
 				applyRulesWithGenericPatterns(actions);
 			}
 
+			// Collect the derivations flags on one node
+			ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
+			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
+			actions.add(c);
+
 			// Add the controller
-			ActionConf c = ActionFactory.getActionConf(RulesController.class);
+			c = ActionFactory.getActionConf(RulesController.class);
 			actions.add(c);
 
 			// Create the branch

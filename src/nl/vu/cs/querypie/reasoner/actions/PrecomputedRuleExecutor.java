@@ -29,6 +29,7 @@ public class PrecomputedRuleExecutor extends Action {
 			ActionOutput actionOutput) throws Exception {
 		Rule rule = ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules()[getParamInt(RULE_ID)];
+		rule.reloadPrecomputation(ReasoningContext.getInstance(), context);
 
 		List<SimpleData[]> results = new ArrayList<SimpleData[]>();
 		for (int i = 0; i < 3; i++) {
