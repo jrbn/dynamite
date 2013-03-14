@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import nl.vu.cs.ajira.data.types.TLong;
+import nl.vu.cs.ajira.data.types.Tuple;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,16 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 		}
 
 		return p;
+	}
+
+	public static final boolean tupleMatchConstants(Tuple tuple,
+			int[] pos_constants, long[] value_constants) {
+		for (int i = 0; i < pos_constants.length; ++i) {
+			TLong t = (TLong) tuple.get(pos_constants[i]);
+			if (t.getValue() != value_constants[i])
+				return false;
+		}
+		return true;
 	}
 
 	public static int[][] getPositionSharedVariables(Pattern p1, Pattern p2) {

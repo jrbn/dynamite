@@ -24,13 +24,15 @@ public class PrecompGenericReduce extends Action {
 	private Tuples[] precompTuples;
 
 	private TLong[][] outputTuples;
+	private int[] counters;
+	private Rule[] rules;
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		// Get the rule
-		Rule[] rules = ReasoningContext.getInstance().getRuleset()
+		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
 
+		counters = new int[rules.length];
 		pos_head_precomps = new int[rules.length][][];
 		pos_gen_precomps = new int[rules.length][][];
 		pos_gen_head = new int[rules.length][][];
@@ -92,6 +94,7 @@ public class PrecompGenericReduce extends Action {
 								.setValue(row[pos_head_precomps[m][i][1]]);
 					}
 					actionOutput.output(outputTuples[m]);
+					counters[m]++;
 				}
 			}
 		}
@@ -105,5 +108,11 @@ public class PrecompGenericReduce extends Action {
 		pos_gen_head = null;
 		precompTuples = null;
 		outputTuples = null;
+		for (int i = 0; i < counters.length; ++i) {
+			if (counters[i] > 0) {
+				context.incrCounter("derivation-rule-" + rules[i].getId(),
+						counters[i]);
+			}
+		}
 	}
 }

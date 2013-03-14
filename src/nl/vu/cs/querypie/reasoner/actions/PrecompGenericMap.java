@@ -17,6 +17,8 @@ public class PrecompGenericMap extends Action {
 
 	private int[][] key_positions;
 	private int[][] positions_to_check;
+	private int[][] pos_constants_to_check;
+	private long[][] value_constants_to_check;
 	private Collection<Long>[] acceptableValues;
 	private Rule[] rules;
 
@@ -33,6 +35,8 @@ public class PrecompGenericMap extends Action {
 		key_positions = new int[rules.length][];
 		positions_to_check = new int[rules.length][];
 		acceptableValues = new Collection[rules.length];
+		pos_constants_to_check = new int[rules.length][];
+		value_constants_to_check = new long[rules.length][];
 
 		for (int m = 0; m < rules.length; ++m) {
 			Rule rule = rules[m];
@@ -62,6 +66,9 @@ public class PrecompGenericMap extends Action {
 			acceptableValues[m] = rule.getPrecomputedTuples().getSortedSet(
 					shared_vars[0][1]);
 
+			pos_constants_to_check[m] = rule
+					.getPositionsConstantGenericPattern();
+			value_constants_to_check[m] = rule.getValueConstantGenericPattern();
 		}
 	}
 
@@ -70,6 +77,14 @@ public class PrecompGenericMap extends Action {
 			ActionOutput actionOutput) throws Exception {
 
 		for (int m = 0; m < rules.length; m++) {
+
+			// Does the input match with the generic pattern?
+			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(
+					tuple, pos_constants_to_check[m],
+					value_constants_to_check[m])) {
+				continue;
+			}
+
 			TLong t = (TLong) tuple.get(positions_to_check[m][0]);
 			if (acceptableValues[m].contains(t.getValue())) {
 
