@@ -5,6 +5,7 @@ import java.util.Collection;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -22,8 +23,9 @@ public class PrecompGenericMap extends Action {
 	private Collection<Long>[] acceptableValues;
 	private Rule[] rules;
 
-	private final TByteArray oneKey = new TByteArray(new byte[9]);
-	private final TByteArray twoKeys = new TByteArray(new byte[17]);
+	private final TByteArray oneKey = new TByteArray(new byte[8]);
+	private final TByteArray twoKeys = new TByteArray(new byte[16]);
+	private final TByte ruleID = new TByte();
 	private final Tuple outputTuple = TupleFactory.newTuple();
 
 	@SuppressWarnings("unchecked")
@@ -86,22 +88,21 @@ public class PrecompGenericMap extends Action {
 			}
 
 			TLong t = (TLong) tuple.get(positions_to_check[m][0]);
-			if (acceptableValues[m].contains(t.getValue())) {
 
+			if (acceptableValues[m].contains(t.getValue())) {
+				ruleID.setValue(m);
 				if (key_positions[m].length == 1) {
-					oneKey.getArray()[0] = (byte) m;
-					Utils.encodeLong(oneKey.getArray(), 1,
+					Utils.encodeLong(oneKey.getArray(), 0,
 							((TLong) tuple.get(key_positions[m][0])).getValue());
-					outputTuple
-							.set(oneKey, tuple.get(positions_to_check[m][0]));
+					outputTuple.set(oneKey, ruleID,
+							tuple.get(positions_to_check[m][0]));
 
 				} else { // Two keys
-					twoKeys.getArray()[0] = (byte) m;
-					Utils.encodeLong(twoKeys.getArray(), 1,
+					Utils.encodeLong(twoKeys.getArray(), 0,
 							((TLong) tuple.get(key_positions[m][0])).getValue());
-					Utils.encodeLong(twoKeys.getArray(), 9,
+					Utils.encodeLong(twoKeys.getArray(), 8,
 							((TLong) tuple.get(key_positions[m][1])).getValue());
-					outputTuple.set(twoKeys,
+					outputTuple.set(twoKeys, ruleID,
 							tuple.get(positions_to_check[m][0]));
 				}
 				actionOutput.output(outputTuple);

@@ -17,6 +17,7 @@ import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
+import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -83,7 +84,7 @@ public class RulesController extends Action {
 		c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
-				TLong.class.getName());
+				TByte.class.getName(), TLong.class.getName());
 		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
 		actions.add(c);
 
