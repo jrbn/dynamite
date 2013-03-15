@@ -55,7 +55,7 @@ public class RulesController extends Action {
 
 		// Forward the input to the Map action
 		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 4);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 2);
 		actions.add(c);
 
 		// First apply only the rules that use one antecedent
@@ -64,20 +64,20 @@ public class RulesController extends Action {
 
 		// Forward derivation to sorting phase
 		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 6);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 4);
 		actions.add(c);
 
-		// Sort the derivation
-		c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
-		c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
-		c.setParamBoolean(PartitionToNodes.SORT, true);
-		actions.add(c);
-
-		// Remove the duplicates
-		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+		// // Sort the derivation
+		// c = ActionFactory.getActionConf(PartitionToNodes.class);
+		// c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
+		// c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+		// TLong.class.getName(), TLong.class.getName(),
+		// TLong.class.getName());
+		// c.setParamBoolean(PartitionToNodes.SORT, true);
+		// actions.add(c);
+		//
+		// // Remove the duplicates
+		// actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 
 		// // Write the derivation on the BTree
 		// actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
