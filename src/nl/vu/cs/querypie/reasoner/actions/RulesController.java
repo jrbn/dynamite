@@ -62,6 +62,11 @@ public class RulesController extends Action {
 		c = ActionFactory.getActionConf(GenericRuleExecutor.class);
 		actions.add(c);
 
+		// Forward derivation to sorting phase
+		c = ActionFactory.getActionConf(Split.class);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 6);
+		actions.add(c);
+
 		// Sort the derivation
 		c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
@@ -74,8 +79,8 @@ public class RulesController extends Action {
 		// Remove the duplicates
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 
-		// Write the derivation on the BTree
-		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
+		// // Write the derivation on the BTree
+		// actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
 
 		// Map
 		actions.add(ActionFactory.getActionConf(PrecompGenericMap.class));

@@ -86,14 +86,12 @@ public class PrecompGenericReduce extends Action {
 		for (Tuple t : values) {
 			TByte rule = (TByte) t.get(0);
 			TLong elementToJoin = (TLong) t.get(1);
-			if (rule.getValue() == currentRule) {
-				if (currentJoinValue == elementToJoin.getValue()) {
-					continue;
-				} else {
-					currentJoinValue = elementToJoin.getValue();
-				}
+			if (rule.getValue() == currentRule
+					&& currentJoinValue == elementToJoin.getValue()) {
+				continue;
 			} else {
 				currentRule = rule.getValue();
+				currentJoinValue = elementToJoin.getValue();
 				// First copy the "key" in the output triple.
 				for (int i = 0; i < pos_gen_head[currentRule].length; ++i) {
 					outputTuples[currentRule][pos_gen_head[currentRule][i][1]]
