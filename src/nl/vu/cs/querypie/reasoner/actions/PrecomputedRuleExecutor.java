@@ -17,66 +17,77 @@ import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
 public class PrecomputedRuleExecutor extends Action {
 
-	public static final int RULE_ID = 0;
+  public static final int RULE_ID = 0;
+  Rule rule;
+  int counter;
 
-	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(RULE_ID, "rule", null, true);
-	}
+  @Override
+  public void registerActionParameters(ActionConf conf) {
+    conf.registerParameter(RULE_ID, "rule", null, true);
+  }
 
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		Rule rule = ReasoningContext.getInstance().getRuleset()
-				.getAllSchemaOnlyRules()[getParamInt(RULE_ID)];
-		rule.reloadPrecomputation(ReasoningContext.getInstance(), context);
+  @Override
+  public void startProcess(ActionContext context) {
+    int ruleId = getParamInt(RULE_ID);
+    rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules()[ruleId];
+    rule.reloadPrecomputation(ReasoningContext.getInstance(), context);
+    counter = 0;
+  }
 
-		List<SimpleData[]> results = new ArrayList<SimpleData[]>();
-		for (int i = 0; i < 3; i++) {
-			Term term = rule.getHead().getTerm(i);
-			// The value is constant
-			if (term.getName() != null) {
-				TLong value = new TLong(term.getValue());
-				if (results.isEmpty()) {
-					SimpleData[] result = new SimpleData[3];
-					result[i] = value;
-					results.add(result);
-				} else {
-					for (SimpleData[] result : results) {
-						result[i] = value;
-					}
-				}
-			}
-			// The value derives from a variable
-			else {
-				Tuples tuples = rule.getPrecomputedTuples();
-				if (results.isEmpty()) {
-					for (Long value : tuples.getSortedSet(i)) {
-						SimpleData[] result = new SimpleData[3];
-						result[i] = new TLong(value);
-						results.add(result);
-					}
-				} else {
-					List<SimpleData[]> newResults = new ArrayList<SimpleData[]>();
-					for (SimpleData[] result : results) {
-						for (Long value : tuples.getSortedSet(i)) {
-							SimpleData[] newResult = new SimpleData[3];
-							for (int j = 0; j < i; j++) {
-								newResult[j] = result[j];
-							}
-							newResult[i] = new TLong(value);
-							newResults.add(newResult);
-						}
-					}
-					results = newResults;
-					newResults = null;
-				}
-			}
-		}
+  @Override
+  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<SimpleData[]> results = new ArrayList<SimpleData[]>();
+    for (int i = 0; i < 3; i++) {
+      Term term = rule.getHead().getTerm(i);
+      // The value is constant
+      if (term.getName() != null) {
+        TLong value = new TLong(term.getValue());
+        if (results.isEmpty()) {
+          SimpleData[] result = new SimpleData[3];
+          result[i] = value;
+          results.add(result);
+        } else {
+          for (SimpleData[] result : results) {
+            result[i] = value;
+          }
+        }
+      }
+      // The value derives from a variable
+      else {
+        Tuples tuples = rule.getPrecomputedTuples();
+        if (results.isEmpty()) {
+          for (Long value : tuples.getSortedSet(i)) {
+            SimpleData[] result = new SimpleData[3];
+            result[i] = new TLong(value);
+            results.add(result);
+          }
+        } else {
+          List<SimpleData[]> newResults = new ArrayList<SimpleData[]>();
+          for (SimpleData[] result : results) {
+            for (Long value : tuples.getSortedSet(i)) {
+              SimpleData[] newResult = new SimpleData[3];
+              for (int j = 0; j < i; j++) {
+                newResult[j] = result[j];
+              }
+              newResult[i] = new TLong(value);
+              newResults.add(newResult);
+            }
+          }
+          results = newResults;
+          newResults = null;
+        }
+      }
+    }
 
-		for (SimpleData[] result : results) {
-			actionOutput.output(result);
-		}
-	}
+    for (SimpleData[] result : results) {
+      actionOutput.output(result);
+      counter++;
+    }
+  }
+
+  @Override
+  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+    context.incrCounter("derivation-rule-" + rule.getId(), counter);
+  }
 
 }
