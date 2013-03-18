@@ -27,6 +27,8 @@ public class GenericRuleExecutor extends Action {
   public void startProcess(ActionContext context) throws Exception {
     rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
     counters = new int[rules.length];
+    pos_constants_to_check = new int[rules.length][];
+    value_constants_to_check = new long[rules.length][];
     for (int r = 0; r < rules.length; ++r) {
       // Extract the rule
       Rule rule = rules[r];
