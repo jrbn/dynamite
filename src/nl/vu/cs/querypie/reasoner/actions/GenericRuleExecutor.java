@@ -16,58 +16,62 @@ import nl.vu.cs.querypie.reasoner.support.Term;
 
 public class GenericRuleExecutor extends Action {
 
-	List<int[][]> positions_gen_head = new ArrayList<int[][]>();
-	List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
-	int[] counters;
-	Rule[] rules;
+  List<int[][]> positions_gen_head = new ArrayList<int[][]>();
+  List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
+  private int[][] pos_constants_to_check;
+  private long[][] value_constants_to_check;
+  int[] counters;
+  Rule[] rules;
 
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		rules = ReasoningContext.getInstance().getRuleset()
-				.getAllRulesWithOneAntecedent();
-		counters = new int[rules.length];
-		for (int r = 0; r < rules.length; ++r) {
-			// Extract the rule
-			Rule rule = rules[r];
-			// Determines positions of variables
-			int[][] pos_gen_head = rule.getSharedVariablesGen_Head();
-			positions_gen_head.add(pos_gen_head);
-			// Prepares the known parts of the output triples
-			Pattern head = rule.getHead();
-			SimpleData[] outputTriple = new SimpleData[3];
-			for (int i = 0; i < 3; i++) {
-				Term t = head.getTerm(i);
-				if (t.getName() == null) {
-					outputTriple[i] = new TLong(t.getValue());
-				}
-			}
-			outputTriples.add(outputTriple);
-		}
-	}
+  @Override
+  public void startProcess(ActionContext context) throws Exception {
+    rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
+    counters = new int[rules.length];
+    for (int r = 0; r < rules.length; ++r) {
+      // Extract the rule
+      Rule rule = rules[r];
+      // Determines positions of variables
+      int[][] pos_gen_head = rule.getSharedVariablesGen_Head();
+      positions_gen_head.add(pos_gen_head);
+      // Determines the positions and values of constants
+      pos_constants_to_check[r] = rule.getPositionsConstantGenericPattern();
+      value_constants_to_check[r] = rule.getValueConstantGenericPattern();
+      // Prepares the known parts of the output triples
+      Pattern head = rule.getHead();
+      SimpleData[] outputTriple = new SimpleData[3];
+      for (int i = 0; i < 3; i++) {
+        Term t = head.getTerm(i);
+        if (t.getName() == null) {
+          outputTriple[i] = new TLong(t.getValue());
+        }
+      }
+      outputTriples.add(outputTriple);
+    }
+  }
 
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		// Bind the variables in the output triple
-		for (int r = 0; r < outputTriples.size(); r++) {
-			int[][] pos_gen_head = positions_gen_head.get(r);
-			SimpleData[] outputTriple = outputTriples.get(r);
-			for (int i = 0; i < pos_gen_head.length; ++i) {
-				outputTriple[pos_gen_head[i][1]] = tuple
-						.get(pos_gen_head[i][0]);
-			}
-			actionOutput.output(outputTriple);
-			counters[r]++;
-		}
-	}
+  @Override
+  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+    // Bind the variables in the output triple
+    for (int r = 0; r < outputTriples.size(); r++) {
+      // Does the input match with the generic pattern?
+      if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
+        continue;
+      }
+      int[][] pos_gen_head = positions_gen_head.get(r);
+      SimpleData[] outputTriple = outputTriples.get(r);
+      for (int i = 0; i < pos_gen_head.length; ++i) {
+        outputTriple[pos_gen_head[i][1]] = tuple.get(pos_gen_head[i][0]);
+      }
+      actionOutput.output(outputTriple);
+      counters[r]++;
+    }
+  }
 
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		for (int i = 0; i < counters.length; ++i) {
-			context.incrCounter("derivation-rule-" + rules[i].getId(),
-					counters[i]);
-		}
-	}
+  @Override
+  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+    for (int i = 0; i < counters.length; ++i) {
+      context.incrCounter("derivation-rule-" + rules[i].getId(), counters[i]);
+    }
+  }
 
 }
