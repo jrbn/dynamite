@@ -13,6 +13,7 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.support.Pattern;
 import nl.vu.cs.querypie.reasoner.support.Term;
+import nl.vu.cs.querypie.reasoner.support.Utils;
 
 public class GenericRuleExecutor extends Action {
 
@@ -56,7 +57,7 @@ public class GenericRuleExecutor extends Action {
     // Bind the variables in the output triple
     for (int r = 0; r < outputTriples.size(); r++) {
       // Does the input match with the generic pattern?
-      if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
+      if (!Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
         continue;
       }
       int[][] pos_gen_head = positions_gen_head.get(r);

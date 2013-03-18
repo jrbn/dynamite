@@ -1,7 +1,10 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -13,7 +16,6 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.support.Term;
-import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
 
 public class PrecomputedRuleExecutor extends Action {
 
@@ -37,44 +39,43 @@ public class PrecomputedRuleExecutor extends Action {
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
     List<SimpleData[]> results = new ArrayList<SimpleData[]>();
+    Map<Integer, Collection<Long>> values = new HashMap<Integer, Collection<Long>>();
+    Map<Integer, Long> constants = new HashMap<Integer, Long>();
+
+    int variableId = 0;
     for (int i = 0; i < 3; i++) {
       Term term = rule.getHead().getTerm(i);
-      // The value is constant
-      if (term.getName() != null) {
-        TLong value = new TLong(term.getValue());
-        if (results.isEmpty()) {
-          SimpleData[] result = new SimpleData[3];
-          result[i] = value;
-          results.add(result);
-        } else {
-          for (SimpleData[] result : results) {
-            result[i] = value;
-          }
-        }
+      if (term.getName() == null) {
+        constants.put(i, term.getValue());
+      } else {
+        Collection<Long> sortedSet = rule.getPrecomputedTuples().getSortedSet(variableId++);
+        values.put(i, sortedSet);
       }
-      // The value derives from a variable
-      else {
-        Tuples tuples = rule.getPrecomputedTuples();
-        if (results.isEmpty()) {
-          for (Long value : tuples.getSortedSet(i)) {
-            SimpleData[] result = new SimpleData[3];
-            result[i] = new TLong(value);
-            results.add(result);
-          }
-        } else {
-          List<SimpleData[]> newResults = new ArrayList<SimpleData[]>();
-          for (SimpleData[] result : results) {
-            for (Long value : tuples.getSortedSet(i)) {
-              SimpleData[] newResult = new SimpleData[3];
-              for (int j = 0; j < i; j++) {
-                newResult[j] = result[j];
-              }
-              newResult[i] = new TLong(value);
-              newResults.add(newResult);
-            }
-          }
-          results = newResults;
-          newResults = null;
+    }
+
+    int numResults = 0;
+    for (Integer key : values.keySet()) {
+      numResults = values.get(key).size();
+      break;
+    }
+
+    for (int i = 0; i < numResults; i++) {
+      SimpleData[] result = new SimpleData[3];
+      results.add(result);
+    }
+
+    for (int i = 0; i < 3; i++) {
+      if (values.containsKey(i)) {
+        int num = 0;
+        for (Long l : values.get(i)) {
+          results.get(num)[i] = new TLong(l);
+          num++;
+        }
+      } else {
+        assert (constants.containsKey(i));
+        Long val = constants.get(i);
+        for (SimpleData[] result : results) {
+          result[i] = new TLong(val);
         }
       }
     }
