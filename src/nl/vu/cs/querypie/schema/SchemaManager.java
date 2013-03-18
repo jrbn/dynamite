@@ -84,8 +84,8 @@ public class SchemaManager {
     for (int i = 1; i < patterns.length; ++i) {
       Map<Integer, String> currentNames = new HashMap<Integer, String>();
       for (int j = 0; j < pos_vars[i - 1].length; j++) {
-        Integer key = pos_vars[0][j];
-        String val = patterns[0].getTerm(key).getName();
+        Integer key = pos_vars[i - 1][j];
+        String val = patterns[i - 1].getTerm(key).getName();
         currentNames.put(key, val);
       }
       Pattern p = patterns[i];
@@ -111,8 +111,8 @@ public class SchemaManager {
       Map<Long, Set<Long>> firstMap = new HashMap<Long, Set<Long>>();
       Map<Long, Set<Long>> secondMap = new HashMap<Long, Set<Long>>();
       for (int j = 0; j < currentResults.length; j += 2) {
-        Long key = currentResults[j];
-        Long val = currentResults[j + 1];
+        Long key = currentResults[j + 1];     // TODO: determine as a function of var1
+        Long val = currentResults[j]; // TODO: determine as a function of var1
         if (firstMap.containsKey(key)) {
           firstMap.get(key).add(val);
         } else {
@@ -122,8 +122,8 @@ public class SchemaManager {
         }
       }
       for (int j = 0; j < tuples[i].length; j += 2) {
-        Long key = tuples[i][j];
-        Long val = tuples[i][j + 1];
+        Long key = tuples[i][j];  // TODO: determine as a function of var2
+        Long val = tuples[i][j + 1];  // TODO: determine as a function of var2
         if (secondMap.containsKey(key)) {
           secondMap.get(key).add(val);
         } else {
@@ -139,7 +139,7 @@ public class SchemaManager {
         if (!secondMap.containsKey(key)) continue;
         for (Long freeVal1 : firstMap.get(key)) {
           for (Long freeVal2 : secondMap.get(key)) {
-            resultList.add(freeVal1);
+            resultList.add(freeVal1); // TODO: order according to head
             resultList.add(freeVal2);
           }
         }
