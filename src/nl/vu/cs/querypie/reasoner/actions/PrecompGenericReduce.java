@@ -16,9 +16,9 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.support.Pattern;
-import nl.vu.cs.querypie.reasoner.support.Term;
-import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
+import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.querypie.storage.Term;
+import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class PrecompGenericReduce extends Action {
 

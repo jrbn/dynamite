@@ -13,9 +13,9 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.querypie.reasoner.support.Pattern;
-import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
+import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

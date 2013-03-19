@@ -11,9 +11,9 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.support.Pattern;
-import nl.vu.cs.querypie.reasoner.support.Term;
 import nl.vu.cs.querypie.reasoner.support.Utils;
+import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
 
