@@ -81,7 +81,9 @@ public class RulesController extends Action {
     // actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
 
     // Map
-    actions.add(ActionFactory.getActionConf(PrecompGenericMap.class));
+    c = ActionFactory.getActionConf(PrecompGenericMap.class);
+    c.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, false); // TODO: set flag
+    actions.add(c);
 
     // Group by
     c = ActionFactory.getActionConf(GroupBy.class);
@@ -91,7 +93,9 @@ public class RulesController extends Action {
     actions.add(c);
 
     // Reduce
-    actions.add(ActionFactory.getActionConf(PrecompGenericReduce.class));
+    c = ActionFactory.getActionConf(PrecompGenericReduce.class);
+    c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, false); // TODO: set flag
+    actions.add(c);
 
     // Sort the derivation
     c = ActionFactory.getActionConf(PartitionToNodes.class);
@@ -144,7 +148,7 @@ public class RulesController extends Action {
 
         // Reload the schema
         ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
-        c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, false);
+        c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, false);  // TODO: set flag
         actions.add(c);
 
         // Create a branch to process the rules that use generic patterns

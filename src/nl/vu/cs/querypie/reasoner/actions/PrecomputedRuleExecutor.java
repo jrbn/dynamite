@@ -16,14 +16,16 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Term;
+import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class PrecomputedRuleExecutor extends Action {
 
   public static final int RULE_ID = 0;
   public static final int INCREMENTAL_FLAG = 1;
 
-  Rule rule;
-  int counter;
+  private Rule rule;
+  private int counter;
+  private boolean incrementalFlag;
 
   @Override
   public void registerActionParameters(ActionConf conf) {
@@ -34,7 +36,7 @@ public class PrecomputedRuleExecutor extends Action {
   @Override
   public void startProcess(ActionContext context) {
     int ruleId = getParamInt(RULE_ID);
-    boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+    incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
     rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules()[ruleId];
     rule.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
     counter = 0;
@@ -52,7 +54,8 @@ public class PrecomputedRuleExecutor extends Action {
       if (term.getName() == null) {
         constants.put(i, term.getValue());
       } else {
-        Collection<Long> sortedSet = rule.getPrecomputedTuples().getSortedSet(variableId++);
+        Tuples tuples = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
+        Collection<Long> sortedSet = tuples.getSortedSet(variableId++);
         values.put(i, sortedSet);
       }
     }

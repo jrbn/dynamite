@@ -116,7 +116,7 @@ public class SchemaManager {
   }
 
   private Set<Tuple> retrieveAllFlaggedTuplesForPattern(Pattern p, ActionContext context) {
-    InMemoryTupleSet inMemorySet = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_SET_KEY);
+    InMemoryTupleSet inMemorySet = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_SCHEMA_SET_KEY);
     Set<Tuple> result = null;
     try {
       result = inMemorySet.getSubset(p);

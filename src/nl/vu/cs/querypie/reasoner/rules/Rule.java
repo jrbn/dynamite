@@ -20,7 +20,8 @@ public class Rule {
   private final Pattern[] genericPatterns;
 
   // Contains the set of precomputed triples
-  private Tuples precomputedTuples = null;
+  private Tuples allPrecomputedTuples = null;
+  private Tuples flaggedPrecomputedTuples = null;
   private Collection<String> precomputedSignatures = null;
 
   // Positions shared variables in the first generic pattern that are used in
@@ -87,15 +88,25 @@ public class Rule {
     return pos_head_precomp;
   }
 
-  public Tuples getPrecomputedTuples() {
-    return precomputedTuples;
+  public Tuples getAllPrecomputedTuples() {
+    return allPrecomputedTuples;
+  }
+
+  public Tuples getFlaggedPrecomputedTuples() {
+    return flaggedPrecomputedTuples;
   }
 
   public void reloadPrecomputation(ReasoningContext c, ActionContext context, boolean flaggedOnly) {
-    if (precomputedPatterns != null && precomputedPatterns.length > 0) try {
-      precomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, flaggedOnly);
-    } catch (Exception e) {
-      e.printStackTrace();
+    if (precomputedPatterns != null && precomputedPatterns.length > 0) {
+      try {
+        if (flaggedOnly) {
+          flaggedPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, flaggedOnly);
+        } else {
+          allPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, flaggedOnly);
+        }
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
   }
 
