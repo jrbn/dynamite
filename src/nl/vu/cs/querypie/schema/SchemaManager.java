@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.data.types.SimpleData;
@@ -44,13 +46,14 @@ public class SchemaManager {
     if (patterns.length == 1) {
       Pattern p = patterns[0];
       Set<Tuple> tuples = flaggedOnly ? retrieveAllFlaggedTuplesForPattern(p, context) : retrieveAllTuplesForPattern(p, context);
-      return generateTuples(tuples, variablesPositions.get(0).values());
+      SortedSet<Integer> variablesPositionsSet = new TreeSet<Integer>(variablesPositions.get(0).values());
+      return generateTuples(tuples, variablesPositionsSet);
     } else {
       Pattern p1 = patterns[0];
       Pattern p2 = patterns[1];
       Set<Tuple> allTuples1 = retrieveAllTuplesForPattern(p1, context);
       Set<Tuple> allTuples2 = retrieveAllTuplesForPattern(p2, context);
-      Collection<Integer> resultVariablesPositions = new ArrayList<Integer>();
+      SortedSet<Integer> resultVariablesPositions = new TreeSet<Integer>();
       resultVariablesPositions.add(0);
       resultVariablesPositions.add(1);
       if (flaggedOnly) {
@@ -92,13 +95,9 @@ public class SchemaManager {
   private Set<Tuple> retrieveAllTuplesForPattern(Pattern p, ActionContext context) {
     Set<Tuple> tuples = new HashSet<Tuple>();
     TLong[] query = new TLong[3];
-    // Get the triples
-    int nvars = 0;
-    int[] posToCopy = new int[3];
     for (int j = 0; j < 3; ++j) {
       if (p.getTerm(j).getName() != null) {
         query[j] = new TLong(-1);
-        posToCopy[nvars++] = j;
       } else {
         query[j] = new TLong(p.getTerm(j).getValue());
       }
@@ -176,7 +175,7 @@ public class SchemaManager {
     return result;
   }
 
-  private Tuples generateTuples(Set<Tuple> inputTuples, Collection<Integer> variablesPositions) {
+  private Tuples generateTuples(Set<Tuple> inputTuples, SortedSet<Integer> variablesPositions) {
     Collection<Long> resultList = new ArrayList<Long>();
     for (Tuple t : inputTuples) {
       for (Integer pos : variablesPositions) {
