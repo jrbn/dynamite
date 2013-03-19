@@ -31,7 +31,6 @@ public class PrecompGenericMap extends Action {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-
 		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
 		key_positions = new int[rules.length][];
@@ -67,7 +66,6 @@ public class PrecompGenericMap extends Action {
 
 			acceptableValues[m] = rule.getPrecomputedTuples().getSortedSet(
 					shared_vars[0][1]);
-
 			pos_constants_to_check[m] = rule
 					.getPositionsConstantGenericPattern();
 			value_constants_to_check[m] = rule.getValueConstantGenericPattern();

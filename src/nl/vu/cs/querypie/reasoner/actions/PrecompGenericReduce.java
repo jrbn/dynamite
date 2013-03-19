@@ -16,9 +16,9 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.support.Pattern;
-import nl.vu.cs.querypie.reasoner.support.Term;
-import nl.vu.cs.querypie.reasoner.support.sets.Tuples;
+import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.querypie.storage.Term;
+import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class PrecompGenericReduce extends Action {
 
@@ -30,7 +30,7 @@ public class PrecompGenericReduce extends Action {
 	private TLong[][] outputTuples;
 	private int[] counters;
 	private Rule[] rules;
-	private Set<Tuple> duplicates = new HashSet<Tuple>();
+	private final Set<Tuple> duplicates = new HashSet<Tuple>();
 	private Tuple supportTuple = TupleFactory.newTuple();
 
 	@Override
@@ -72,7 +72,6 @@ public class PrecompGenericReduce extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-
 		duplicates.clear();
 		TByteArray key = (TByteArray) tuple.get(0);
 
@@ -108,7 +107,6 @@ public class PrecompGenericReduce extends Action {
 						outputTuples[currentRule][pos_head_precomps[currentRule][i][0]]
 								.setValue(row[pos_head_precomps[currentRule][i][1]]);
 					}
-
 					supportTuple.set(outputTuples[currentRule]);
 					if (!duplicates.contains(supportTuple)) {
 						duplicates.add(supportTuple);
