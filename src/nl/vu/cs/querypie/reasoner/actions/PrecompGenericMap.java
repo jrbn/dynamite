@@ -77,7 +77,6 @@ public class PrecompGenericMap extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-
 		for (int m = 0; m < rules.length; m++) {
 
 			// Does the input match with the generic pattern?
