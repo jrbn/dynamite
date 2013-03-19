@@ -20,19 +20,23 @@ import nl.vu.cs.querypie.storage.Term;
 public class PrecomputedRuleExecutor extends Action {
 
   public static final int RULE_ID = 0;
+  public static final int INCREMENTAL_FLAG = 1;
+
   Rule rule;
   int counter;
 
   @Override
   public void registerActionParameters(ActionConf conf) {
     conf.registerParameter(RULE_ID, "rule", null, true);
+    conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, true);
   }
 
   @Override
   public void startProcess(ActionContext context) {
     int ruleId = getParamInt(RULE_ID);
+    boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
     rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules()[ruleId];
-    rule.reloadPrecomputation(ReasoningContext.getInstance(), context);
+    rule.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
     counter = 0;
   }
 

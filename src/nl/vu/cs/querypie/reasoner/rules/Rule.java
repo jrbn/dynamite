@@ -91,9 +91,9 @@ public class Rule {
     return precomputedTuples;
   }
 
-  public void reloadPrecomputation(ReasoningContext c, ActionContext context) {
+  public void reloadPrecomputation(ReasoningContext c, ActionContext context, boolean flaggedOnly) {
     if (precomputedPatterns != null && precomputedPatterns.length > 0) try {
-      precomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context);
+      precomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, flaggedOnly);
     } catch (Exception e) {
       e.printStackTrace();
     }

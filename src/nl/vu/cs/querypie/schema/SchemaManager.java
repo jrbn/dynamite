@@ -32,7 +32,7 @@ public class SchemaManager {
     this.kb = kb;
   }
 
-  public Tuples getTuples(Pattern[] patterns, ActionContext context) throws Exception {
+  public Tuples getTuples(Pattern[] patterns, ActionContext context, boolean flaggedOnly) throws Exception {
     // Retrieve the triples for each pattern
     long[][] tuples = new long[patterns.length][];
     int[][] pos_vars = new int[patterns.length][];
