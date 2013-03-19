@@ -20,7 +20,7 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.querypie.storage.inmemory.InMemorySet;
+import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 import org.slf4j.Logger;
@@ -116,9 +116,14 @@ public class SchemaManager {
   }
 
   private Set<Tuple> retrieveAllFlaggedTuplesForPattern(Pattern p, ActionContext context) {
-    @SuppressWarnings("unchecked")
-    InMemorySet<Tuple> inMemorySet = (InMemorySet<Tuple>) context.getObjectFromCache(Consts.IN_MEMORY_SET_KEY);
-    return inMemorySet.getSubset(p);
+    InMemoryTupleSet inMemorySet = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_SET_KEY);
+    Set<Tuple> result = null;
+    try {
+      result = inMemorySet.getSubset(p);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return result;
   }
 
   private Set<Tuple> joinSets(Map<String, Integer> var1, Set<Tuple> t1, Map<String, Integer> var2, Set<Tuple> t2) {
