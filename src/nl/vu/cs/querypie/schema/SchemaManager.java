@@ -1,7 +1,7 @@
 package nl.vu.cs.querypie.schema;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,12 +9,16 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
+import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.querypie.storage.inmemory.InMemorySet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 import org.slf4j.Logger;
@@ -33,143 +37,176 @@ public class SchemaManager {
   }
 
   public Tuples getTuples(Pattern[] patterns, ActionContext context, boolean flaggedOnly) throws Exception {
-    // Retrieve the triples for each pattern
-    long[][] tuples = new long[patterns.length][];
-    int[][] pos_vars = new int[patterns.length][];
-
-    TLong[] query = new TLong[3];
-    for (int i = 0; i < patterns.length; ++i) {
-      Pattern p = patterns[i];
-      // Get the triples
-      int nvars = 0;
-      int[] posToCopy = new int[3];
-      for (int j = 0; j < 3; ++j) {
-        if (p.getTerm(j).getName() != null) {
-          query[j] = new TLong(-1);
-          posToCopy[nvars++] = j;
-        } else {
-          query[j] = new TLong(p.getTerm(j).getValue());
-        }
-      }
-      pos_vars[i] = Arrays.copyOf(posToCopy, nvars);
-      Tuple t = TupleFactory.newTuple(query);
-      TupleIterator itr = kb.getIterator(t, context);
-
-      // Copy the bindings on a new data structure
-      ArrayList<Long> rawValues = new ArrayList<Long>();
-      try {
-        while (itr != null && itr.isReady() && itr.nextTuple()) {
-          itr.getTuple(t);
-          for (int m = 0; m < nvars; ++m) {
-            Long val = ((TLong) t.get(posToCopy[m])).getValue();
-            rawValues.add(val);
-          }
-        }
-      } catch (Exception e) {
-        log.error("Error", e);
-      }
-      tuples[i] = Longs.toArray(rawValues);
+    List<Map<String, Integer>> variablesPositions = retrieveVariablesFromPatterns(patterns);
+    if (!isCurrentlySupported(variablesPositions)) {
+      throw new Exception("Currently not implemented");
     }
-
     if (patterns.length == 1) {
-      Tuples output = new Tuples(pos_vars[0].length, tuples[0]);
-      return output;
+      Pattern p = patterns[0];
+      Set<Tuple> tuples = flaggedOnly ? retrieveAllFlaggedTuplesForPattern(p, context) : retrieveAllTuplesForPattern(p, context);
+      return generateTuples(tuples, variablesPositions.get(0).values());
+    } else {
+      Pattern p1 = patterns[0];
+      Pattern p2 = patterns[1];
+      Set<Tuple> allTuples1 = retrieveAllTuplesForPattern(p1, context);
+      Set<Tuple> allTuples2 = retrieveAllTuplesForPattern(p2, context);
+      Collection<Integer> resultVariablesPositions = new ArrayList<Integer>();
+      resultVariablesPositions.add(0);
+      resultVariablesPositions.add(1);
+      if (flaggedOnly) {
+        Set<Tuple> flaggedTuples1 = retrieveAllFlaggedTuplesForPattern(p1, context);
+        Set<Tuple> flaggedTuples2 = retrieveAllFlaggedTuplesForPattern(p2, context);
+        Set<Tuple> result1 = joinSets(variablesPositions.get(0), flaggedTuples1, variablesPositions.get(1), allTuples2);
+        Set<Tuple> result2 = joinSets(variablesPositions.get(0), allTuples1, variablesPositions.get(1), flaggedTuples2);
+        result1.addAll(result2);
+        return generateTuples(result1, resultVariablesPositions);
+      } else {
+        allTuples1.addAll(allTuples2);
+        return generateTuples(allTuples1, resultVariablesPositions);
+      }
     }
-
-    if (!isCurrentlySupported(pos_vars, patterns)) throw new Exception("Not Implemented");
-
-    // If more than one pattern, than join the bindings using a hash join
-    long[] currentResults = tuples[0];
-
-    for (int i = 1; i < patterns.length; ++i) {
-      Map<Integer, String> currentNames = new HashMap<Integer, String>();
-      for (int j = 0; j < pos_vars[i - 1].length; j++) {
-        Integer key = pos_vars[i - 1][j];
-        String val = patterns[i - 1].getTerm(key).getName();
-        currentNames.put(key, val);
-      }
-      Pattern p = patterns[i];
-
-      // Retrieve the position of the variables to use for join
-      int var1 = -1;	// Position of the variable to join in pattern1
-      int var2 = -1;	// Position of the variable to join in pattern2
-      outerloop: for (Integer index : currentNames.keySet()) {
-        String name1 = currentNames.get(index);
-        for (int j = 0; j < pos_vars[i].length; ++j) {
-          String name2 = p.getTerm(j).getName();
-          if (name1.equals(name2)) {
-            var1 = index;
-            var2 = j;
-            break outerloop;
-          }
-        }
-      }
-      // Currently we assume that one and only one join condition is specified
-      assert (var1 >= 0 && var2 >= 0);
-
-      // Order tuples according to the joining variable
-      Map<Long, Set<Long>> firstMap = new HashMap<Long, Set<Long>>();
-      Map<Long, Set<Long>> secondMap = new HashMap<Long, Set<Long>>();
-      for (int j = 0; j < currentResults.length; j += 2) {
-        Long key = currentResults[j + 1];     // TODO: determine as a function of var1
-        Long val = currentResults[j]; // TODO: determine as a function of var1
-        if (firstMap.containsKey(key)) {
-          firstMap.get(key).add(val);
-        } else {
-          Set<Long> newSet = new HashSet<Long>();
-          newSet.add(val);
-          firstMap.put(key, newSet);
-        }
-      }
-      for (int j = 0; j < tuples[i].length; j += 2) {
-        Long key = tuples[i][j];  // TODO: determine as a function of var2
-        Long val = tuples[i][j + 1];  // TODO: determine as a function of var2
-        if (secondMap.containsKey(key)) {
-          secondMap.get(key).add(val);
-        } else {
-          Set<Long> newSet = new HashSet<Long>();
-          newSet.add(val);
-          secondMap.put(key, newSet);
-        }
-      }
-
-      // Execute the join
-      List<Long> resultList = new ArrayList<Long>();
-      for (Long key : firstMap.keySet()) {
-        if (!secondMap.containsKey(key)) continue;
-        for (Long freeVal1 : firstMap.get(key)) {
-          for (Long freeVal2 : secondMap.get(key)) {
-            resultList.add(freeVal1); // TODO: order according to head
-            resultList.add(freeVal2);
-          }
-        }
-      }
-
-      // Update current results
-      currentResults = Longs.toArray(resultList);
-    }
-
-    return new Tuples(2, currentResults);
   }
 
-  private boolean isCurrentlySupported(int[][] pos_vars, Pattern[] patterns) {
-    for (int i = 0; i < pos_vars.length; i++) {
-      if (pos_vars[i].length != 2) return false;
+  private List<Map<String, Integer>> retrieveVariablesFromPatterns(Pattern patterns[]) {
+    List<Map<String, Integer>> variablesPositions = new ArrayList<Map<String, Integer>>();
+    for (int i = 0; i < patterns.length; ++i) {
+      Pattern p = patterns[i];
+      Map<String, Integer> map = retrieveVariablesFromPatter(p);
+      variablesPositions.add(map);
     }
-    for (int i = 0; i < patterns.length - 1; i++) {
-      String p1Name1 = patterns[i].getTerm(pos_vars[i][0]).getName();
-      String p1Name2 = patterns[i].getTerm(pos_vars[i][1]).getName();
-      if (p1Name1.equals(p1Name2)) return false;
-      String p2Name1 = patterns[i + 1].getTerm(pos_vars[i + 1][0]).getName();
-      String p2Name2 = patterns[i + 1].getTerm(pos_vars[i + 1][1]).getName();
-      if (p2Name1.equals(p2Name2)) return false;
+    return variablesPositions;
+  }
+
+  private Map<String, Integer> retrieveVariablesFromPatter(Pattern p) {
+    Map<String, Integer> variables = new HashMap<String, Integer>();
+    for (int i = 0; i < 3; i++) {
+      Term term = p.getTerm(i);
+      String name = term.getName();
+      if (name != null) {
+        variables.put(name, i);
+      }
+    }
+    return variables;
+  }
+
+  private Set<Tuple> retrieveAllTuplesForPattern(Pattern p, ActionContext context) {
+    Set<Tuple> tuples = new HashSet<Tuple>();
+    TLong[] query = new TLong[3];
+    // Get the triples
+    int nvars = 0;
+    int[] posToCopy = new int[3];
+    for (int j = 0; j < 3; ++j) {
+      if (p.getTerm(j).getName() != null) {
+        query[j] = new TLong(-1);
+        posToCopy[nvars++] = j;
+      } else {
+        query[j] = new TLong(p.getTerm(j).getValue());
+      }
+    }
+    Tuple t = TupleFactory.newTuple(query);
+    TupleIterator itr = kb.getIterator(t, context);
+    try {
+      while (itr != null && itr.isReady() && itr.nextTuple()) {
+        itr.getTuple(t);
+        tuples.add(t);
+      }
+    } catch (Exception e) {
+      log.error("Error", e);
+    }
+    return tuples;
+  }
+
+  private Set<Tuple> retrieveAllFlaggedTuplesForPattern(Pattern p, ActionContext context) {
+    @SuppressWarnings("unchecked")
+    InMemorySet<Tuple> inMemorySet = (InMemorySet<Tuple>) context.getObjectFromCache(Consts.IN_MEMORY_SET_KEY);
+    return inMemorySet.getSubset(p);
+  }
+
+  private Set<Tuple> joinSets(Map<String, Integer> var1, Set<Tuple> t1, Map<String, Integer> var2, Set<Tuple> t2) {
+    // Determine position of variables
+    int joinVar1, joinVar2, freeVar1, freeVar2;
+    joinVar1 = joinVar2 = freeVar1 = freeVar2 = 0;
+    for (String key1 : var1.keySet()) {
+      for (String key2 : var2.keySet()) {
+        if (key1.equals(key2)) {
+          joinVar1 = var1.get(key1);
+          joinVar2 = var2.get(key2);
+        } else {
+          freeVar1 = var1.get(key1);
+          freeVar2 = var2.get(key2);
+        }
+      }
+    }
+    // Order tuples according to the joining variable
+    Map<SimpleData, Set<SimpleData>> firstMap = getJoinMap(t1, joinVar1, freeVar1);
+    Map<SimpleData, Set<SimpleData>> secondMap = getJoinMap(t1, joinVar2, freeVar2);
+    // Execute the join
+    Set<Tuple> result = executeJoin(firstMap, secondMap);
+    return result;
+  }
+
+  private Map<SimpleData, Set<SimpleData>> getJoinMap(Set<Tuple> t, int keyPos, int freePos) {
+    Map<SimpleData, Set<SimpleData>> map = new HashMap<SimpleData, Set<SimpleData>>();
+    for (Tuple tuple : t) {
+      SimpleData key = tuple.get(keyPos);
+      SimpleData value = tuple.get(freePos);
+      if (map.containsKey(key)) {
+        map.get(key).add(value);
+      } else {
+        Set<SimpleData> newSet = new HashSet<SimpleData>();
+        newSet.add(value);
+        map.put(key, newSet);
+      }
+    }
+    return map;
+  }
+
+  // TODO: define the order of free variables in output
+  private Set<Tuple> executeJoin(Map<SimpleData, Set<SimpleData>> first, Map<SimpleData, Set<SimpleData>> second) {
+    Set<Tuple> result = new HashSet<Tuple>();
+    for (SimpleData key : first.keySet()) {
+      if (!second.containsKey(key)) continue;
+      for (SimpleData freeVal1 : first.get(key)) {
+        for (SimpleData freeVal2 : second.get(key)) {
+          Tuple t = TupleFactory.newTuple(freeVal1, freeVal2);
+          result.add(t);
+        }
+      }
+    }
+    return result;
+  }
+
+  private Tuples generateTuples(Set<Tuple> inputTuples, Collection<Integer> variablesPositions) {
+    Collection<Long> resultList = new ArrayList<Long>();
+    for (Tuple t : inputTuples) {
+      for (Integer pos : variablesPositions) {
+        TLong val = (TLong) t.get(pos);
+        Long longVal = val.getValue();
+        resultList.add(longVal);
+      }
+    }
+    return new Tuples(variablesPositions.size(), Longs.toArray(resultList));
+  }
+
+  private boolean isCurrentlySupported(List<Map<String, Integer>> variablesPositions) {
+    if (variablesPositions.size() < 1 || variablesPositions.size() > 2) return false;
+    if (variablesPositions.size() == 1) {
+      return true;
+    } else if (variablesPositions.size() == 2) {
+      Map<String, Integer> pattern1 = variablesPositions.get(0);
+      Map<String, Integer> pattern2 = variablesPositions.get(1);
+      if (pattern1.size() != 2 || pattern2.size() != 2) return false;
       int numConstraints = 0;
-      if (p1Name1.equals(p2Name1)) numConstraints++;
-      if (p1Name1.equals(p2Name2)) numConstraints++;
-      if (p1Name2.equals(p2Name1)) numConstraints++;
-      if (p1Name2.equals(p2Name2)) numConstraints++;
-      if (numConstraints != 1) return false;
+      for (String key1 : pattern1.keySet()) {
+        for (String key2 : pattern2.keySet()) {
+          if (key1.equals(key2)) {
+            numConstraints++;
+          }
+        }
+      }
+      return (numConstraints == 1);
+    } else {
+      return false;
     }
-    return true;
   }
 }
