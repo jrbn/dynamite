@@ -12,6 +12,7 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.reasoner.actions.IncrRulesController;
 import nl.vu.cs.querypie.reasoner.actions.RulesController;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
@@ -25,12 +26,25 @@ public class Reasoner {
 
 	static final Logger log = LoggerFactory.getLogger(Reasoner.class);
 
+	private static String deltaDir = null;
+
+	private static void parseArgs(String[] args) {
+		for (int i = 0; i < args.length; ++i) {
+			if (args[i].equals("--remove")) {
+				deltaDir = args[++i];
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 
 		if (args.length < 2) {
-			System.out.println("Usage: Reasoner <KB_dir> <ruleset>");
+			System.out
+					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove]");
 			return;
 		}
+
+		parseArgs(args);
 
 		// Start the architecture
 		Ajira arch = new Ajira();
@@ -71,9 +85,15 @@ public class Reasoner {
 		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 
-		// Start the rule controller that handles the execution of the rules
-		a = ActionFactory.getActionConf(RulesController.class);
-		actions.add(a);
+		if (deltaDir == null) {
+			// Start the rule controller that handles the execution of the rules
+			a = ActionFactory.getActionConf(RulesController.class);
+			actions.add(a);
+		} else {
+			a = ActionFactory.getActionConf(IncrRulesController.class);
+			a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
+			actions.add(a);
+		}
 
 		// Add actions to the job configuration file
 		job.setActions(actions);
