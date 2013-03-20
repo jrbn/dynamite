@@ -13,6 +13,7 @@ import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
+import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
@@ -114,6 +115,7 @@ public class IncrRulesController extends Action {
 		// Update the delta and go to the next stage
 		c = ActionFactory.getActionConf(IncrRulesController.class);
 		c.setParamInt(I_STAGE, 1);
+		c.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		actions.add(c);
 
 		// Branch
@@ -133,6 +135,10 @@ public class IncrRulesController extends Action {
 
 			// Repeat the process
 			stop0(context, actionOutput);
+		} else {
+			// TODO: Move to the second stage of the algorithm.
+			// 1) Remove everything in Delta
+			// 2) Recompute the remaining derivation
 		}
 
 		currentDelta = null;
@@ -151,22 +157,33 @@ public class IncrRulesController extends Action {
 		}
 	}
 
-	private static InMemoryTupleSet parseTriplesFromFile(String inputFile) {
+	private static InMemoryTupleSet parseTriplesFromFile(String input) {
 		InMemoryTreeTupleSet set = new InMemoryTreeTupleSet();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(
-					inputFile)));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				// Parse the line
-				String[] sTriple = line.split(" ");
-				TLong[] triple = { new TLong(), new TLong(), new TLong() };
-				triple[0].setValue(Long.valueOf(sTriple[0]));
-				triple[1].setValue(Long.valueOf(sTriple[1]));
-				triple[2].setValue(Long.valueOf(sTriple[2]));
-				set.add(TupleFactory.newTuple(triple));
+			List<File> files = new ArrayList<File>();
+
+			File fInput = new File(input);
+			if (fInput.isDirectory()) {
+				for (File child : fInput.listFiles(new FilterHiddenFiles()))
+					files.add(child);
+			} else {
+				files.add(fInput);
 			}
-			reader.close();
+
+			for (File file : files) {
+				BufferedReader reader = new BufferedReader(new FileReader(file));
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					// Parse the line
+					String[] sTriple = line.split(" ");
+					TLong[] triple = { new TLong(), new TLong(), new TLong() };
+					triple[0].setValue(Long.valueOf(sTriple[0]));
+					triple[1].setValue(Long.valueOf(sTriple[1]));
+					triple[2].setValue(Long.valueOf(sTriple[2]));
+					set.add(TupleFactory.newTuple(triple));
+				}
+				reader.close();
+			}
 		} catch (Exception e) {
 			log.error("Error in reading the update", e);
 		}
