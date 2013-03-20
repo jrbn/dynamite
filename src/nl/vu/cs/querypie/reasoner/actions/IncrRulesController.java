@@ -32,8 +32,9 @@ public class IncrRulesController extends Action {
 
 	private String deltaDir = null;
 	private int stage = 0;
-	InMemoryTupleSet currentDelta = null;
-	Tuple currentTuple = null;
+	private InMemoryTupleSet currentDelta = null;
+	private InMemoryTupleSet oldDelta = null;
+	private Tuple currentTuple = null;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -48,8 +49,14 @@ public class IncrRulesController extends Action {
 
 		switch (stage) {
 		case 1:
-			currentDelta = (InMemoryTupleSet) context
-					.getObjectFromCache("delta");
+			oldDelta = (InMemoryTreeTupleSet) context
+					.getObjectFromCache("old_delta");
+			if (oldDelta == null) {
+				oldDelta = (InMemoryTreeTupleSet) context
+						.getObjectFromCache("delta");
+			}
+
+			currentDelta = new InMemoryTreeTupleSet();
 			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 					new TLong());
 			break;
@@ -59,7 +66,7 @@ public class IncrRulesController extends Action {
 	private void process1(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) {
 		tuple.copyTo(currentTuple);
-		if (!currentDelta.contains(currentTuple)) {
+		if (!oldDelta.contains(currentTuple)) {
 			currentDelta.add(currentTuple);
 			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 					new TLong());
@@ -73,6 +80,7 @@ public class IncrRulesController extends Action {
 		switch (stage) {
 		case 1:
 			process1(tuple, context, actionOutput);
+			break;
 		}
 	}
 
@@ -108,13 +116,26 @@ public class IncrRulesController extends Action {
 		c.setParamInt(I_STAGE, 1);
 		actions.add(c);
 
+		// Branch
 		actionOutput.branch(actions);
 	}
 
-	private void stop1(ActionContext context, ActionOutput actionOutput) {
-		currentDelta = null;
+	private void stop1(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		if (currentDelta.size() > 0) {
 
-		// Now time to proceed to the second stage of computation
+			// Copy the new triples in the total container
+			oldDelta.addAll(currentDelta);
+			// Replace the delta with the new triples
+			context.putObjectInCache("delta", currentDelta);
+			// Store the old delta in another data structure
+			context.putObjectInCache("old_delta", oldDelta);
+
+			// Repeat the process
+			stop0(context, actionOutput);
+		}
+
+		currentDelta = null;
 	}
 
 	@Override
