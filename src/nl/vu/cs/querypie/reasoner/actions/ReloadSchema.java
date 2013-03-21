@@ -24,13 +24,9 @@ public class ReloadSchema extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    // Reload all the schema
-    if (context.isPrincipalBranch()) {
-      boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
-      ReasoningContext rc = ReasoningContext.getInstance();
-      for (Rule rule : rc.getRuleset().getAllRulesWithSchemaAndGeneric()) {
-        rule.reloadPrecomputation(rc, context, incrementalFlag);
-      }
-    }
+    if (!context.isPrincipalBranch()) return;
+    boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+    Rule[] rulesWithSchemaAndGeneric = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
+    ActionsHelper.reloadPrecomputationOnRules(rulesWithSchemaAndGeneric, context, incrementalFlag);
   }
 }

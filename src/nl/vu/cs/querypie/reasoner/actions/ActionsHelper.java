@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.Branch;
 import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
@@ -19,6 +20,7 @@ import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
+import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -31,6 +33,12 @@ import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
 public class ActionsHelper {
+
+  static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
+    ActionConf c = ActionFactory.getActionConf(Branch.class);
+    c.setParamWritable(Branch.BRANCH, new WritableListActions(actionsToBranch));
+    actions.add(c);
+  }
 
   static void readEverythingFromBTree(List<ActionConf> actions) {
     ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
@@ -50,6 +58,12 @@ public class ActionsHelper {
     ActionConf c = ActionFactory.getActionConf(Split.class);
     c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAfter);
     actions.add(c);
+  }
+
+  static void reloadPrecomputationOnRules(Rule rules[], ActionContext context, boolean flaggedOnly) {
+    for (Rule r : rules) {
+      r.reloadPrecomputation(ReasoningContext.getInstance(), context, flaggedOnly);
+    }
   }
 
   static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean flaggedOnly) {

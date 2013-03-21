@@ -6,10 +6,7 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.actions.Branch;
-import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 
@@ -51,28 +48,25 @@ public class RulesController extends Action {
     ActionsHelper.runSort(actions);
     ActionsHelper.runRemoveDuplicates(actions);
     ActionsHelper.runWriteDerivationsOnBTree(actions);
+    ActionsHelper.runReloadSchema(actions, false);
+  }
+
+  private void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions) {
+    List<ActionConf> actions2 = new ArrayList<ActionConf>();
+    applyRulesWithGenericPatterns(actions2);
+    ActionsHelper.createBranch(actions, actions2);
   }
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     if (!hasDerived) return;
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    // Launch only-schema rules
     if (ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().length > 0) {
       applyRulesSchemaOnly(actions);
-      ActionsHelper.runReloadSchema(actions, false);
-      // Create a branch to process the rules that use generic patterns
-      List<ActionConf> actions2 = new ArrayList<ActionConf>();
-      applyRulesWithGenericPatterns(actions2);
-      ActionConf c = ActionFactory.getActionConf(Branch.class);
-      c.setParamWritable(Branch.BRANCH, new WritableListActions(actions2));
-      actions.add(c);
-    }
-    // There is no rule only on schema triples
-    else {
+      applyRulesWithGenericPatternsInABranch(actions);
+    } else {
       applyRulesWithGenericPatterns(actions);
     }
-
     ActionsHelper.runCollectToNode(actions);
     ActionsHelper.runRulesController(actions);
     actionOutput.branch(actions);
