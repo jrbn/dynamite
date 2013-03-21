@@ -34,10 +34,10 @@ public class IncrRulesParallelExecution extends Action {
     extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
 
     // Execute all schema rules in parallel (on different branches)
-    executeSchemaOnlyRulesInParallel(rulesOnlySchema, context, actionOutput);
+    ActionsHelper.runPrecomputedRuleExecutorForRulesInParallel(rulesOnlySchema, true, actionOutput);
 
     // FIXME This operation is necessary, but is this the right place to perform it?
-    reloadPrecomputationOnRules(rulesSchemaGenerics, context);
+    ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true);
 
     // Read all the delta triples and apply all the rules with a single antecedent
     executeGenericRules(context, actionOutput);
@@ -87,27 +87,12 @@ public class IncrRulesParallelExecution extends Action {
     }
   }
 
-  private void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context) {
-    for (Rule r : rules) {
-      r.reloadPrecomputation(ReasoningContext.getInstance(), context, true);
-    }
-  }
-
   private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.readFakeTuple(actions);
     ActionsHelper.runReadAllInMemoryTuples(actions);
     ActionsHelper.runGenericRuleExecutor(actions);
     actionOutput.branch(actions);
-  }
-
-  private void executeSchemaOnlyRulesInParallel(List<Integer> ruleIds, ActionContext context, ActionOutput actionOutput) throws Exception {
-    for (Integer id : ruleIds) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      ActionsHelper.readFakeTuple(actions);
-      ActionsHelper.runPrecomputeRuleExectorForRule(id, actions, true);
-      actionOutput.branch(actions);
-    }
   }
 
   private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {

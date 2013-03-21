@@ -1,10 +1,6 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.Action;
-import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -19,13 +15,7 @@ public class ParallelExecutionSchemaOnly extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    // Create n branches, one per every rule
     Rule[] rules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
-    for (int i = 0; i < rules.length; ++i) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      ActionsHelper.readFakeTuple(actions);
-      ActionsHelper.runPrecomputeRuleExectorForRule(i, actions, false);
-      actionOutput.branch(actions);
-    }
+    ActionsHelper.runPrecomputedRuleExecutorForAllRulesInParallel(rules.length, false, actionOutput);
   }
 }

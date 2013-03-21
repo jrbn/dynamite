@@ -1,8 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +7,6 @@ import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
@@ -111,7 +107,12 @@ public class IncrRulesController extends Action {
   }
 
   private void readDeltaFromFileAndPutItInCache(ActionContext context) {
-    InMemoryTupleSet delta = parseTriplesFromFile(deltaDir);
+    InMemoryTupleSet delta = null;
+    try {
+      delta = ActionsHelper.parseTriplesFromFile(deltaDir);
+    } catch (Exception e) {
+      log.error("Error retrieving information from file");
+    }
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, delta);
   }
 
@@ -128,34 +129,4 @@ public class IncrRulesController extends Action {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
   }
 
-  private static InMemoryTupleSet parseTriplesFromFile(String input) {
-    InMemoryTupleSet set = new InMemoryTreeTupleSet();
-    try {
-      List<File> files = new ArrayList<File>();
-      File fInput = new File(input);
-      if (fInput.isDirectory()) {
-        for (File child : fInput.listFiles(new FilterHiddenFiles()))
-          files.add(child);
-      } else {
-        files.add(fInput);
-      }
-      for (File file : files) {
-        BufferedReader reader = new BufferedReader(new FileReader(file));
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-          // Parse the line
-          String[] sTriple = line.split(" ");
-          TLong[] triple = { new TLong(), new TLong(), new TLong() };
-          triple[0].setValue(Long.valueOf(sTriple[0]));
-          triple[1].setValue(Long.valueOf(sTriple[1]));
-          triple[2].setValue(Long.valueOf(sTriple[2]));
-          set.add(TupleFactory.newTuple(triple));
-        }
-        reader.close();
-      }
-    } catch (Exception e) {
-      log.error("Error in reading the update", e);
-    }
-    return set;
-  }
 }

@@ -55,27 +55,27 @@ public class RulesController extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+    if (!hasDerived) return;
+    List<ActionConf> actions = new ArrayList<ActionConf>();
     // Launch only-schema rules
-    if (hasDerived) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      if (ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules() != null && ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().length > 0) {
-        applyRulesSchemaOnly(actions);
-        ActionsHelper.runReloadSchema(actions, false);
-        // Create a branch to process the rules that use generic patterns
-        List<ActionConf> actions2 = new ArrayList<ActionConf>();
-        applyRulesWithGenericPatterns(actions2);
-        ActionConf c = ActionFactory.getActionConf(Branch.class);
-        c.setParamWritable(Branch.BRANCH, new WritableListActions(actions2));
-        actions.add(c);
-      } else {
-        // There is no rule only on schema triples.
-        applyRulesWithGenericPatterns(actions);
-      }
-
-      ActionsHelper.runCollectToNode(actions);
-      ActionsHelper.runRulesController(actions);
-      actionOutput.branch(actions);
+    if (ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().length > 0) {
+      applyRulesSchemaOnly(actions);
+      ActionsHelper.runReloadSchema(actions, false);
+      // Create a branch to process the rules that use generic patterns
+      List<ActionConf> actions2 = new ArrayList<ActionConf>();
+      applyRulesWithGenericPatterns(actions2);
+      ActionConf c = ActionFactory.getActionConf(Branch.class);
+      c.setParamWritable(Branch.BRANCH, new WritableListActions(actions2));
+      actions.add(c);
     }
+    // There is no rule only on schema triples
+    else {
+      applyRulesWithGenericPatterns(actions);
+    }
+
+    ActionsHelper.runCollectToNode(actions);
+    ActionsHelper.runRulesController(actions);
+    actionOutput.branch(actions);
   }
 
 }
