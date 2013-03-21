@@ -9,10 +9,7 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.actions.CollectToNode;
-import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -105,11 +102,11 @@ public class IncrRulesController extends Action {
 
   private void executeOneForwardChainIteration(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    invokeIncrRulesParallelExecution(actions);
-    collectAllDerivationsInOneNode(actions);
-    removeDuplicates(actions);
+    ActionsHelper.runIncrRulesParallelExecution(actions);
+    ActionsHelper.runCollectToNode(actions);
+    ActionsHelper.runRemoveDuplicates(actions);
     updateAndSaveCompleteDelta(context);
-    invokeSelfInStage(1, actions);
+    ActionsHelper.runIncrRulesControllerInStage(1, actions, deltaDir);
     actionOutput.branch(actions);
   }
 
@@ -129,28 +126,6 @@ public class IncrRulesController extends Action {
 
   private void saveCurrentDelta(ActionContext context) {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
-  }
-
-  private void invokeIncrRulesParallelExecution(List<ActionConf> actions) {
-    actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
-  }
-
-  private void invokeSelfInStage(int stage, List<ActionConf> actions) {
-    ActionConf c = ActionFactory.getActionConf(IncrRulesController.class);
-    c.setParamInt(I_STAGE, stage);
-    c.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
-    actions.add(c);
-  }
-
-  private void removeDuplicates(List<ActionConf> actions) {
-    actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
-  }
-
-  private void collectAllDerivationsInOneNode(List<ActionConf> actions) {
-    ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-    c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
-    c.setParamBoolean(CollectToNode.SORT, true);
-    actions.add(c);
   }
 
   private static InMemoryTupleSet parseTriplesFromFile(String input) {

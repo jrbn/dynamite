@@ -8,14 +8,7 @@ import java.util.Map;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.actions.GroupBy;
-import nl.vu.cs.ajira.actions.QueryInputLayer;
-import nl.vu.cs.ajira.actions.support.Query;
-import nl.vu.cs.ajira.data.types.TByte;
-import nl.vu.cs.ajira.data.types.TByteArray;
-import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.common.Consts;
@@ -102,86 +95,37 @@ public class IncrRulesParallelExecution extends Action {
 
   private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    runQueryInputLayer(actions);
-    runReadAllTuplesFromDelta(actions);
-    runGenericRuleExecutor(actions);
+    ActionsHelper.readFakeTuple(actions);
+    ActionsHelper.runReadAllInMemoryTuples(actions);
+    ActionsHelper.runGenericRuleExecutor(actions);
     actionOutput.branch(actions);
   }
 
   private void executeSchemaOnlyRulesInParallel(List<Integer> ruleIds, ActionContext context, ActionOutput actionOutput) throws Exception {
     for (Integer id : ruleIds) {
       List<ActionConf> actions = new ArrayList<ActionConf>();
-      runQueryInputLayer(actions);
-      runPrecomputeRuleExectorForRule(id, actions);
+      ActionsHelper.readFakeTuple(actions);
+      ActionsHelper.runPrecomputeRuleExectorForRule(id, actions, true);
       actionOutput.branch(actions);
     }
   }
 
   private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    runQueryInputLayer(actions);
-    runReadAllTuplesFromDelta(actions);
-    runMap(actions);
-    runGroupBy(actions);
-    runReduce(actions);
+    ActionsHelper.readFakeTuple(actions);
+    ActionsHelper.runReadAllInMemoryTuples(actions);
+    ActionsHelper.runMap(actions, true);
+    ActionsHelper.runGroupBy(actions);
+    ActionsHelper.runReduce(actions, true);
     actionOutput.branch(actions);
   }
 
   private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    runReadFromBTree(pattern, actions);
-    runMap(actions);
-    runGroupBy(actions);
-    runReduce(actions);
+    ActionsHelper.runReadFromBTree(pattern, actions);
+    ActionsHelper.runMap(actions, true);
+    ActionsHelper.runGroupBy(actions);
+    ActionsHelper.runReduce(actions, true);
     actionOutput.branch(actions);
-  }
-
-  private void runQueryInputLayer(List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-    a.setParamInt(QueryInputLayer.I_INPUTLAYER, nl.vu.cs.ajira.utils.Consts.DUMMY_INPUT_LAYER_ID);
-    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
-    actions.add(a);
-  }
-
-  private void runPrecomputeRuleExectorForRule(int ruleId, List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
-    a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
-    a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, true);
-    actions.add(a);
-  }
-
-  private void runReadAllTuplesFromDelta(List<ActionConf> actions) {
-    actions.add(ActionFactory.getActionConf(ReadAllInmemoryTriples.class));
-  }
-
-  private void runGenericRuleExecutor(List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(GenericRuleExecutor.class);
-    actions.add(a);
-  }
-
-  private void runMap(List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(PrecompGenericMap.class);
-    a.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, true);
-    actions.add(a);
-  }
-
-  private void runGroupBy(List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(GroupBy.class);
-    a.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-    a.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
-    actions.add(a);
-  }
-
-  private void runReduce(List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(PrecompGenericReduce.class);
-    a.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, true);
-    actions.add(a);
-  }
-
-  private void runReadFromBTree(Pattern pattern, List<ActionConf> actions) {
-    ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
-    Query query = new Query(new TLong(pattern.getTerm(0).getValue()), new TLong(pattern.getTerm(1).getValue()), new TLong(pattern.getTerm(2).getValue()));
-    a.setParamWritable(ReadFromBtree.TUPLE, query);
-    actions.add(a);
   }
 }
