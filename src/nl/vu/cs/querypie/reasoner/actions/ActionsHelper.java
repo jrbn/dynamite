@@ -39,7 +39,7 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void readFakeTuple(List<ActionConf> actions) {
+  public static void readFakeTuple(List<ActionConf> actions) {
     ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
     a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
     a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
@@ -75,6 +75,10 @@ public class ActionsHelper {
     c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
     c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
     actions.add(c);
+  }
+
+  public static void runIncrRulesController(List<ActionConf> actions, String deltaDir) {
+    runIncrRulesControllerInStage(0, actions, deltaDir);
   }
 
   static void runIncrRulesControllerInStage(int stage, List<ActionConf> actions, String deltaDir) {
@@ -146,7 +150,7 @@ public class ActionsHelper {
     actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
   }
 
-  static void runRulesController(List<ActionConf> actions) {
+  public static void runRulesController(List<ActionConf> actions) {
     ActionConf c = ActionFactory.getActionConf(RulesController.class);
     actions.add(c);
   }
