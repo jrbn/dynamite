@@ -1,5 +1,7 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
@@ -26,7 +28,7 @@ public class ReloadSchema extends Action {
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     if (!context.isPrincipalBranch()) return;
     boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
-    Rule[] rulesWithSchemaAndGeneric = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
+    List<Rule> rulesWithSchemaAndGeneric = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
     ActionsHelper.reloadPrecomputationOnRules(rulesWithSchemaAndGeneric, context, incrementalFlag);
   }
 }

@@ -66,12 +66,6 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void reloadPrecomputationOnRules(Rule rules[], ActionContext context, boolean incrementalFlag) {
-    for (Rule r : rules) {
-      r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
-    }
-  }
-
   static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean incrementalFlag) {
     for (Rule r : rules) {
       r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);

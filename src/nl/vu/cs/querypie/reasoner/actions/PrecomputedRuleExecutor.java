@@ -37,7 +37,7 @@ public class PrecomputedRuleExecutor extends Action {
   public void startProcess(ActionContext context) {
     int ruleId = getParamInt(RULE_ID);
     incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
-    rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules()[ruleId];
+    rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().get(ruleId);
     rule.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
     counter = 0;
   }

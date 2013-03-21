@@ -38,19 +38,19 @@ public class SchemaManager {
     this.kb = kb;
   }
 
-  public Tuples getTuples(Pattern[] patterns, ActionContext context, boolean flaggedOnly) throws Exception {
+  public Tuples getTuples(List<Pattern> patterns, ActionContext context, boolean flaggedOnly) throws Exception {
     List<Map<String, Integer>> variablesPositions = retrieveVariablesFromPatterns(patterns);
     if (!isCurrentlySupported(variablesPositions)) {
       throw new Exception("Currently not implemented");
     }
-    if (patterns.length == 1) {
-      Pattern p = patterns[0];
+    if (patterns.size() == 1) {
+      Pattern p = patterns.get(0);
       Set<Tuple> tuples = flaggedOnly ? retrieveAllFlaggedTuplesForPattern(p, context) : retrieveAllTuplesForPattern(p, context);
       SortedSet<Integer> variablesPositionsSet = new TreeSet<Integer>(variablesPositions.get(0).values());
       return generateTuples(tuples, variablesPositionsSet);
     } else {
-      Pattern p1 = patterns[0];
-      Pattern p2 = patterns[1];
+      Pattern p1 = patterns.get(0);
+      Pattern p2 = patterns.get(1);
       Set<Tuple> allTuples1 = retrieveAllTuplesForPattern(p1, context);
       Set<Tuple> allTuples2 = retrieveAllTuplesForPattern(p2, context);
       SortedSet<Integer> resultVariablesPositions = new TreeSet<Integer>();
@@ -70,10 +70,9 @@ public class SchemaManager {
     }
   }
 
-  private List<Map<String, Integer>> retrieveVariablesFromPatterns(Pattern patterns[]) {
+  private List<Map<String, Integer>> retrieveVariablesFromPatterns(List<Pattern> patterns) {
     List<Map<String, Integer>> variablesPositions = new ArrayList<Map<String, Integer>>();
-    for (int i = 0; i < patterns.length; ++i) {
-      Pattern p = patterns[i];
+    for (Pattern p : patterns) {
       Map<String, Integer> map = retrieveVariablesFromPatter(p);
       variablesPositions.add(map);
     }

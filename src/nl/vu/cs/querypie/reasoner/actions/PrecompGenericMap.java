@@ -1,6 +1,7 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
 import java.util.Collection;
+import java.util.List;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -24,7 +25,7 @@ public class PrecompGenericMap extends Action {
   private int[][] pos_constants_to_check;
   private long[][] value_constants_to_check;
   private Collection<Long>[] acceptableValues;
-  private Rule[] rules;
+  private List<Rule> rules;
 
   private final TByteArray oneKey = new TByteArray(new byte[8]);
   private final TByteArray twoKeys = new TByteArray(new byte[16]);
@@ -41,29 +42,29 @@ public class PrecompGenericMap extends Action {
   public void startProcess(ActionContext context) throws Exception {
     boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
     rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
-    key_positions = new int[rules.length][];
-    positions_to_check = new int[rules.length][];
-    acceptableValues = new Collection[rules.length];
-    pos_constants_to_check = new int[rules.length][];
-    value_constants_to_check = new long[rules.length][];
+    key_positions = new int[rules.size()][];
+    positions_to_check = new int[rules.size()][];
+    acceptableValues = new Collection[rules.size()];
+    pos_constants_to_check = new int[rules.size()][];
+    value_constants_to_check = new long[rules.size()][];
 
-    for (int m = 0; m < rules.length; ++m) {
-      Rule rule = rules[m];
+    for (int r = 0; r < rules.size(); ++r) {
+      Rule rule = rules.get(r);
 
       // Get the positions of the generic patterns that are used in the
       // head
       int[][] shared_vars = rule.getSharedVariablesGen_Head();
-      key_positions[m] = new int[shared_vars.length];
-      for (int i = 0; i < key_positions[m].length; ++i) {
-        key_positions[m][i] = shared_vars[i][0];
+      key_positions[r] = new int[shared_vars.length];
+      for (int i = 0; i < key_positions[r].length; ++i) {
+        key_positions[r][i] = shared_vars[i][0];
       }
 
       // Get the positions in the generic variables that should be checked
       // against the schema
       shared_vars = rule.getSharedVariablesGen_Precomp();
-      positions_to_check[m] = new int[shared_vars.length];
-      for (int i = 0; i < positions_to_check[m].length; ++i) {
-        positions_to_check[m][i] = shared_vars[i][0];
+      positions_to_check[r] = new int[shared_vars.length];
+      for (int i = 0; i < positions_to_check[r].length; ++i) {
+        positions_to_check[r][i] = shared_vars[i][0];
       }
 
       // Get the elements from the precomputed tuples that should be checked
@@ -71,29 +72,29 @@ public class PrecompGenericMap extends Action {
         throw new Exception("Not implemented yet");
       }
 
-      acceptableValues[m] = incrementalFlag ? rule.getFlaggedPrecomputedTuples().getSortedSet(shared_vars[0][1]) : rule.getAllPrecomputedTuples().getSortedSet(shared_vars[0][1]);
-      pos_constants_to_check[m] = rule.getPositionsConstantGenericPattern();
-      value_constants_to_check[m] = rule.getValueConstantGenericPattern();
+      acceptableValues[r] = incrementalFlag ? rule.getFlaggedPrecomputedTuples().getSortedSet(shared_vars[0][1]) : rule.getAllPrecomputedTuples().getSortedSet(shared_vars[0][1]);
+      pos_constants_to_check[r] = rule.getPositionsConstantGenericPattern();
+      value_constants_to_check[r] = rule.getValueConstantGenericPattern();
     }
   }
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    for (int m = 0; m < rules.length; m++) {
+    for (int r = 0; r < rules.size(); r++) {
       // Does the input match with the generic pattern?
-      if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(tuple, pos_constants_to_check[m], value_constants_to_check[m])) {
+      if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
         continue;
       }
-      TLong t = (TLong) tuple.get(positions_to_check[m][0]);
-      if (acceptableValues[m].contains(t.getValue())) {
-        ruleID.setValue(m);
-        if (key_positions[m].length == 1) {
-          Utils.encodeLong(oneKey.getArray(), 0, ((TLong) tuple.get(key_positions[m][0])).getValue());
-          outputTuple.set(oneKey, ruleID, tuple.get(positions_to_check[m][0]));
+      TLong t = (TLong) tuple.get(positions_to_check[r][0]);
+      if (acceptableValues[r].contains(t.getValue())) {
+        ruleID.setValue(r);
+        if (key_positions[r].length == 1) {
+          Utils.encodeLong(oneKey.getArray(), 0, ((TLong) tuple.get(key_positions[r][0])).getValue());
+          outputTuple.set(oneKey, ruleID, tuple.get(positions_to_check[r][0]));
         } else { // Two keys
-          Utils.encodeLong(twoKeys.getArray(), 0, ((TLong) tuple.get(key_positions[m][0])).getValue());
-          Utils.encodeLong(twoKeys.getArray(), 8, ((TLong) tuple.get(key_positions[m][1])).getValue());
-          outputTuple.set(twoKeys, ruleID, tuple.get(positions_to_check[m][0]));
+          Utils.encodeLong(twoKeys.getArray(), 0, ((TLong) tuple.get(key_positions[r][0])).getValue());
+          Utils.encodeLong(twoKeys.getArray(), 8, ((TLong) tuple.get(key_positions[r][1])).getValue());
+          outputTuple.set(twoKeys, ruleID, tuple.get(positions_to_check[r][0]));
         }
         actionOutput.output(outputTuple);
       }

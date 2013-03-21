@@ -60,7 +60,7 @@ public class IncrRulesParallelExecution extends Action {
   private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Integer> rulesOnlySchema, List<Rule> rulesSchemaGenerics) throws Exception {
     InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
     Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
-    Rule[] allSchemaOnlyRules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
+    List<Rule> allSchemaOnlyRules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
     List<Rule> selectedSchemaOnlyRules = new ArrayList<Rule>();
     for (Pattern p : patterns.keySet()) {
       // Skip if it does not include schema information
@@ -68,15 +68,15 @@ public class IncrRulesParallelExecution extends Action {
         continue;
       }
       for (Rule rule : patterns.get(p)) {
-        if (rule.getGenericBodyPatterns().length == 0) {
+        if (rule.getGenericBodyPatterns().isEmpty()) {
           selectedSchemaOnlyRules.add(rule);
         } else {
           rulesSchemaGenerics.add(rule);
         }
       }
     }
-    for (int i = 0; i < allSchemaOnlyRules.length; ++i) {
-      Rule r = allSchemaOnlyRules[i];
+    for (int i = 0; i < allSchemaOnlyRules.size(); ++i) {
+      Rule r = allSchemaOnlyRules.get(i);
       if (selectedSchemaOnlyRules.contains(r)) {
         rulesOnlySchema.add(i);
       }
@@ -108,7 +108,7 @@ public class IncrRulesParallelExecution extends Action {
 
   private Pattern getQueryPattern(Rule rule) {
     Pattern pattern = new Pattern();
-    rule.getGenericBodyPatterns()[0].copyTo(pattern);
+    rule.getGenericBodyPatterns().get(0).copyTo(pattern);
     return pattern;
   }
 

@@ -94,15 +94,15 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
     return positions.toArray(new int[positions.size()][]);
   }
 
-  public static Collection<String> concatenateVariables(Pattern... patterns) {
+  public static Collection<String> concatenateVariables(List<Pattern> patterns) {
     List<String> variables = new ArrayList<String>();
 
     // First add the variables of the first pattern
-    variables.addAll(patterns[0].getVariables());
+    variables.addAll(patterns.get(0).getVariables());
 
     // Then add all the variables that do not have appeared so far
-    for (int i = 1; i < patterns.length; ++i) {
-      Pattern p = patterns[i];
+    for (int i = 1; i < patterns.size(); ++i) {
+      Pattern p = patterns.get(i);
       for (String v : p.getVariables()) {
         if (!variables.contains(v)) {
           variables.add(v);

@@ -1,5 +1,7 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
@@ -15,7 +17,7 @@ public class ParallelExecutionSchemaOnly extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    Rule[] rules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
-    ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(rules.length, false, actionOutput);
+    List<Rule> rules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
+    ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(rules.size(), false, actionOutput);
   }
 }

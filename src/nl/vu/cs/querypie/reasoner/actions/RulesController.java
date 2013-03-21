@@ -59,7 +59,7 @@ public class RulesController extends Action {
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     if (!hasDerived) return;
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    if (ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().length > 0) {
+    if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
       applyRulesSchemaOnly(actions);
       applyRulesWithGenericPatternsInABranch(actions);
     } else {
