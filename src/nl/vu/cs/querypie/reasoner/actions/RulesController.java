@@ -34,9 +34,7 @@ public class RulesController extends Action {
     ActionsHelper.reconnectAfter(2, actions);
     ActionsHelper.runGenericRuleExecutor(actions);
     ActionsHelper.reconnectAfter(4, actions);
-    ActionsHelper.runMap(actions, false);
-    ActionsHelper.runGroupBy(actions);
-    ActionsHelper.runReduce(actions, false);
+    ActionsHelper.runMapReduce(actions, false);
     ActionsHelper.runSort(actions);
     ActionsHelper.runRemoveDuplicates(actions);
     ActionsHelper.runWriteDerivationsOnBTree(actions);

@@ -20,7 +20,6 @@ import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
-import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -36,8 +35,13 @@ public class ActionsHelper {
 
   static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
     ActionConf c = ActionFactory.getActionConf(Branch.class);
-    c.setParamWritable(Branch.BRANCH, new WritableListActions(actionsToBranch));
     actions.add(c);
+  }
+
+  static void runMapReduce(List<ActionConf> actions, boolean incrementalFlag) {
+    runMap(actions, incrementalFlag);
+    runGroupBy(actions);
+    runReduce(actions, incrementalFlag);
   }
 
   static void readEverythingFromBTree(List<ActionConf> actions) {
@@ -60,15 +64,15 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void reloadPrecomputationOnRules(Rule rules[], ActionContext context, boolean flaggedOnly) {
+  static void reloadPrecomputationOnRules(Rule rules[], ActionContext context, boolean incrementalFlag) {
     for (Rule r : rules) {
-      r.reloadPrecomputation(ReasoningContext.getInstance(), context, flaggedOnly);
+      r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
     }
   }
 
-  static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean flaggedOnly) {
+  static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean incrementalFlag) {
     for (Rule r : rules) {
-      r.reloadPrecomputation(ReasoningContext.getInstance(), context, flaggedOnly);
+      r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
     }
   }
 
@@ -83,7 +87,7 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void runGroupBy(List<ActionConf> actions) {
+  private static void runGroupBy(List<ActionConf> actions) {
     ActionConf c = ActionFactory.getActionConf(GroupBy.class);
     c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
     c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
@@ -106,13 +110,13 @@ public class ActionsHelper {
     actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
   }
 
-  static void runMap(List<ActionConf> actions, boolean incrementalFlag) {
+  private static void runMap(List<ActionConf> actions, boolean incrementalFlag) {
     ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
     c.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, incrementalFlag);
     actions.add(c);
   }
 
-  static void runPrecomputedRuleExecutorForAllRulesInParallel(int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+  static void parallelRunPrecomputedRuleExecutorForAllRules(int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
     for (int ruleId = 0; ruleId < numRules; ++ruleId) {
       List<ActionConf> actions = new ArrayList<ActionConf>();
       readFakeTuple(actions);
@@ -128,7 +132,7 @@ public class ActionsHelper {
     actions.add(a);
   }
 
-  static void runPrecomputedRuleExecutorForRulesInParallel(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+  static void parallelRunPrecomputedRuleExecutorForRules(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
     for (Integer ruleId : ruleIds) {
       List<ActionConf> actions = new ArrayList<ActionConf>();
       readFakeTuple(actions);
@@ -148,7 +152,7 @@ public class ActionsHelper {
     actions.add(a);
   }
 
-  static void runReduce(List<ActionConf> actions, boolean incrementalFlag) {
+  private static void runReduce(List<ActionConf> actions, boolean incrementalFlag) {
     ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
     c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, incrementalFlag);
     actions.add(c);

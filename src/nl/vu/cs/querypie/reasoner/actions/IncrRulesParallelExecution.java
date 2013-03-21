@@ -34,27 +34,23 @@ public class IncrRulesParallelExecution extends Action {
     extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
 
     // Execute all schema rules in parallel (on different branches)
-    ActionsHelper.runPrecomputedRuleExecutorForRulesInParallel(rulesOnlySchema, true, actionOutput);
-
-    // FIXME This operation is necessary, but is this the right place to perform it?
-    ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true);
+    ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, true, actionOutput);
 
     // Read all the delta triples and apply all the rules with a single antecedent
     executeGenericRules(context, actionOutput);
 
     // Execute rules that require a map and a reduce
+    // FIXME This operation is necessary, but is this the right place to perform it?
+    ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true);
     executePrecomGenericRules(context, actionOutput);
 
     // If some schema is changed, re-apply the rules over the entire input which is affected
-    for (Rule r : rulesSchemaGenerics) {
-      // Get all the possible "join" values that match the schema
-      Pattern pattern = new Pattern();
-      r.getGenericBodyPatterns()[0].copyTo(pattern);
-      int[][] shared_pos = r.getSharedVariablesGen_Precomp();
-      Tuples tuples = r.getFlaggedPrecomputedTuples();
-      Collection<Long> possibleValues = tuples.getSortedSet(shared_pos[0][1]);
+    for (Rule rule : rulesSchemaGenerics) {
+      Pattern pattern = getQueryPattern(rule);
+      Collection<Long> possibleValues = getValuesMatchingTheSchema(rule);
+      int varPos = getVariablePosition(rule);
       for (long v : possibleValues) {
-        pattern.setTerm(shared_pos[0][0], new Term(v));
+        pattern.setTerm(varPos, new Term(v));
         executePrecomGenericRulesForPattern(pattern, context, actionOutput);
       }
     }
@@ -99,18 +95,31 @@ public class IncrRulesParallelExecution extends Action {
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.readFakeTuple(actions);
     ActionsHelper.runReadAllInMemoryTuples(actions);
-    ActionsHelper.runMap(actions, true);
-    ActionsHelper.runGroupBy(actions);
-    ActionsHelper.runReduce(actions, true);
+    ActionsHelper.runMapReduce(actions, true);
     actionOutput.branch(actions);
   }
 
   private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runReadFromBTree(pattern, actions);
-    ActionsHelper.runMap(actions, true);
-    ActionsHelper.runGroupBy(actions);
-    ActionsHelper.runReduce(actions, true);
+    ActionsHelper.runMapReduce(actions, true);
     actionOutput.branch(actions);
+  }
+
+  private Pattern getQueryPattern(Rule rule) {
+    Pattern pattern = new Pattern();
+    rule.getGenericBodyPatterns()[0].copyTo(pattern);
+    return pattern;
+  }
+
+  private Collection<Long> getValuesMatchingTheSchema(Rule rule) {
+    int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
+    Tuples tuples = rule.getFlaggedPrecomputedTuples();
+    return tuples.getSortedSet(shared_pos[0][1]);
+  }
+
+  private int getVariablePosition(Rule rule) {
+    int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
+    return shared_pos[0][0];
   }
 }

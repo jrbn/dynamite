@@ -16,6 +16,6 @@ public class ParallelExecutionSchemaOnly extends Action {
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     Rule[] rules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
-    ActionsHelper.runPrecomputedRuleExecutorForAllRulesInParallel(rules.length, false, actionOutput);
+    ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(rules.length, false, actionOutput);
   }
 }
