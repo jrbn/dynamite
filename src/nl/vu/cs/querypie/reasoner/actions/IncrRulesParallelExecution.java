@@ -39,7 +39,7 @@ public class IncrRulesParallelExecution extends Action {
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 
     // Find out whether there is schema information in the delta
-    InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_TUPLE_SET_KEY);
+    InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
 
     Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
     Iterator<Pattern> itr = patterns.keySet().iterator();

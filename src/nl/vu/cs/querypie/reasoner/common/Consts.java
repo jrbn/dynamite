@@ -1,6 +1,6 @@
 package nl.vu.cs.querypie.reasoner.common;
 
 public class Consts {
-  public static final String IN_MEMORY_TUPLE_SET_KEY = "__IN_MEMORY_TUPLE_SET_KEY";
-  public static final String IN_MEMORY_TUPLE_SET_KEY_OLD = "__IN_MEMORY_TUPLE_SET_KEY_OLD";
+  public static final String CURRENT_DELTA_KEY = "__CURRENT_DELTA_KEY";
+  public static final String COMPLETE_DELTA_KEY = "__COMPLETE_DELTA_KEY";
 }

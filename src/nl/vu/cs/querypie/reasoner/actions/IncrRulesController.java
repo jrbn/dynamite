@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IncrRulesController extends Action {
-
   static final Logger log = LoggerFactory.getLogger(IncrRulesController.class);
 
   public static final int S_DELTA_DIR = 0;
@@ -34,7 +33,7 @@ public class IncrRulesController extends Action {
   private String deltaDir = null;
   private int stage = 0;
   private InMemoryTupleSet currentDelta = null;
-  private InMemoryTupleSet oldDelta = null;
+  private InMemoryTupleSet completeDelta = null;
   private Tuple currentTuple = null;
 
   @Override
@@ -48,11 +47,10 @@ public class IncrRulesController extends Action {
     deltaDir = getParamString(S_DELTA_DIR);
     stage = getParamInt(I_STAGE);
     switch (stage) {
+    case 0:
+      readDeltaFromFileAndPutItInCache(context);
     case 1:
-      oldDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_TUPLE_SET_KEY_OLD);
-      if (oldDelta == null) {
-        oldDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_TUPLE_SET_KEY);
-      }
+      completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
       currentDelta = new InMemoryTreeTupleSet();
       currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
       break;
@@ -61,11 +59,10 @@ public class IncrRulesController extends Action {
 
   private void process1(Tuple tuple, ActionContext context, ActionOutput actionOutput) {
     tuple.copyTo(currentTuple);
-    if (!oldDelta.contains(currentTuple)) {
+    if (!completeDelta.contains(currentTuple)) {
       currentDelta.add(currentTuple);
       currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
     }
-
   }
 
   @Override
@@ -78,48 +75,14 @@ public class IncrRulesController extends Action {
   }
 
   private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
-    // Check if the content of the delta is already in the cache. If it is not, then parse it from the file.
-    InMemoryTupleSet delta = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_TUPLE_SET_KEY);
-    if (delta == null) {
-      delta = parseTriplesFromFile(deltaDir);
-      context.putObjectInCache(Consts.IN_MEMORY_TUPLE_SET_KEY, delta);
-    }
-
-    // Apply all the rules in parallel just once
-    List<ActionConf> actions = new ArrayList<ActionConf>();
-    actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
-
-    // Collect all the derivations on one node
-    ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-    c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
-    c.setParamBoolean(CollectToNode.SORT, true);
-    actions.add(c);
-
-    // Remove the duplicates
-    actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
-
-    // Update the delta and go to the next stage
-    c = ActionFactory.getActionConf(IncrRulesController.class);
-    c.setParamInt(I_STAGE, 1);
-    c.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
-    actions.add(c);
-
-    // Branch
-    actionOutput.branch(actions);
+    executeOneForwardChainIteration(context, actionOutput);
   }
 
   private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (currentDelta.size() > 0) {
-
-      // Copy the new triples in the total container
-      oldDelta.addAll(currentDelta);
-      // Replace the delta with the new triples
-      context.putObjectInCache(Consts.IN_MEMORY_TUPLE_SET_KEY, currentDelta);
-      // Store the old delta in another data structure
-      context.putObjectInCache(Consts.IN_MEMORY_TUPLE_SET_KEY_OLD, oldDelta);
-
-      // Repeat the process
-      stop0(context, actionOutput);
+    if (!currentDelta.isEmpty()) {
+      // Repeat the process (execute a new iteration) considering the current delta
+      saveCurrentDelta(context);
+      executeOneForwardChainIteration(context, actionOutput);
     } else {
       // TODO: Move to the second stage of the algorithm.
       // 1) Remove everything in Delta
@@ -141,11 +104,66 @@ public class IncrRulesController extends Action {
     }
   }
 
+  private void executeOneForwardChainIteration(ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    // Apply all the rules in parallel just once
+    invokeIncrRulesParallelExecution(actions);
+    // Collect all the derivations on one node
+    collectAllDerivationsInOneNode(actions);
+    // Remove the duplicates
+    removeDuplicates(actions);
+    // Adds derivations to the complete delta
+    updateAndSaveCompleteDelta(context);
+    // Repeat stage 1
+    invokeSelfInStage(1, actions);
+    // Branch
+    actionOutput.branch(actions);
+  }
+
+  private void readDeltaFromFileAndPutItInCache(ActionContext context) {
+    InMemoryTupleSet delta = parseTriplesFromFile(deltaDir);
+    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, delta);
+  }
+
+  private void updateAndSaveCompleteDelta(ActionContext context) {
+    completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+    if (completeDelta == null) {
+      completeDelta = new InMemoryTreeTupleSet();
+    }
+    completeDelta.addAll(currentDelta);
+    context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
+  }
+
+  private void saveCurrentDelta(ActionContext context) {
+    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+  }
+
+  private void invokeIncrRulesParallelExecution(List<ActionConf> actions) {
+    actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
+  }
+
+  private void invokeSelfInStage(int stage, List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(IncrRulesController.class);
+    c.setParamInt(I_STAGE, stage);
+    c.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
+    actions.add(c);
+  }
+
+  private void removeDuplicates(List<ActionConf> actions) {
+    actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+  }
+
+  private void collectAllDerivationsInOneNode(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
+    c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+    c.setParamBoolean(CollectToNode.SORT, true);
+    actions.add(c);
+  }
+
   private static InMemoryTupleSet parseTriplesFromFile(String input) {
     InMemoryTupleSet set = new InMemoryTreeTupleSet();
     try {
       List<File> files = new ArrayList<File>();
-
       File fInput = new File(input);
       if (fInput.isDirectory()) {
         for (File child : fInput.listFiles(new FilterHiddenFiles()))
@@ -153,7 +171,6 @@ public class IncrRulesController extends Action {
       } else {
         files.add(fInput);
       }
-
       for (File file : files) {
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line = null;
