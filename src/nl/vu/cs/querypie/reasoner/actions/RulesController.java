@@ -29,150 +29,144 @@ import org.slf4j.LoggerFactory;
 
 public class RulesController extends Action {
 
-	static final Logger log = LoggerFactory.getLogger(RulesController.class);
+  static final Logger log = LoggerFactory.getLogger(RulesController.class);
 
-	private boolean hasDerived;
+  private boolean hasDerived;
 
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		hasDerived = false;
-	}
+  @Override
+  public void startProcess(ActionContext context) throws Exception {
+    hasDerived = false;
+  }
 
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		hasDerived = true;
-	}
+  @Override
+  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+    hasDerived = true;
+  }
 
-	private void applyRulesWithGenericPatterns(List<ActionConf> actions) {
+  private void applyRulesWithGenericPatterns(List<ActionConf> actions) {
+    readEverythingFromBTree(actions);
+    reconnectAfter(2, actions);
+    runGenericRuleExecutor(actions);
+    reconnectAfter(4, actions);
+    runMap(actions);
+    runGroupBy(actions);
+    runReduce(actions);
+    runSort(actions);
+    runRemoveDuplicates(actions);
+    runWriteDerivationsOnBTree(actions);
+  }
 
-		// Read everything from the knowledge base
-		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
-		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
-		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1),
-				new TLong(-1), new TLong(-1)));
-		actions.add(c);
+  private void applyRulesSchemaOnly(List<ActionConf> actions) {
+    readFakeTuple(actions);
+    runSchemaRulesInParallel(actions);
+    runSort(actions);
+    runRemoveDuplicates(actions);
+    runWriteDerivationsOnBTree(actions);
+  }
 
-		// Forward the input to the Map action
-		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 2);
-		actions.add(c);
+  @Override
+  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+    // Launch only-schema rules
+    if (hasDerived) {
+      List<ActionConf> actions = new ArrayList<ActionConf>();
+      if (ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules() != null && ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().length > 0) {
+        applyRulesSchemaOnly(actions);
+        runReloadSchema(actions);
 
-		// First apply only the rules that use one antecedent
-		c = ActionFactory.getActionConf(GenericRuleExecutor.class);
-		actions.add(c);
+        // Create a branch to process the rules that use generic patterns
+        List<ActionConf> actions2 = new ArrayList<ActionConf>();
+        applyRulesWithGenericPatterns(actions2);
+        ActionConf c = ActionFactory.getActionConf(Branch.class);
+        c.setParamWritable(Branch.BRANCH, new WritableListActions(actions2));
+        actions.add(c);
+      } else {
+        // There is no rule only on schema triples.
+        applyRulesWithGenericPatterns(actions);
+      }
 
-		// Forward derivation to sorting phase
-		c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 4);
-		actions.add(c);
+      // Collect the derivations flags on one node
+      ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
+      c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+      actions.add(c);
 
-		// Map
-		c = ActionFactory.getActionConf(PrecompGenericMap.class);
-		c.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, false);
-		actions.add(c);
+      // Add the controller
+      c = ActionFactory.getActionConf(RulesController.class);
+      actions.add(c);
 
-		// Group by
-		c = ActionFactory.getActionConf(GroupBy.class);
-		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
-				TByte.class.getName(), TLong.class.getName());
-		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
-		actions.add(c);
+      // Create the branch
+      actionOutput.branch(actions);
+    }
+  }
 
-		// Reduce
-		c = ActionFactory.getActionConf(PrecompGenericReduce.class);
-		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, false);
-		actions.add(c);
+  private void runSchemaRulesInParallel(List<ActionConf> actions) {
+    ActionConf a = ActionFactory.getActionConf(ParallelExecutionSchemaOnly.class);
+    actions.add(a);
+  }
 
-		// Sort the derivation
-		c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
-		c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
-		c.setParamBoolean(PartitionToNodes.SORT, true);
-		actions.add(c);
+  private void readFakeTuple(List<ActionConf> actions) {
+    ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
+    a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
+    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
+    actions.add(a);
+  }
 
-		// Remove the duplicates
-		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+  private void readEverythingFromBTree(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
+    c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
+    c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1), new TLong(-1), new TLong(-1)));
+    actions.add(c);
+  }
 
-		// Write the derivation on the BTree
-		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
-	}
+  private void reconnectAfter(int reconnectAfter, List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(Split.class);
+    c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAfter);
+    actions.add(c);
+  }
 
-	private void applyRulesSchemaOnly(List<ActionConf> actions) {
-		// Read a fake triple in input
-		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
-		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
-		actions.add(a);
+  private void runMap(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
+    c.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, false);
+    actions.add(c);
+  }
 
-		// Launch the schema-only rules in parallel
-		a = ActionFactory.getActionConf(ParallelExecutionSchemaOnly.class);
-		actions.add(a);
+  private void runReduce(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
+    c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, false);
+    actions.add(c);
+  }
 
-		// Sort the derivation
-		a = ActionFactory.getActionConf(PartitionToNodes.class);
-		a.setParamBoolean(PartitionToNodes.SORT, true);
-		a.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
-		a.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
-		actions.add(a);
+  private void runGroupBy(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(GroupBy.class);
+    c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
+    c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
+    c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
+    actions.add(c);
+  }
 
-		// Clean the duplicates
-		a = ActionFactory.getActionConf(RemoveDuplicates.class);
-		actions.add(a);
+  private void runGenericRuleExecutor(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
+    actions.add(c);
+  }
 
-		// Write the derivation on the BTree
-		a = ActionFactory.getActionConf(WriteDerivationsBtree.class);
-		actions.add(a);
-	}
+  private void runSort(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
+    c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
+    c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+    c.setParamBoolean(PartitionToNodes.SORT, true);
+    actions.add(c);
+  }
 
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		// Launch only-schema rules
-		if (hasDerived) {
-			List<ActionConf> actions = new ArrayList<ActionConf>();
-			if (ReasoningContext.getInstance().getRuleset()
-					.getAllSchemaOnlyRules() != null) {
-				applyRulesSchemaOnly(actions);
+  private void runRemoveDuplicates(List<ActionConf> actions) {
+    actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+  }
 
-				// Reload the schema
-				ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
-				c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, false); // TODO:
-																			// set
-																			// flag
-				actions.add(c);
+  private void runWriteDerivationsOnBTree(List<ActionConf> actions) {
+    actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
+  }
 
-				// Create a branch to process the rules that use generic
-				// patterns
-				List<ActionConf> actions2 = new ArrayList<ActionConf>();
-				applyRulesWithGenericPatterns(actions2);
-				c = ActionFactory.getActionConf(Branch.class);
-				c.setParamWritable(Branch.BRANCH, new WritableListActions(
-						actions2));
-				actions.add(c);
-			} else {
-				// There is no rule only on schema triples.
-				applyRulesWithGenericPatterns(actions);
-			}
-
-			// Collect the derivations flags on one node
-			ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
-					TLong.class.getName(), TLong.class.getName(),
-					TLong.class.getName());
-			actions.add(c);
-
-			// Add the controller
-			c = ActionFactory.getActionConf(RulesController.class);
-			actions.add(c);
-
-			// Create the branch
-			actionOutput.branch(actions);
-		}
-	}
+  private void runReloadSchema(List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
+    c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, false);
+    actions.add(c);
+  }
 }
