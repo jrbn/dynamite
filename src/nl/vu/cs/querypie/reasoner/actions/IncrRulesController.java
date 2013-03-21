@@ -88,7 +88,6 @@ public class IncrRulesController extends Action {
       // 1) Remove everything in Delta
       // 2) Recompute the remaining derivation
     }
-
     currentDelta = null;
   }
 
@@ -106,17 +105,11 @@ public class IncrRulesController extends Action {
 
   private void executeOneForwardChainIteration(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    // Apply all the rules in parallel just once
     invokeIncrRulesParallelExecution(actions);
-    // Collect all the derivations on one node
     collectAllDerivationsInOneNode(actions);
-    // Remove the duplicates
     removeDuplicates(actions);
-    // Adds derivations to the complete delta
     updateAndSaveCompleteDelta(context);
-    // Repeat stage 1
     invokeSelfInStage(1, actions);
-    // Branch
     actionOutput.branch(actions);
   }
 
