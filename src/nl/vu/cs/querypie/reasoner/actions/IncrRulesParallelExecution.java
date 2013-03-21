@@ -34,15 +34,14 @@ public class IncrRulesParallelExecution extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    List<Rule> rulesOnlySchema = new ArrayList<Rule>();
+    List<Integer> rulesOnlySchema = new ArrayList<Integer>();
     List<Rule> rulesSchemaGenerics = new ArrayList<Rule>();
 
     // Determine the rules that have information in delta and organize them according to their type
     extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
 
-    // FIXME Currently always execute the first schema only rules, which is wrong.. Must execute the first "flagged" rules
     // Execute all schema rules in parallel (on different branches)
-    executeSchemaOnlyRulesInParallel(rulesOnlySchema.size(), context, actionOutput);
+    executeSchemaOnlyRulesInParallel(rulesOnlySchema, context, actionOutput);
 
     // FIXME This operation is necessary, but is this the right place to perform it?
     reloadPrecomputationOnRules(rulesSchemaGenerics, context);
@@ -69,9 +68,11 @@ public class IncrRulesParallelExecution extends Action {
 
   }
 
-  private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Rule> rulesOnlySchema, List<Rule> rulesSchemaGenerics) throws Exception {
+  private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Integer> rulesOnlySchema, List<Rule> rulesSchemaGenerics) throws Exception {
     InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
     Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
+    Rule[] allSchemaOnlyRules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
+    List<Rule> selectedSchemaOnlyRules = new ArrayList<Rule>();
     for (Pattern p : patterns.keySet()) {
       // Skip if it does not include schema information
       if (set.getSubset(p).isEmpty()) {
@@ -79,10 +80,16 @@ public class IncrRulesParallelExecution extends Action {
       }
       for (Rule rule : patterns.get(p)) {
         if (rule.getGenericBodyPatterns().length == 0) {
-          rulesOnlySchema.add(rule);
+          selectedSchemaOnlyRules.add(rule);
         } else {
           rulesSchemaGenerics.add(rule);
         }
+      }
+    }
+    for (int i = 0; i < allSchemaOnlyRules.length; ++i) {
+      Rule r = allSchemaOnlyRules[i];
+      if (selectedSchemaOnlyRules.contains(r)) {
+        rulesOnlySchema.add(i);
       }
     }
   }
@@ -101,11 +108,11 @@ public class IncrRulesParallelExecution extends Action {
     actionOutput.branch(actions);
   }
 
-  private void executeSchemaOnlyRulesInParallel(int numRules, ActionContext context, ActionOutput actionOutput) throws Exception {
-    for (int i = 0; i < numRules; ++i) {
+  private void executeSchemaOnlyRulesInParallel(List<Integer> ruleIds, ActionContext context, ActionOutput actionOutput) throws Exception {
+    for (Integer id : ruleIds) {
       List<ActionConf> actions = new ArrayList<ActionConf>();
       runQueryInputLayer(actions);
-      runPrecomputeRuleExectorForRule(i, actions);
+      runPrecomputeRuleExectorForRule(id, actions);
       actionOutput.branch(actions);
     }
   }
