@@ -20,6 +20,7 @@ import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
+import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -35,6 +36,7 @@ public class ActionsHelper {
 
   static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
     ActionConf c = ActionFactory.getActionConf(Branch.class);
+    c.setParamWritable(Branch.BRANCH, new WritableListActions(actionsToBranch));
     actions.add(c);
   }
 
