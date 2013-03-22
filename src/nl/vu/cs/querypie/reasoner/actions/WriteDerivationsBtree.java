@@ -3,7 +3,6 @@ package nl.vu.cs.querypie.reasoner.actions;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.utils.Utils;
@@ -45,11 +44,13 @@ public class WriteDerivationsBtree extends Action {
     TLong s = (TLong) tuple.get(0);
     TLong p = (TLong) tuple.get(1);
     TLong o = (TLong) tuple.get(2);
-    TInt step = (TInt) tuple.get(3);
+    // FIXME: temporary removed to make the program run
+    // TInt step = (TInt) tuple.get(3);
     encode(s.getValue(), p.getValue(), o.getValue());
 
     // Set the iteration count the triple was derived from
-    Utils.encodeInt(meta, 0, step.getValue());
+    // FIXME: temporary removed to make the program run
+    //Utils.encodeInt(meta, 0, step.getValue());
 
     if (spo.write(triple, meta) == WritingSession.SUCCESS) {
       // Add it also in the other permutations
