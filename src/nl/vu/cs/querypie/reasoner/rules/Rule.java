@@ -12,7 +12,12 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class Rule {
+
+	static final Logger log = LoggerFactory.getLogger(Rule.class);
 
 	private final int id;
 	private final Pattern head;
@@ -106,7 +111,7 @@ public class Rule {
 						precomputedPatterns, context);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Error", e);
 		}
 
 	}

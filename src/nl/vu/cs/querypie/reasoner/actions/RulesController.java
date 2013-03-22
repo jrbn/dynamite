@@ -49,9 +49,9 @@ public class RulesController extends Action {
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
 	}
 
-	private void applyRulesSchemaOnly(List<ActionConf> actions) {
+	private void applyRulesSchemaOnly(int step, List<ActionConf> actions) {
 		ActionsHelper.readFakeTuple(actions);
-		ActionsHelper.runSchemaRulesInParallel(actions);
+		ActionsHelper.runSchemaRulesInParallel(step, actions);
 		ActionsHelper.runSort(actions);
 		ActionsHelper.runRemoveDuplicates(actions);
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
@@ -72,7 +72,7 @@ public class RulesController extends Action {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions);
+			applyRulesSchemaOnly(step, actions);
 			applyRulesWithGenericPatternsInABranch(actions);
 		} else {
 			applyRulesWithGenericPatterns(actions);

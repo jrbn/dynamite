@@ -125,24 +125,26 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int numRules,
-			boolean incrementalFlag, ActionOutput actionOutput)
+	static void parallelRunPrecomputedRuleExecutorForAllRules(int step,
+			int numRules, boolean incrementalFlag, ActionOutput actionOutput)
 			throws Exception {
 		for (int ruleId = 0; ruleId < numRules; ++ruleId) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
+			runPrecomputedRuleExecutorForRule(step, ruleId, actions,
+					incrementalFlag);
 			actionOutput.branch(actions);
 		}
 	}
 
-	static void runPrecomputedRuleExecutorForRule(int ruleId,
+	static void runPrecomputedRuleExecutorForRule(int step, int ruleId,
 			List<ActionConf> actions, boolean incrementalFlag) {
 		ActionConf a = ActionFactory
 				.getActionConf(PrecomputedRuleExecutor.class);
 		a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
 		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG,
 				incrementalFlag);
+		a.setParamInt(PrecomputedRuleExecutor.I_STEP, step);
 		actions.add(a);
 	}
 
@@ -152,7 +154,8 @@ public class ActionsHelper {
 		for (Integer ruleId : ruleIds) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
+			runPrecomputedRuleExecutorForRule(-1, ruleId, actions,
+					incrementalFlag);
 			actionOutput.branch(actions);
 		}
 	}
@@ -195,9 +198,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runSchemaRulesInParallel(List<ActionConf> actions) {
+	static void runSchemaRulesInParallel(int step, List<ActionConf> actions) {
 		ActionConf a = ActionFactory
 				.getActionConf(ParallelExecutionSchemaOnly.class);
+		a.setParamInt(ParallelExecutionSchemaOnly.I_STEP, step);
 		actions.add(a);
 	}
 

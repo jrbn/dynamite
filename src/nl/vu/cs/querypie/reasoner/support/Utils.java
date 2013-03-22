@@ -127,7 +127,7 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 		int c1 = 0;
 		int c2 = 0;
 		for (int i = 0; i < var1.size(); ++i) {
-			if (i == pos_shared[c1][0]) {
+			if (c1 < pos_shared.length && i == pos_shared[c1][0]) {
 				++c1;
 			} else {
 				results[0][c2] = i;
@@ -138,7 +138,7 @@ public class Utils extends nl.vu.cs.ajira.utils.Utils {
 		results[1] = new int[var2.size() - pos_shared.length];
 		c2 = c1 = 0;
 		for (int i = 0; i < var2.size(); ++i) {
-			if (i == pos_shared[c1][1]) {
+			if (c1 < pos_shared.length && i == pos_shared[c1][1]) {
 				++c1;
 			} else {
 				results[1][c2] = i;
