@@ -11,125 +11,95 @@ import nl.vu.cs.querypie.storage.Pattern;
 
 public class Ruleset {
 
-	private Rule[] schemaOnly = null;
-	private Rule[] oneAntecedent = null;
-	private Rule[] schemaGeneric = null;
+  private List<Rule> schemaOnly = null;
+  private List<Rule> oneAntecedent = null;
+  private List<Rule> schemaGeneric = null;
 
-	public Ruleset(Rule[] rules) {
-		// For each rule determines which type it is
-		List<Rule> schemaOnly = new ArrayList<Rule>();
-		List<Rule> oneAntecedent = new ArrayList<Rule>();
-		List<Rule> schemaGeneric = new ArrayList<Rule>();
+  public Ruleset(Rule[] rules) {
+    schemaOnly = new ArrayList<Rule>();
+    oneAntecedent = new ArrayList<Rule>();
+    schemaGeneric = new ArrayList<Rule>();
+    for (Rule r : rules) {
+      if (r.isSchemaOnly()) {
+        schemaOnly.add(r);
+      } else if (r.isGenericOnly()) {
+        oneAntecedent.add(r);
+      } else {
+        schemaGeneric.add(r);
+      }
+    }
+  }
 
-		if (rules == null) {
-			return;
-		}
+  public void init(ReasoningContext reasoningContext) {
+    for (Rule r : schemaOnly) {
+      r.init(reasoningContext);
+    }
+    for (Rule r : oneAntecedent) {
+      r.init(reasoningContext);
+    }
+    for (Rule r : schemaGeneric) {
+      r.init(reasoningContext);
+    }
+  }
 
-		for (Rule r : rules) {
-			// Check if all the antecedents are "schema".
-			if (r.getGenericBodyPatterns().length == 0) {
-				schemaOnly.add(r);
-				continue;
-			}
+  public List<Rule> getAllSchemaOnlyRules() {
+    return schemaOnly;
+  }
 
-			// If only one antecedent...
-			if (r.getGenericBodyPatterns().length == 1
-					&& r.getPrecomputedBodyPatterns().length == 0) {
-				oneAntecedent.add(r);
-				continue;
-			}
+  public List<Rule> getAllRulesWithOneAntecedent() {
+    return oneAntecedent;
+  }
 
-			// All the others
-			schemaGeneric.add(r);
-		}
+  public List<Rule> getAllRulesWithSchemaAndGeneric() {
+    return schemaGeneric;
+  }
 
-		// Reconvert them into arrays
-		this.schemaOnly = schemaOnly.toArray(new Rule[schemaOnly.size()]);
-		this.oneAntecedent = oneAntecedent.toArray(new Rule[oneAntecedent
-				.size()]);
-		this.schemaGeneric = schemaGeneric.toArray(new Rule[schemaGeneric
-				.size()]);
-	}
+  public Map<Pattern, Collection<Rule>> getPrecomputedPatternSet() {
+    Map<String, Collection<Rule>> output = new HashMap<String, Collection<Rule>>();
+    if (schemaOnly != null) {
+      for (Rule r : schemaOnly) {
+        for (Pattern p : r.getPrecomputedBodyPatterns()) {
+          String signature = p.toStringWithVarsAsStar();
+          Collection<Rule> col = null;
+          if (!output.containsKey(signature)) {
+            col = new ArrayList<Rule>();
+            output.put(signature, col);
+          } else {
+            col = output.get(signature);
+          }
+          col.add(r);
+        }
+      }
+    }
 
-	public void init(ReasoningContext reasoningContext) {
-		// Init all the rules
-		if (schemaOnly != null) {
-			for (Rule r : schemaOnly) {
-				r.init(reasoningContext);
-			}
-		}
+    if (schemaGeneric != null) {
+      for (Rule r : schemaGeneric) {
+        for (Pattern p : r.getPrecomputedBodyPatterns()) {
+          String signature = p.toStringWithVarsAsStar();
+          Collection<Rule> col = null;
+          if (!output.containsKey(signature)) {
+            col = new ArrayList<Rule>();
+            output.put(signature, col);
+          } else {
+            col = output.get(signature);
+          }
+          col.add(r);
+        }
+      }
+    }
 
-		if (oneAntecedent != null) {
-			for (Rule r : oneAntecedent) {
-				r.init(reasoningContext);
-			}
-		}
-
-		if (schemaGeneric != null) {
-			for (Rule r : schemaGeneric) {
-				r.init(reasoningContext);
-			}
-		}
-	}
-
-	public Rule[] getAllSchemaOnlyRules() {
-		return schemaOnly;
-	}
-
-	public Rule[] getAllRulesWithOneAntecedent() {
-		return oneAntecedent;
-	}
-
-	public Rule[] getAllRulesWithSchemaAndGeneric() {
-		return schemaGeneric;
-	}
-
-	public Map<Pattern, Collection<Rule>> getPrecomputedPatternSet() {
-		Map<String, Collection<Rule>> output = new HashMap<String, Collection<Rule>>();
-		if (schemaOnly != null) {
-			for (Rule r : schemaOnly) {
-				for (Pattern p : r.getPrecomputedBodyPatterns()) {
-					String signature = p.toStringWithVarsAsStar();
-					Collection<Rule> col = null;
-					if (!output.containsKey(signature)) {
-						col = new ArrayList<Rule>();
-						output.put(signature, col);
-					} else {
-						col = output.get(signature);
-					}
-					col.add(r);
-				}
-			}
-		}
-
-		if (schemaGeneric != null) {
-			for (Rule r : schemaGeneric) {
-				for (Pattern p : r.getPrecomputedBodyPatterns()) {
-					String signature = p.toStringWithVarsAsStar();
-					Collection<Rule> col = null;
-					if (!output.containsKey(signature)) {
-						col = new ArrayList<Rule>();
-						output.put(signature, col);
-					} else {
-						col = output.get(signature);
-					}
-					col.add(r);
-				}
-			}
-		}
-
-		// Translate the strings in patterns
-		Map<Pattern, Collection<Rule>> output2 = new HashMap<Pattern, Collection<Rule>>();
-		for (Map.Entry<String, Collection<Rule>> entry : output.entrySet()) {
-			// Get the pattern from the first rule
-			Rule r = entry.getValue().iterator().next();
-			for (Pattern p : r.getPrecomputedBodyPatterns()) {
-				if (p.toStringWithVarsAsStar().equals(entry.getKey())) {
-					output2.put(p, entry.getValue());
-					break;
-				}
-			}
-		}
-		return output2;
-	}
+    // Translate the strings in patterns
+    Map<Pattern, Collection<Rule>> output2 = new HashMap<Pattern, Collection<Rule>>();
+    for (Map.Entry<String, Collection<Rule>> entry : output.entrySet()) {
+      // Get the pattern from the first rule
+      Rule r = entry.getValue().iterator().next();
+      for (Pattern p : r.getPrecomputedBodyPatterns()) {
+        if (p.toStringWithVarsAsStar().equals(entry.getKey())) {
+          output2.put(p, entry.getValue());
+          break;
+        }
+      }
+    }
+    return output2;
+  }
 }

@@ -2,23 +2,13 @@ package nl.vu.cs.querypie.reasoner.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.actions.GroupBy;
-import nl.vu.cs.ajira.actions.QueryInputLayer;
-import nl.vu.cs.ajira.actions.support.Query;
-import nl.vu.cs.ajira.data.types.TByte;
-import nl.vu.cs.ajira.data.types.TByteArray;
-import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.common.Consts;
@@ -37,144 +27,99 @@ public class IncrRulesParallelExecution extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-
-    // Find out whether there is schema information in the delta
-    InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.IN_MEMORY_TUPLE_SET_KEY);
-
-    Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
-    Iterator<Pattern> itr = patterns.keySet().iterator();
-    while (itr.hasNext()) {
-      Pattern p = itr.next();
-      Set<Tuple> tuples = set.getSubset(p);
-      if (tuples == null || tuples.size() == 0) {
-        itr.remove();
-      }
-    }
-
-    // "patterns" contains all the patterns which have triples in delta. Get
-    // all the rules that use them
-    Set<Rule> rulesToLaunch = new HashSet<Rule>();
-    for (Map.Entry<Pattern, Collection<Rule>> entry : patterns.entrySet()) {
-      rulesToLaunch.addAll(entry.getValue());
-    }
-    List<Rule> rulesOnlySchema = new ArrayList<Rule>();
+    List<Integer> rulesOnlySchema = new ArrayList<Integer>();
     List<Rule> rulesSchemaGenerics = new ArrayList<Rule>();
-    for (Rule rule : rulesToLaunch) {
-      if (rule.getGenericBodyPatterns() == null || rule.getGenericBodyPatterns().length == 0) {
-        rulesOnlySchema.add(rule);
-      } else {
-        rulesSchemaGenerics.add(rule);
-        // FIXME This operation is necessary. Not sure if this is the right place to execute it. Please, check!
-        rule.reloadPrecomputation(ReasoningContext.getInstance(), context, true);
-      }
-    }
 
-    // Create n branches, one per every schema rule to be launched
-    for (int i = 0; i < rulesOnlySchema.size(); ++i) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
+    // Determine the rules that have information in delta and organize them according to their type
+    extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
 
-      ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-      a.setParamInt(QueryInputLayer.I_INPUTLAYER, nl.vu.cs.ajira.utils.Consts.DUMMY_INPUT_LAYER_ID);
-      a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
-      actions.add(a);
+    // Execute all schema rules in parallel (on different branches)
+    ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, true, actionOutput);
 
-      a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
-      a.setParamInt(PrecomputedRuleExecutor.RULE_ID, i);
-      a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, true);
-      actions.add(a);
+    // Read all the delta triples and apply all the rules with a single antecedent
+    executeGenericRules(context, actionOutput);
 
-      actionOutput.branch(actions);
-    }
+    // Execute rules that require a map and a reduce
+    // FIXME This operation is necessary, but is this the right place to perform it?
+    ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true);
+    executePrecomGenericRules(context, actionOutput);
 
-    /******
-     * Read all the delta triples and apply on them all the rules with a single antecedent.
-     ******/
-    List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-    a.setParamInt(QueryInputLayer.I_INPUTLAYER, nl.vu.cs.ajira.utils.Consts.DUMMY_INPUT_LAYER_ID);
-    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
-    actions.add(a);
-
-    // Read all the triples from the delta and stream them to the rest of
-    // the chain
-    actions.add(ActionFactory.getActionConf(ReadAllInmemoryTriples.class));
-
-    // Apply all the rules on them
-    a = ActionFactory.getActionConf(GenericRuleExecutor.class);
-    actions.add(a);
-
-    actionOutput.branch(actions);
-
-    /*****
-     * Apply the rules that require a map and reduce.
-     */
-    actions = new ArrayList<ActionConf>();
-    a = ActionFactory.getActionConf(QueryInputLayer.class);
-    a.setParamInt(QueryInputLayer.I_INPUTLAYER, nl.vu.cs.ajira.utils.Consts.DUMMY_INPUT_LAYER_ID);
-    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
-    actions.add(a);
-
-    // Read all the triples from the delta and stream them to the rest of
-    // the chain
-    actions.add(ActionFactory.getActionConf(ReadAllInmemoryTriples.class));
-
-    // Map
-    a = ActionFactory.getActionConf(PrecompGenericMap.class);
-    a.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, true);
-    actions.add(a);
-
-    // Group by
-    a = ActionFactory.getActionConf(GroupBy.class);
-    a.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-    a.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
-    actions.add(a);
-
-    // Reduce
-    a = ActionFactory.getActionConf(PrecompGenericReduce.class);
-    a.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, true);
-    actions.add(a);
-
-    actionOutput.branch(actions);
-
-    /****
-     * If some schema is changed, reapply the rules over the entire input which is affected
-     */
-    for (Rule r : rulesSchemaGenerics) {
-      // Get all the possible "join" values that match the schema
-      Pattern query = new Pattern();
-      r.getGenericBodyPatterns()[0].copyTo(query);
-
-      Tuples tuples = r.getFlaggedPrecomputedTuples();
-      int[][] shared_pos = r.getSharedVariablesGen_Precomp();
-      Collection<Long> possibleValues = tuples.getSortedSet(shared_pos[0][1]);
+    // If some schema is changed, re-apply the rules over the entire input which is affected
+    for (Rule rule : rulesSchemaGenerics) {
+      Pattern pattern = getQueryPattern(rule);
+      Collection<Long> possibleValues = getValuesMatchingTheSchema(rule);
+      int varPos = getVariablePosition(rule);
       for (long v : possibleValues) {
-        query.setTerm(shared_pos[0][0], new Term(v));
-        actions = new ArrayList<ActionConf>();
-
-        // Read the query from the btree
-        a = ActionFactory.getActionConf(ReadFromBtree.class);
-        a.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(query.getTerm(0).getValue()), new TLong(query.getTerm(1).getValue()), new TLong(query.getTerm(2).getValue())));
-        actions.add(a);
-
-        // Map
-        a = ActionFactory.getActionConf(PrecompGenericMap.class);
-        a.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, true);
-        actions.add(a);
-
-        // Group by
-        a = ActionFactory.getActionConf(GroupBy.class);
-        a.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-        a.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TByte.class.getName(), TLong.class.getName());
-        actions.add(a);
-
-        // Reduce
-        a = ActionFactory.getActionConf(PrecompGenericReduce.class);
-        a.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, true);
-        actions.add(a);
-
-        actionOutput.branch(actions);
+        pattern.setTerm(varPos, new Term(v));
+        executePrecomGenericRulesForPattern(pattern, context, actionOutput);
       }
     }
 
+  }
+
+  private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Integer> rulesOnlySchema, List<Rule> rulesSchemaGenerics) throws Exception {
+    InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+    Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
+    List<Rule> allSchemaOnlyRules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
+    List<Rule> selectedSchemaOnlyRules = new ArrayList<Rule>();
+    for (Pattern p : patterns.keySet()) {
+      // Skip if it does not include schema information
+      if (set.getSubset(p).isEmpty()) {
+        continue;
+      }
+      for (Rule rule : patterns.get(p)) {
+        if (rule.getGenericBodyPatterns().isEmpty()) {
+          selectedSchemaOnlyRules.add(rule);
+        } else {
+          rulesSchemaGenerics.add(rule);
+        }
+      }
+    }
+    for (int i = 0; i < allSchemaOnlyRules.size(); ++i) {
+      Rule r = allSchemaOnlyRules.get(i);
+      if (selectedSchemaOnlyRules.contains(r)) {
+        rulesOnlySchema.add(i);
+      }
+    }
+  }
+
+  private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.readFakeTuple(actions);
+    ActionsHelper.runReadAllInMemoryTuples(actions);
+    ActionsHelper.runGenericRuleExecutor(actions);
+    actionOutput.branch(actions);
+  }
+
+  private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.readFakeTuple(actions);
+    ActionsHelper.runReadAllInMemoryTuples(actions);
+    ActionsHelper.runMapReduce(actions, true);
+    actionOutput.branch(actions);
+  }
+
+  private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.runReadFromBTree(pattern, actions);
+    ActionsHelper.runMapReduce(actions, true);
+    actionOutput.branch(actions);
+  }
+
+  private Pattern getQueryPattern(Rule rule) {
+    Pattern pattern = new Pattern();
+    rule.getGenericBodyPatterns().get(0).copyTo(pattern);
+    return pattern;
+  }
+
+  private Collection<Long> getValuesMatchingTheSchema(Rule rule) {
+    int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
+    Tuples tuples = rule.getFlaggedPrecomputedTuples();
+    return tuples.getSortedSet(shared_pos[0][1]);
+  }
+
+  private int getVariablePosition(Rule rule) {
+    int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
+    return shared_pos[0][0];
   }
 }

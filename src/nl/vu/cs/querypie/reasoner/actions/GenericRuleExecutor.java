@@ -22,17 +22,16 @@ public class GenericRuleExecutor extends Action {
   private int[][] pos_constants_to_check;
   private long[][] value_constants_to_check;
   int[] counters;
-  Rule[] rules;
+  List<Rule> rules;
 
   @Override
   public void startProcess(ActionContext context) throws Exception {
     rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
-    counters = new int[rules.length];
-    pos_constants_to_check = new int[rules.length][];
-    value_constants_to_check = new long[rules.length][];
-    for (int r = 0; r < rules.length; ++r) {
-      // Extract the rule
-      Rule rule = rules[r];
+    counters = new int[rules.size()];
+    pos_constants_to_check = new int[rules.size()][];
+    value_constants_to_check = new long[rules.size()][];
+    for (int r = 0; r < rules.size(); ++r) {
+      Rule rule = rules.get(r);
       // Determines positions of variables
       int[][] pos_gen_head = rule.getSharedVariablesGen_Head();
       positions_gen_head.add(pos_gen_head);
@@ -73,7 +72,7 @@ public class GenericRuleExecutor extends Action {
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     for (int i = 0; i < counters.length; ++i) {
-      context.incrCounter("derivation-rule-" + rules[i].getId(), counters[i]);
+      context.incrCounter("derivation-rule-" + rules.get(i).getId(), counters[i]);
     }
   }
 
