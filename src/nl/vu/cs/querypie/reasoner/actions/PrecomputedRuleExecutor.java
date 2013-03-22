@@ -18,7 +18,7 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
-class PrecomputedRuleExecutor extends Action {
+public class PrecomputedRuleExecutor extends Action {
 
   public static final int RULE_ID = 0;
   public static final int INCREMENTAL_FLAG = 1;

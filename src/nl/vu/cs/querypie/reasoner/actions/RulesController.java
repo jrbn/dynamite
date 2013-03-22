@@ -10,7 +10,7 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 
-class RulesController extends Action {
+public class RulesController extends Action {
 
   private boolean hasDerived;
 

@@ -15,7 +15,7 @@ import nl.vu.cs.querypie.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 
-class GenericRuleExecutor extends Action {
+public class GenericRuleExecutor extends Action {
 
   List<int[][]> positions_gen_head = new ArrayList<int[][]>();
   List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();

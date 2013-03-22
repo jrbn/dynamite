@@ -10,7 +10,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
-class ReloadSchema extends Action {
+public class ReloadSchema extends Action {
 
   static final int INCREMENTAL_FLAG = 0;
 
