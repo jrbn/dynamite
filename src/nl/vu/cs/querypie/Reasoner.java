@@ -23,6 +23,7 @@ public class Reasoner {
 
   private static String deltaDir;
   private static List<Rule> rules;
+  private static boolean add;
 
   public static void main(String[] args) {
     if (args.length < 2) {
@@ -56,7 +57,7 @@ public class Reasoner {
     if (deltaDir == null) {
       ActionsHelper.runRulesController(actions);
     } else {
-      ActionsHelper.runIncrRulesController(actions, deltaDir);
+      ActionsHelper.runIncrRulesController(actions, deltaDir, add);
     }
     job.setActions(actions);
 
@@ -77,6 +78,10 @@ public class Reasoner {
     for (int i = 0; i < args.length; ++i) {
       if (args[i].equals("--remove")) {
         deltaDir = args[++i];
+        add = false;
+      } else if (args[i].equals("--add")) {
+        deltaDir = args[++i];
+        add = true;
       }
     }
   }

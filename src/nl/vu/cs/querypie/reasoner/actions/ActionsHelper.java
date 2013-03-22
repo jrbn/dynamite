@@ -128,17 +128,29 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  public static void runIncrRulesController(List<ActionConf> actions, String deltaDir) {
+  static void runIncrRemoveController(List<ActionConf> actions) {
+    runIncrRemoveControllerInStage(0, actions);
+  }
+
+  public static void runIncrRulesController(List<ActionConf> actions, String deltaDir, boolean add) {
     if (actions.isEmpty()) {
       readFakeTuple(actions);
     }
-    runIncrRulesControllerInStage(0, actions, deltaDir);
+    ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
+    a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
+    a.setParamBoolean(IncrRulesController.ADD, add);
+    actions.add(a);
   }
 
-  static void runIncrRulesControllerInStage(int stage, List<ActionConf> actions, String deltaDir) {
-    ActionConf c = ActionFactory.getActionConf(IncrRulesController.class);
-    c.setParamInt(IncrRulesController.I_STAGE, stage);
-    c.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
+  static void runIncrAddController(List<ActionConf> actions, int stage) {
+    ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
+    c.setParamInt(IncrAddController.I_STAGE, stage);
+    actions.add(c);
+  }
+
+  static void runIncrRemoveControllerInStage(int stage, List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
+    c.setParamInt(IncrRemoveController.I_STAGE, stage);
     actions.add(c);
   }
 
@@ -242,4 +254,12 @@ public class ActionsHelper {
   static void runWriteDerivationsOnBTree(List<ActionConf> actions) {
     actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
   }
+
+  static void writeInMemoryTuplesToBTree(ActionContext context, ActionOutput actionOutput, String inMemoryKey) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.runReadAllInMemoryTuples(actions, inMemoryKey);
+    ActionsHelper.runWriteDerivationsOnBTree(actions);
+    actionOutput.branch(actions);
+  }
+
 }
