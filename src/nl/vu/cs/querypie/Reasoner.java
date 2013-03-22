@@ -69,7 +69,6 @@ public class Reasoner {
     // Launch the reasoning
     Job job = new Job();
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionsHelper.readFakeTuple(actions);
     if (deltaDir == null) {
       ActionsHelper.runRulesController(actions);
     } else {

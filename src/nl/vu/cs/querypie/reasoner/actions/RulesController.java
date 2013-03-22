@@ -36,7 +36,6 @@ public class RulesController extends Action {
   }
 
   private void applyRulesSchemaOnly(List<ActionConf> actions) {
-    ActionsHelper.readFakeTuple(actions);
     ActionsHelper.runSchemaRulesInParallel(actions);
     ActionsHelper.runSort(actions);
     ActionsHelper.runRemoveDuplicates(actions);
