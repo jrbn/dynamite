@@ -40,10 +40,47 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void runMapReduce(List<ActionConf> actions, boolean incrementalFlag) {
-    runMap(actions, incrementalFlag);
-    runGroupBy(actions);
-    runReduce(actions, incrementalFlag);
+  static void parallelRunPrecomputedRuleExecutorForAllRules(int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+    for (int ruleId = 0; ruleId < numRules; ++ruleId) {
+      List<ActionConf> actions = new ArrayList<ActionConf>();
+      runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
+      actionOutput.branch(actions);
+    }
+  }
+
+  static void parallelRunPrecomputedRuleExecutorForRules(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+    for (Integer ruleId : ruleIds) {
+      List<ActionConf> actions = new ArrayList<ActionConf>();
+      runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
+      actionOutput.branch(actions);
+    }
+  }
+
+  static InMemoryTupleSet parseTriplesFromFile(String input) throws Exception {
+    InMemoryTupleSet set = new InMemoryTreeTupleSet();
+    List<File> files = new ArrayList<File>();
+    File fInput = new File(input);
+    if (fInput.isDirectory()) {
+      for (File child : fInput.listFiles(new FilterHiddenFiles()))
+        files.add(child);
+    } else {
+      files.add(fInput);
+    }
+    for (File file : files) {
+      BufferedReader reader = new BufferedReader(new FileReader(file));
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        // Parse the line
+        String[] sTriple = line.split(" ");
+        TLong[] triple = { new TLong(), new TLong(), new TLong() };
+        triple[0].setValue(Long.valueOf(sTriple[0]));
+        triple[1].setValue(Long.valueOf(sTriple[1]));
+        triple[2].setValue(Long.valueOf(sTriple[2]));
+        set.add(TupleFactory.newTuple(triple));
+      }
+      reader.close();
+    }
+    return set;
   }
 
   static void readEverythingFromBTree(List<ActionConf> actions) {
@@ -115,12 +152,10 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void parallelRunPrecomputedRuleExecutorForAllRules(int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
-    for (int ruleId = 0; ruleId < numRules; ++ruleId) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
-      actionOutput.branch(actions);
-    }
+  static void runMapReduce(List<ActionConf> actions, boolean incrementalFlag) {
+    runMap(actions, incrementalFlag);
+    runGroupBy(actions);
+    runReduce(actions, incrementalFlag);
   }
 
   static void runPrecomputedRuleExecutorForRule(int ruleId, List<ActionConf> actions, boolean incrementalFlag) {
@@ -131,14 +166,6 @@ public class ActionsHelper {
     a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
     a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, incrementalFlag);
     actions.add(a);
-  }
-
-  static void parallelRunPrecomputedRuleExecutorForRules(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
-    for (Integer ruleId : ruleIds) {
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      runPrecomputedRuleExecutorForRule(ruleId, actions, incrementalFlag);
-      actionOutput.branch(actions);
-    }
   }
 
   static void runReadAllInMemoryTuples(List<ActionConf> actions) {
@@ -164,6 +191,15 @@ public class ActionsHelper {
   static void runReloadSchema(List<ActionConf> actions, boolean incrementalFlag) {
     ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
     c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
+    actions.add(c);
+  }
+
+  static void runRemoveAllInMemoryTriples(List<ActionConf> actions, String inMemoryTriplesKey) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
+    ActionConf c = ActionFactory.getActionConf(RemoveAllInMemoryTuplesFromBTree.class);
+    c.setParamString(RemoveAllInMemoryTuplesFromBTree.IN_MEMORY_KEY, inMemoryTriplesKey);
     actions.add(c);
   }
 
@@ -194,32 +230,5 @@ public class ActionsHelper {
 
   static void runWriteDerivationsOnBTree(List<ActionConf> actions) {
     actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
-  }
-
-  static InMemoryTupleSet parseTriplesFromFile(String input) throws Exception {
-    InMemoryTupleSet set = new InMemoryTreeTupleSet();
-    List<File> files = new ArrayList<File>();
-    File fInput = new File(input);
-    if (fInput.isDirectory()) {
-      for (File child : fInput.listFiles(new FilterHiddenFiles()))
-        files.add(child);
-    } else {
-      files.add(fInput);
-    }
-    for (File file : files) {
-      BufferedReader reader = new BufferedReader(new FileReader(file));
-      String line = null;
-      while ((line = reader.readLine()) != null) {
-        // Parse the line
-        String[] sTriple = line.split(" ");
-        TLong[] triple = { new TLong(), new TLong(), new TLong() };
-        triple[0].setValue(Long.valueOf(sTriple[0]));
-        triple[1].setValue(Long.valueOf(sTriple[1]));
-        triple[2].setValue(Long.valueOf(sTriple[2]));
-        set.add(TupleFactory.newTuple(triple));
-      }
-      reader.close();
-    }
-    return set;
   }
 }

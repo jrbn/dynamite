@@ -80,6 +80,9 @@ public class IncrRulesController extends Action {
     } else {
       // TODO: Move to the second stage of the algorithm.
       // 1) Remove everything in Delta
+      List<ActionConf> actions = new ArrayList<ActionConf>();
+      ActionsHelper.runRemoveAllInMemoryTriples(actions, Consts.COMPLETE_DELTA_KEY);
+      actionOutput.branch(actions);
       // 2) Recompute the remaining derivation
     }
     currentDelta = null;
