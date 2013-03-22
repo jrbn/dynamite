@@ -18,7 +18,7 @@ import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
-public class IncrRulesParallelExecution extends Action {
+class IncrRulesParallelExecution extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {

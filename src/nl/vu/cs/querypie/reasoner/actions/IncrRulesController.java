@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
 public class IncrRulesController extends Action {
   static final Logger log = LoggerFactory.getLogger(IncrRulesController.class);
 
-  public static final int S_DELTA_DIR = 0;
-  public static final int I_STAGE = 1;
+  static final int S_DELTA_DIR = 0;
+  static final int I_STAGE = 1;
 
   private String deltaDir = null;
   private int stage = 0;

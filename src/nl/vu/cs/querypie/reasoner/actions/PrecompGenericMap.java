@@ -16,9 +16,9 @@ import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
-public class PrecompGenericMap extends Action {
+class PrecompGenericMap extends Action {
 
-  public static final int INCREMENTAL_FLAG = 0;
+  static final int INCREMENTAL_FLAG = 0;
 
   private int[][] key_positions;
   private int[][] positions_to_check;

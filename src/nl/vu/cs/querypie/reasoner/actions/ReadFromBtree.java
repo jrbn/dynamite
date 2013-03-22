@@ -17,10 +17,10 @@ import nl.vu.cs.ajira.data.types.bytearray.BDataInput;
 import nl.vu.cs.ajira.datalayer.InputQuery;
 import nl.vu.cs.ajira.utils.Consts;
 
-public class ReadFromBtree extends Action {
+class ReadFromBtree extends Action {
 
-  public static final int TUPLE = 0;
-  public static final int PARALLEL_TASKS = 1;
+  static final int TUPLE = 0;
+  static final int PARALLEL_TASKS = 1;
 
   private boolean first;
   private int tasks;

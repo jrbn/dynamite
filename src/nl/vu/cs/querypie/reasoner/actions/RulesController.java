@@ -10,12 +10,7 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class RulesController extends Action {
-
-  static final Logger log = LoggerFactory.getLogger(RulesController.class);
+class RulesController extends Action {
 
   private boolean hasDerived;
 

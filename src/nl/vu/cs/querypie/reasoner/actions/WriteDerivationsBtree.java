@@ -11,7 +11,7 @@ import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
-public class WriteDerivationsBtree extends Action {
+class WriteDerivationsBtree extends Action {
 
   private BTreeInterface in;
   private WritingSession spo, sop, pos, pso, osp, ops;

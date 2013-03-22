@@ -22,9 +22,9 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
-public class PrecompGenericReduce extends Action {
+class PrecompGenericReduce extends Action {
 
-  public static final int INCREMENTAL_FLAG = 0;
+  static final int INCREMENTAL_FLAG = 0;
 
   private int[][][] pos_head_precomps;
   private int[][][] pos_gen_precomps;
