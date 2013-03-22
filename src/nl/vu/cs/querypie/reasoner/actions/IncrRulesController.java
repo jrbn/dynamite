@@ -18,16 +18,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class IncrRulesController extends Action {
-
   static final int S_DELTA_DIR = 0;
   static final int I_STAGE = 1;
   static final Logger log = LoggerFactory.getLogger(IncrRulesController.class);
 
-  private String deltaDir = null;
   private int stage = 0;
-  private InMemoryTupleSet currentDelta = null;
-  private InMemoryTupleSet completeDelta = null;
-  private Tuple currentTuple = null;
+  private String deltaDir;
+
+  private InMemoryTupleSet currentDelta;
+  private InMemoryTupleSet completeDelta;
+  private Tuple currentTuple;
 
   @Override
   public void registerActionParameters(ActionConf conf) {
@@ -107,7 +107,6 @@ public class IncrRulesController extends Action {
     }
     // Otherwise stop and write complete derivations on btree 
     else {
-      updateAndSaveCompleteDelta(context);
       writeCompleteDeltaToBTree(context, actionOutput);
     }
   }
@@ -141,9 +140,6 @@ public class IncrRulesController extends Action {
 
   private void updateAndSaveCompleteDelta(ActionContext context) {
     completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-    if (completeDelta == null) {
-      completeDelta = new InMemoryTreeTupleSet();
-    }
     completeDelta.addAll(currentDelta);
     context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
   }
@@ -153,10 +149,10 @@ public class IncrRulesController extends Action {
   }
 
   private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
+    updateAndSaveCompleteDelta(context);
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runReadAllInMemoryTuples(actions, Consts.COMPLETE_DELTA_KEY);
     ActionsHelper.runWriteDerivationsOnBTree(actions);
     actionOutput.branch(actions);
   }
-
 }

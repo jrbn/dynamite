@@ -11,9 +11,7 @@ import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
 public class RemoveAllInMemoryTuplesFromBTree extends Action {
-
   static final int IN_MEMORY_KEY = 0;
-
   private InMemoryTupleSet inMemorySet;
 
   @Override
