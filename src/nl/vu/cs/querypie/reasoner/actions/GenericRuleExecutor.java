@@ -41,6 +41,7 @@ public class GenericRuleExecutor extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		checkInput = getParamBoolean(B_CHECK_VALID_INPUT);
+		minimumStep = getParamInt(I_MIN_STEP_TO_INCLUDE);
 		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithOneAntecedent();
 		counters = new int[rules.size()];

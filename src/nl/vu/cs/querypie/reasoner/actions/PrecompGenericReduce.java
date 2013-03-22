@@ -10,6 +10,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TBag;
+import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -26,6 +27,7 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 public class PrecompGenericReduce extends Action {
 
 	public static final int INCREMENTAL_FLAG = 0;
+	public static final int I_MINIMUM_STEP = 1;
 
 	private int[][][] pos_head_precomps;
 	private int[][][] pos_gen_precomps;
@@ -37,16 +39,20 @@ public class PrecompGenericReduce extends Action {
 	private List<Rule> rules;
 	private final Set<Tuple> duplicates = new HashSet<Tuple>();
 	private Tuple supportTuple = TupleFactory.newTuple();
+	private int minimumStep;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false,
 				false);
+		conf.registerParameter(I_MINIMUM_STEP, "minimum step",
+				Integer.MIN_VALUE, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		minimumStep = getParamInt(I_MINIMUM_STEP);
 		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
 		counters = new int[rules.size()];
@@ -97,25 +103,36 @@ public class PrecompGenericReduce extends Action {
 		int currentRule = -1;
 		long currentJoinValue = -1;
 		for (Tuple t : values) {
-			TByte rule = (TByte) t.get(0);
-			TLong elementToJoin = (TLong) t.get(1);
-			if (rule.getValue() == currentRule
-					&& currentJoinValue == elementToJoin.getValue()) {
-				continue;
-			} else {
+			TBoolean valid = (TBoolean) t.get(0);
+			TByte rule = (TByte) t.get(1);
+			TLong elementToJoin = (TLong) t.get(2);
+
+			// if (rule.getValue() == currentRule
+			// && currentJoinValue == elementToJoin.getValue()) {
+			// continue;
+			// } else {
+
+			if (currentRule != rule.getValue()) {
 				currentRule = rule.getValue();
-				currentJoinValue = elementToJoin.getValue();
 				// First copy the "key" in the output triple.
 				for (int i = 0; i < pos_gen_head[currentRule].length; ++i) {
 					outputTuples[currentRule][pos_gen_head[currentRule][i][1]]
 							.setValue(Utils.decodeLong(key.getArray(), 8 * i));
 				}
 			}
+			// }
 
+			currentJoinValue = elementToJoin.getValue();
 			Collection<Row> set = precompTuples[currentRule].get(
 					pos_gen_precomps[currentRule][0][1], currentJoinValue);
 			if (set != null) {
 				for (Row row : set) {
+
+					// Only if the step is ok
+					if (!valid.getValue() && row.getStep() < minimumStep) {
+						continue;
+					}
+
 					// Get current values
 					for (int i = 0; i < pos_head_precomps[currentRule].length; ++i) {
 						outputTuples[currentRule][pos_head_precomps[currentRule][i][0]]

@@ -21,6 +21,7 @@ import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
+import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -96,7 +97,8 @@ public class ActionsHelper {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
-				TByte.class.getName(), TLong.class.getName());
+				TBoolean.class.getName(), TByte.class.getName(),
+				TLong.class.getName());
 		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
 		actions.add(c);
 	}
@@ -121,7 +123,7 @@ public class ActionsHelper {
 
 	private static void runMap(List<ActionConf> actions, boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
-		c.setParamBoolean(PrecompGenericMap.INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamBoolean(PrecompGenericMap.B_INCREMENTAL_FLAG, incrementalFlag);
 		actions.add(c);
 	}
 

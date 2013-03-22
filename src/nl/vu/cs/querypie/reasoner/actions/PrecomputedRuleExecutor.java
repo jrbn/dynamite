@@ -65,7 +65,7 @@ public class PrecomputedRuleExecutor extends Action {
 
 		for (int i = 0; i < tuples.getNTuples(); ++i) {
 			Row r = tuples.getRow(i);
-			if (r.getStep() >= step - 1) {
+			if (r.getStep() >= step) {
 				for (int j = 0; j < pos_head_precomp.length; ++j) {
 					outputTriple[pos_head_precomp[j][0]].setValue(r
 							.getValue(pos_head_precomp[j][1]));

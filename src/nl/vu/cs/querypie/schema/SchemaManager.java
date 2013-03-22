@@ -161,7 +161,7 @@ public class SchemaManager {
 			for (int i = 0; i < pos_vars.length; ++i) {
 				resultList.add(((TLong) t.get(pos_vars[i])).getValue());
 			}
-			steps.add(((TInt) t.get(3)).getValue());
+			steps.add(Integer.MAX_VALUE);
 		}
 		return new Tuples(pos_vars.length, Longs.toArray(resultList),
 				Ints.toArray(steps));
