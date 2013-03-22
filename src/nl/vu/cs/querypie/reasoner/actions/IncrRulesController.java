@@ -101,8 +101,14 @@ public class IncrRulesController extends Action {
   }
 
   private void stop2(ActionContext context, ActionOutput actionOutput) throws Exception {
+    // In case of new derivations, perform another iteration
     if (!currentDelta.isEmpty()) {
       executeOneForwardChainIterationAndRestartFromStage(2, context, actionOutput);
+    }
+    // Otherwise stop and write complete derivations on btree 
+    else {
+      updateAndSaveCompleteDelta(context);
+      writeCompleteDeltaToBTree(context, actionOutput);
     }
   }
 
@@ -144,6 +150,13 @@ public class IncrRulesController extends Action {
 
   private void saveCurrentDelta(ActionContext context) {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+  }
+
+  private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.runReadAllInMemoryTuples(actions, Consts.COMPLETE_DELTA_KEY);
+    ActionsHelper.runWriteDerivationsOnBTree(actions);
+    actionOutput.branch(actions);
   }
 
 }

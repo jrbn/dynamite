@@ -168,10 +168,12 @@ public class ActionsHelper {
     actions.add(a);
   }
 
-  static void runReadAllInMemoryTuples(List<ActionConf> actions) {
+  static void runReadAllInMemoryTuples(List<ActionConf> actions, String inMemoryTriplesKey) {
     if (actions.isEmpty()) {
       readFakeTuple(actions);
     }
+    ActionConf a = ActionFactory.getActionConf(ReadAllInmemoryTriples.class);
+    a.setParamString(ReadAllInmemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
     actions.add(ActionFactory.getActionConf(ReadAllInmemoryTriples.class));
   }
 
