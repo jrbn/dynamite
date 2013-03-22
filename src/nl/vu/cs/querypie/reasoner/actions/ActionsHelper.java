@@ -56,10 +56,10 @@ public class ActionsHelper {
     }
   }
 
-  static InMemoryTupleSet parseTriplesFromFile(String input) throws Exception {
+  static InMemoryTupleSet populateInMemorySetFromFile(String fileName) throws Exception {
     InMemoryTupleSet set = new InMemoryTreeTupleSet();
     List<File> files = new ArrayList<File>();
-    File fInput = new File(input);
+    File fInput = new File(fileName);
     if (fInput.isDirectory()) {
       for (File child : fInput.listFiles(new FilterHiddenFiles()))
         files.add(child);
@@ -194,12 +194,21 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void runRemoveAllInMemoryTriples(List<ActionConf> actions, String inMemoryTriplesKey) {
+  static void runRemoveAllInMemoryTriplesFromBTree(List<ActionConf> actions, String inMemoryTriplesKey) {
     if (actions.isEmpty()) {
       readFakeTuple(actions);
     }
     ActionConf c = ActionFactory.getActionConf(RemoveAllInMemoryTuplesFromBTree.class);
     c.setParamString(RemoveAllInMemoryTuplesFromBTree.IN_MEMORY_KEY, inMemoryTriplesKey);
+    actions.add(c);
+  }
+
+  static void runRemoveCleanInMemoryTriples(List<ActionConf> actions, String inMemoryTriplesKey) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
+    ActionConf c = ActionFactory.getActionConf(ClearInMemoryTupleSet.class);
+    c.setParamString(ClearInMemoryTupleSet.IN_MEMORY_KEY, inMemoryTriplesKey);
     actions.add(c);
   }
 

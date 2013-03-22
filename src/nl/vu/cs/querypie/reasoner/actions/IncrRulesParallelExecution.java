@@ -22,28 +22,22 @@ public class IncrRulesParallelExecution extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-
   }
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<Integer> rulesOnlySchema = new ArrayList<Integer>();
     List<Rule> rulesSchemaGenerics = new ArrayList<Rule>();
-
     // Determine the rules that have information in delta and organize them according to their type
     extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
-
     // Execute all schema rules in parallel (on different branches)
     ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, true, actionOutput);
-
     // Read all the delta triples and apply all the rules with a single antecedent
     executeGenericRules(context, actionOutput);
-
     // Execute rules that require a map and a reduce
     // FIXME This operation is necessary, but is this the right place to perform it?
     ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true);
     executePrecomGenericRules(context, actionOutput);
-
     // If some schema is changed, re-apply the rules over the entire input which is affected
     for (Rule rule : rulesSchemaGenerics) {
       Pattern pattern = getQueryPattern(rule);
@@ -54,7 +48,6 @@ public class IncrRulesParallelExecution extends Action {
         executePrecomGenericRulesForPattern(pattern, context, actionOutput);
       }
     }
-
   }
 
   private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Integer> rulesOnlySchema, List<Rule> rulesSchemaGenerics) throws Exception {

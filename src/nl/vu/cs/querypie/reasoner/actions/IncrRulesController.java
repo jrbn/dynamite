@@ -42,7 +42,9 @@ public class IncrRulesController extends Action {
     switch (stage) {
     case 0:
       readDeltaFromFileAndPutItInCache(context);
+      break;
     case 1:
+    case 2:
       completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
       currentDelta = new InMemoryTreeTupleSet();
       currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
@@ -50,42 +52,18 @@ public class IncrRulesController extends Action {
     }
   }
 
-  private void process1(Tuple tuple, ActionContext context, ActionOutput actionOutput) {
-    tuple.copyTo(currentTuple);
-    if (!completeDelta.contains(currentTuple)) {
-      currentDelta.add(currentTuple);
-      currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
-    }
-  }
-
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
     switch (stage) {
     case 1:
-      process1(tuple, context, actionOutput);
+    case 2:
+      tuple.copyTo(currentTuple);
+      if (!completeDelta.contains(currentTuple)) {
+        currentDelta.add(currentTuple);
+        currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+      }
       break;
     }
-  }
-
-  private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
-    executeOneForwardChainIteration(context, actionOutput);
-  }
-
-  private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (!currentDelta.isEmpty()) {
-      // Repeat the process (execute a new iteration) considering the
-      // current delta
-      saveCurrentDelta(context);
-      executeOneForwardChainIteration(context, actionOutput);
-    } else {
-      // TODO: Move to the second stage of the algorithm.
-      // 1) Remove everything in Delta
-      List<ActionConf> actions = new ArrayList<ActionConf>();
-      ActionsHelper.runRemoveAllInMemoryTriples(actions, Consts.COMPLETE_DELTA_KEY);
-      actionOutput.branch(actions);
-      // 2) Recompute the remaining derivation
-    }
-    currentDelta = null;
   }
 
   @Override
@@ -97,27 +75,62 @@ public class IncrRulesController extends Action {
     case 1:
       stop1(context, actionOutput);
       break;
+    case 2:
+      stop2(context, actionOutput);
+      break;
     }
   }
 
-  private void executeOneForwardChainIteration(ActionContext context, ActionOutput actionOutput) throws Exception {
+  private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
+    executeOneForwardChainIterationAndRestartFromStage(1, context, actionOutput);
+  }
+
+  private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
+    if (!currentDelta.isEmpty()) {
+      // Repeat the process (execute a new iteration) considering the current delta
+      executeOneForwardChainIterationAndRestartFromStage(1, context, actionOutput);
+    } else {
+      // Move to the second stage of the algorithm.
+      List<ActionConf> actions = new ArrayList<ActionConf>();
+      ActionsHelper.runRemoveAllInMemoryTriplesFromBTree(actions, Consts.COMPLETE_DELTA_KEY);
+      ActionsHelper.runRemoveCleanInMemoryTriples(actions, Consts.CURRENT_DELTA_KEY);
+      ActionsHelper.runRemoveCleanInMemoryTriples(actions, Consts.COMPLETE_DELTA_KEY);
+      ActionsHelper.runIncrRulesControllerInStage(2, actions, deltaDir);
+      actionOutput.branch(actions);
+    }
+  }
+
+  private void stop2(ActionContext context, ActionOutput actionOutput) throws Exception {
+    if (!currentDelta.isEmpty()) {
+      executeOneForwardChainIterationAndRestartFromStage(2, context, actionOutput);
+    }
+  }
+
+  private void executeOneForwardChainIterationAndRestartFromStage(int stage, ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionsHelper.runIncrRulesParallelExecution(actions);
-    ActionsHelper.runCollectToNode(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
-    updateAndSaveCompleteDelta(context);
-    ActionsHelper.runIncrRulesControllerInStage(1, actions, deltaDir);
+    executeOneForwardChainIterationAndRestartFromStage(stage, context, actions);
     actionOutput.branch(actions);
   }
 
+  private void executeOneForwardChainIterationAndRestartFromStage(int stage, ActionContext context, List<ActionConf> actions) throws Exception {
+    saveCurrentDelta(context);
+    updateAndSaveCompleteDelta(context);
+    ActionsHelper.runIncrRulesParallelExecution(actions);
+    ActionsHelper.runCollectToNode(actions);
+    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.runIncrRulesControllerInStage(stage, actions, deltaDir);
+  }
+
   private void readDeltaFromFileAndPutItInCache(ActionContext context) {
-    InMemoryTupleSet delta = null;
     try {
-      delta = ActionsHelper.parseTriplesFromFile(deltaDir);
+      currentDelta = ActionsHelper.populateInMemorySetFromFile(deltaDir);
     } catch (Exception e) {
       log.error("Error retrieving information from file");
     }
-    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, delta);
+    completeDelta = new InMemoryTreeTupleSet();
+    completeDelta.addAll(currentDelta);
+    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+    context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
   }
 
   private void updateAndSaveCompleteDelta(ActionContext context) {
@@ -132,4 +145,5 @@ public class IncrRulesController extends Action {
   private void saveCurrentDelta(ActionContext context) {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
   }
+
 }
