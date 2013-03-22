@@ -15,59 +15,71 @@ import org.slf4j.LoggerFactory;
 
 public class RulesController extends Action {
 
-  static final Logger log = LoggerFactory.getLogger(RulesController.class);
+	public static final int I_STEP = 0;
+	static final Logger log = LoggerFactory.getLogger(RulesController.class);
 
-  private boolean hasDerived;
+	private boolean hasDerived;
+	private int step;
 
-  @Override
-  public void startProcess(ActionContext context) throws Exception {
-    hasDerived = false;
-  }
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_STEP, "step", null, true);
+	}
 
-  @Override
-  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    hasDerived = true;
-  }
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		hasDerived = false;
+		step = getParamInt(I_STEP);
+	}
 
-  private void applyRulesWithGenericPatterns(List<ActionConf> actions) {
-    ActionsHelper.readEverythingFromBTree(actions);
-    ActionsHelper.reconnectAfter(2, actions);
-    ActionsHelper.runGenericRuleExecutor(actions);
-    ActionsHelper.reconnectAfter(4, actions);
-    ActionsHelper.runMapReduce(actions, false);
-    ActionsHelper.runSort(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runWriteDerivationsOnBTree(actions);
-  }
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		hasDerived = true;
+	}
 
-  private void applyRulesSchemaOnly(List<ActionConf> actions) {
-    ActionsHelper.readFakeTuple(actions);
-    ActionsHelper.runSchemaRulesInParallel(actions);
-    ActionsHelper.runSort(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runWriteDerivationsOnBTree(actions);
-    ActionsHelper.runReloadSchema(actions, false);
-  }
+	private void applyRulesWithGenericPatterns(List<ActionConf> actions) {
+		ActionsHelper.readEverythingFromBTree(actions);
+		ActionsHelper.reconnectAfter(2, actions);
+		ActionsHelper.runGenericRuleExecutor(step - 1, actions);
+		ActionsHelper.reconnectAfter(4, actions);
+		ActionsHelper.runMapReduce(actions, false);
+		ActionsHelper.runSort(actions);
+		ActionsHelper.runRemoveDuplicates(actions);
+		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
+	}
 
-  private void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions) {
-    List<ActionConf> actions2 = new ArrayList<ActionConf>();
-    applyRulesWithGenericPatterns(actions2);
-    ActionsHelper.createBranch(actions, actions2);
-  }
+	private void applyRulesSchemaOnly(List<ActionConf> actions) {
+		ActionsHelper.readFakeTuple(actions);
+		ActionsHelper.runSchemaRulesInParallel(actions);
+		ActionsHelper.runSort(actions);
+		ActionsHelper.runRemoveDuplicates(actions);
+		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
+		ActionsHelper.runReloadSchema(actions, false);
+	}
 
-  @Override
-  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (!hasDerived) return;
-    List<ActionConf> actions = new ArrayList<ActionConf>();
-    if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-      applyRulesSchemaOnly(actions);
-      applyRulesWithGenericPatternsInABranch(actions);
-    } else {
-      applyRulesWithGenericPatterns(actions);
-    }
-    ActionsHelper.runCollectToNode(actions);
-    ActionsHelper.runRulesController(actions);
-    actionOutput.branch(actions);
-  }
+	private void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions) {
+		List<ActionConf> actions2 = new ArrayList<ActionConf>();
+		applyRulesWithGenericPatterns(actions2);
+		ActionsHelper.createBranch(actions, actions2);
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		if (!hasDerived)
+			return;
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		if (!ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().isEmpty()) {
+			applyRulesSchemaOnly(actions);
+			applyRulesWithGenericPatternsInABranch(actions);
+		} else {
+			applyRulesWithGenericPatterns(actions);
+		}
+		ActionsHelper.runCollectToNode(actions);
+		ActionsHelper.runRulesController(step + 1, actions);
+		actionOutput.branch(actions);
+	}
 
 }

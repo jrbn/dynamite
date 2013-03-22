@@ -1,101 +1,85 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
-import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
+import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
 public class PrecomputedRuleExecutor extends Action {
 
-  public static final int RULE_ID = 0;
-  public static final int INCREMENTAL_FLAG = 1;
+	public static final int RULE_ID = 0;
+	public static final int INCREMENTAL_FLAG = 1;
+	public static final int I_STEP = 2;
 
-  private Rule rule;
-  private int counter;
-  private boolean incrementalFlag;
+	private Rule rule;
+	private int counter;
+	private boolean incrementalFlag;
+	private int step;
+	private int[][] pos_head_precomp;
 
-  @Override
-  public void registerActionParameters(ActionConf conf) {
-    conf.registerParameter(RULE_ID, "rule", null, true);
-    conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, true);
-  }
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(RULE_ID, "rule", null, true);
+		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false,
+				true);
+		conf.registerParameter(I_STEP, "step", Integer.MIN_VALUE, false);
+	}
 
-  @Override
-  public void startProcess(ActionContext context) {
-    int ruleId = getParamInt(RULE_ID);
-    incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
-    rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().get(ruleId);
-    rule.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
-    counter = 0;
-  }
+	@Override
+	public void startProcess(ActionContext context) {
+		int ruleId = getParamInt(RULE_ID);
+		incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		step = getParamInt(I_STEP);
+		rule = ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().get(ruleId);
+		rule.reloadPrecomputation(ReasoningContext.getInstance(), context,
+				incrementalFlag);
+		pos_head_precomp = rule.getSharedVariablesHead_Precomp();
+		counter = 0;
+	}
 
-  @Override
-  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    List<SimpleData[]> results = new ArrayList<SimpleData[]>();
-    Map<Integer, Collection<Long>> values = new HashMap<Integer, Collection<Long>>();
-    Map<Integer, Long> constants = new HashMap<Integer, Long>();
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 
-    int variableId = 0;
-    for (int i = 0; i < 3; i++) {
-      Term term = rule.getHead().getTerm(i);
-      if (term.getName() == null) {
-        constants.put(i, term.getValue());
-      } else {
-        Tuples tuples = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
-        Collection<Long> sortedSet = tuples.getSortedSet(variableId++);
-        values.put(i, sortedSet);
-      }
-    }
+		Tuples tuples = incrementalFlag ? rule.getFlaggedPrecomputedTuples()
+				: rule.getAllPrecomputedTuples();
 
-    int numResults = 0;
-    for (Integer key : values.keySet()) {
-      numResults = values.get(key).size();
-      break;
-    }
+		TLong[] outputTriple = { new TLong(), new TLong(), new TLong() };
+		// Fill the output with the constants in the head
+		Pattern head = rule.getHead();
+		for (int i = 0; i < 3; ++i) {
+			Term t = head.getTerm(i);
+			if (t.getName() == null) {
+				outputTriple[i].setValue(t.getValue());
+			}
+		}
 
-    for (int i = 0; i < numResults; i++) {
-      SimpleData[] result = new SimpleData[3];
-      results.add(result);
-    }
+		for (int i = 0; i < tuples.getNTuples(); ++i) {
+			Row r = tuples.getRow(i);
+			if (r.getStep() >= step - 1) {
+				for (int j = 0; j < pos_head_precomp.length; ++j) {
+					outputTriple[pos_head_precomp[j][0]].setValue(r
+							.getValue(pos_head_precomp[j][1]));
+				}
+				actionOutput.output(outputTriple);
+				counter++;
+			}
+		}
+	}
 
-    for (int i = 0; i < 3; i++) {
-      if (values.containsKey(i)) {
-        int num = 0;
-        for (Long l : values.get(i)) {
-          results.get(num)[i] = new TLong(l);
-          num++;
-        }
-      } else {
-        assert (constants.containsKey(i));
-        Long val = constants.get(i);
-        for (SimpleData[] result : results) {
-          result[i] = new TLong(val);
-        }
-      }
-    }
-
-    for (SimpleData[] result : results) {
-      actionOutput.output(result);
-      counter++;
-    }
-  }
-
-  @Override
-  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    context.incrCounter("derivation-rule-" + rule.getId(), counter);
-  }
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		context.incrCounter("derivation-rule-" + rule.getId(), counter);
+	}
 
 }

@@ -85,8 +85,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runGenericRuleExecutor(List<ActionConf> actions) {
+	static void runGenericRuleExecutor(int step, List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
+		c.setParamInt(GenericRuleExecutor.I_MIN_STEP_TO_INCLUDE, step);
+		c.setParamBoolean(GenericRuleExecutor.B_CHECK_VALID_INPUT, true);
 		actions.add(c);
 	}
 
@@ -187,8 +189,9 @@ public class ActionsHelper {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	public static void runRulesController(List<ActionConf> actions) {
+	public static void runRulesController(int step, List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(RulesController.class);
+		c.setParamInt(RulesController.I_STEP, step);
 		actions.add(c);
 	}
 
@@ -208,8 +211,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runWriteDerivationsOnBTree(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
+	static void runWriteDerivationsOnBTree(int step, List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
+		actions.add(c);
 	}
 
 	static InMemoryTupleSet parseTriplesFromFile(String input) throws Exception {
