@@ -8,9 +8,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
 public class ReadAllInmemoryTriples extends Action {
-
   static final int IN_MEMORY_KEY = 0;
-
   private InMemoryTupleSet inMemorySet;
 
   @Override

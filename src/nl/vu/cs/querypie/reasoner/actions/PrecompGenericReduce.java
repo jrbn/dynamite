@@ -23,7 +23,6 @@ import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class PrecompGenericReduce extends Action {
-
   static final int INCREMENTAL_FLAG = 0;
 
   private int[][][] pos_head_precomps;

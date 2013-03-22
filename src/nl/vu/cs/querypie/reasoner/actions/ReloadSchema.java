@@ -11,7 +11,6 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class ReloadSchema extends Action {
-
   static final int INCREMENTAL_FLAG = 0;
 
   @Override

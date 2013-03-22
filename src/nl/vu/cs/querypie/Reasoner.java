@@ -19,18 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Reasoner {
-
   static final Logger log = LoggerFactory.getLogger(Reasoner.class);
 
-  private static String deltaDir = null;
-
-  private static void parseArgs(String[] args) {
-    for (int i = 0; i < args.length; ++i) {
-      if (args[i].equals("--remove")) {
-        deltaDir = args[++i];
-      }
-    }
-  }
+  private static String deltaDir;
+  private static List<Rule> rules;
 
   public static void main(String[] args) {
     if (args.length < 2) {
@@ -47,16 +39,8 @@ public class Reasoner {
     conf.setInt(Consts.N_PROC_THREADS, 4);
     arch.startup();
 
-    // Parse the rules from the file
-    Rule[] rules = null;
-    try {
-      String ruleFile = args[1];
-      rules = new RuleParser().parseRules(ruleFile);
-    } catch (Exception e) {
-      log.error("Error parsing... ", e);
-      log.error("Failed parsing the ruleset file. Exiting... ");
-      System.exit(1);
-    }
+    // Read rules from memory
+    readRules(args[1]);
 
     // Init the global context
     Ruleset set = new Ruleset(rules);
@@ -87,5 +71,23 @@ public class Reasoner {
     }
 
     arch.shutdown();
+  }
+
+  private static void parseArgs(String[] args) {
+    for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("--remove")) {
+        deltaDir = args[++i];
+      }
+    }
+  }
+
+  private static void readRules(String fileName) {
+    try {
+      rules = new RuleParser().parseRules(fileName);
+    } catch (Exception e) {
+      log.error("Error parsing... ", e);
+      log.error("Failed parsing the ruleset file. Exiting... ");
+      System.exit(1);
+    }
   }
 }

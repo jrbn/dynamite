@@ -17,7 +17,6 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class PrecompGenericMap extends Action {
-
   static final int INCREMENTAL_FLAG = 0;
 
   private int[][] key_positions;

@@ -16,9 +16,8 @@ public class RuleParser {
 
   static final Logger log = LoggerFactory.getLogger(RuleParser.class);
 
-  public Rule[] parseRules(String file) throws Exception {
+  public List<Rule> parseRules(String file) throws Exception {
     log.info("Start parsing the ruleset file");
-
     List<Rule> output = new ArrayList<>();
 
     BufferedReader f = new BufferedReader(new FileReader(new File(file)));
@@ -26,24 +25,20 @@ public class RuleParser {
     int i = 0;
 
     while (line != null) {
-      // Parse the signature
       String[] split = line.split(" :- ");
       String head = split[0];
-
       String[] sBody = split[1].split(",");
       Pattern[] body = new Pattern[sBody.length];
       for (int j = 0; j < sBody.length; ++j) {
         body[j] = Utils.parsePattern(sBody[j]);
       }
-
       Rule rule = new Rule(i, Utils.parsePattern(head), body);
       output.add(rule);
-
       line = f.readLine();
       i++;
     }
     f.close();
 
-    return output.toArray(new Rule[output.size()]);
+    return output;
   }
 }

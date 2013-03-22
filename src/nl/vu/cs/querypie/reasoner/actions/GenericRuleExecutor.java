@@ -16,7 +16,6 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
-
   List<int[][]> positions_gen_head = new ArrayList<int[][]>();
   List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
   private int[][] pos_constants_to_check;
