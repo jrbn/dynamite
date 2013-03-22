@@ -45,7 +45,7 @@ public class IncrRulesController extends Action {
     context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
     List<ActionConf> actions = new ArrayList<ActionConf>();
     if (add) {
-      ActionsHelper.runIncrAddController(actions, 0);
+      ActionsHelper.runIncrAddController(0, actions);
     } else {
       ActionsHelper.runIncrRemoveController(actions);
     }

@@ -37,7 +37,6 @@ public class IncrAddController extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    // Skip dummy tuple
     if (stage == 0) return;
     tuple.copyTo(currentTuple);
     if (!completeDelta.contains(currentTuple)) {
@@ -80,7 +79,7 @@ public class IncrAddController extends Action {
     ActionsHelper.runIncrRulesParallelExecution(actions);
     ActionsHelper.runCollectToNode(actions);
     ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runIncrAddController(actions, 1);
+    ActionsHelper.runIncrAddController(1, actions);
     actionOutput.branch(actions);
   }
 

@@ -128,8 +128,20 @@ public class ActionsHelper {
     actions.add(c);
   }
 
+  static void runIncrAddController(int stage, List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
+    c.setParamInt(IncrAddController.I_STAGE, stage);
+    actions.add(c);
+  }
+
   static void runIncrRemoveController(List<ActionConf> actions) {
     runIncrRemoveControllerInStage(0, actions);
+  }
+
+  static void runIncrRemoveControllerInStage(int stage, List<ActionConf> actions) {
+    ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
+    c.setParamInt(IncrRemoveController.I_STAGE, stage);
+    actions.add(c);
   }
 
   public static void runIncrRulesController(List<ActionConf> actions, String deltaDir, boolean add) {
@@ -140,18 +152,6 @@ public class ActionsHelper {
     a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
     a.setParamBoolean(IncrRulesController.ADD, add);
     actions.add(a);
-  }
-
-  static void runIncrAddController(List<ActionConf> actions, int stage) {
-    ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
-    c.setParamInt(IncrAddController.I_STAGE, stage);
-    actions.add(c);
-  }
-
-  static void runIncrRemoveControllerInStage(int stage, List<ActionConf> actions) {
-    ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
-    c.setParamInt(IncrRemoveController.I_STAGE, stage);
-    actions.add(c);
   }
 
   static void runIncrRulesParallelExecution(List<ActionConf> actions) {
@@ -205,24 +205,6 @@ public class ActionsHelper {
   static void runReloadSchema(List<ActionConf> actions, boolean incrementalFlag) {
     ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
     c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
-    actions.add(c);
-  }
-
-  static void runRemoveAllInMemoryTriplesFromBTree(List<ActionConf> actions, String inMemoryTriplesKey) {
-    if (actions.isEmpty()) {
-      readFakeTuple(actions);
-    }
-    ActionConf c = ActionFactory.getActionConf(RemoveAllInMemoryTuplesFromBTree.class);
-    c.setParamString(RemoveAllInMemoryTuplesFromBTree.IN_MEMORY_KEY, inMemoryTriplesKey);
-    actions.add(c);
-  }
-
-  static void runRemoveCleanInMemoryTriples(List<ActionConf> actions, String inMemoryTriplesKey) {
-    if (actions.isEmpty()) {
-      readFakeTuple(actions);
-    }
-    ActionConf c = ActionFactory.getActionConf(ClearInMemoryTupleSet.class);
-    c.setParamString(ClearInMemoryTupleSet.IN_MEMORY_KEY, inMemoryTriplesKey);
     actions.add(c);
   }
 

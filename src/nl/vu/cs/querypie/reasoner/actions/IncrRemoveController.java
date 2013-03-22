@@ -10,7 +10,9 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.common.Consts;
+import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
@@ -37,7 +39,6 @@ public class IncrRemoveController extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    // Skip dummy tuple
     if (stage == 0) return;
     tuple.copyTo(currentTuple);
     if (!completeDelta.contains(currentTuple)) {
@@ -59,32 +60,34 @@ public class IncrRemoveController extends Action {
   }
 
   private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
-    executeOneForwardChainIterationAndRestartFromStage(1, context, actionOutput);
+    executeOneForwardChainIterationAndRestartFromStage(context, actionOutput);
   }
 
   private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
     saveCurrentDelta(context);
     if (!currentDelta.isEmpty()) {
       // Repeat the process (execute a new iteration) considering the current delta
-      executeOneForwardChainIterationAndRestartFromStage(1, context, actionOutput);
+      executeOneForwardChainIterationAndRestartFromStage(context, actionOutput);
     } else {
       // Move to the second stage of the algorithm.
       List<ActionConf> actions = new ArrayList<ActionConf>();
-      ActionsHelper.runRemoveAllInMemoryTriplesFromBTree(actions, Consts.COMPLETE_DELTA_KEY);
-      ActionsHelper.runRemoveCleanInMemoryTriples(actions, Consts.CURRENT_DELTA_KEY);
-      ActionsHelper.runRemoveCleanInMemoryTriples(actions, Consts.COMPLETE_DELTA_KEY);
-      ActionsHelper.runIncrAddController(actions, 1);
+      // FIXME: currently we re-derive everything.
+      // Implement the incremental algorithm as in the paper! 
+      removeAllInMemoryTuplesFromBTree(context);
+      cleanInMemoryTuples(context);
+      ActionsHelper.readEverythingFromBTree(actions);
+      ActionsHelper.runIncrAddController(1, actions);
       actionOutput.branch(actions);
     }
   }
 
-  private void executeOneForwardChainIterationAndRestartFromStage(int stage, ActionContext context, ActionOutput actionOutput) throws Exception {
+  private void executeOneForwardChainIterationAndRestartFromStage(ActionContext context, ActionOutput actionOutput) throws Exception {
     updateAndSaveCompleteDelta(context);
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runIncrRulesParallelExecution(actions);
     ActionsHelper.runCollectToNode(actions);
     ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runIncrRemoveControllerInStage(stage, actions);
+    ActionsHelper.runIncrRemoveControllerInStage(1, actions);
     actionOutput.branch(actions);
   }
 
@@ -96,6 +99,21 @@ public class IncrRemoveController extends Action {
 
   private void saveCurrentDelta(ActionContext context) {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+  }
+
+  private void removeAllInMemoryTuplesFromBTree(ActionContext context) {
+    InMemoryTupleSet set = (InMemoryTupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+    BerkeleydbLayer db = ReasoningContext.getInstance().getKB();
+    for (Tuple t : set) {
+      db.remove(t);
+    }
+  }
+
+  private void cleanInMemoryTuples(ActionContext context) {
+    currentDelta = new InMemoryTreeTupleSet();
+    completeDelta = new InMemoryTreeTupleSet();
+    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+    context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
   }
 
 }
