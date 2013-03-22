@@ -174,7 +174,7 @@ public class ActionsHelper {
     }
     ActionConf a = ActionFactory.getActionConf(ReadAllInmemoryTriples.class);
     a.setParamString(ReadAllInmemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
-    actions.add(ActionFactory.getActionConf(ReadAllInmemoryTriples.class));
+    actions.add(a);
   }
 
   static void runReadFromBTree(Pattern pattern, List<ActionConf> actions) {

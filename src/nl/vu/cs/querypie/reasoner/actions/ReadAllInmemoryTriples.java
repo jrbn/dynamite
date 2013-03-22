@@ -27,8 +27,7 @@ public class ReadAllInmemoryTriples extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    InMemoryTupleSet delta = (InMemoryTupleSet) context.getObjectFromCache(inMemorySet);
-    for (Tuple t : delta) {
+    for (Tuple t : inMemorySet) {
       actionOutput.output(t);
     }
   }
