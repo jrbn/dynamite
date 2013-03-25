@@ -44,10 +44,15 @@ public class IncrRulesController extends Action {
     context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
     context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
     List<ActionConf> actions = new ArrayList<ActionConf>();
+    List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
+    // Initialization: one step derivation from the in-memory delta (set to add/remove)
+    ActionsHelper.runOneStepRulesControllerToMemory(actions);
     if (add) {
-      ActionsHelper.runIncrAddController(0, actions);
+      ActionsHelper.runIncrAddController(actionsToBranch);
+      ActionsHelper.createBranch(actions, actionsToBranch);
     } else {
-      ActionsHelper.runIncrRemoveController(actions);
+      ActionsHelper.runIncrRemoveController(actionsToBranch);
+      ActionsHelper.createBranch(actions, actionsToBranch);
     }
     actionOutput.branch(actions);
   }

@@ -21,6 +21,7 @@ import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
+import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -93,7 +94,7 @@ public class ActionsHelper {
   private static void readFakeTuple(List<ActionConf> actions) {
     ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
     a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
-    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
+    a.setParamWritable(QueryInputLayer.W_QUERY, new Query(new TBoolean()));
     actions.add(a);
   }
 
@@ -115,6 +116,14 @@ public class ActionsHelper {
     actions.add(c);
   }
 
+  public static void runCompleteRulesController(List<ActionConf> actions) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
+    ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
+    actions.add(c);
+  }
+
   static void runGenericRuleExecutor(List<ActionConf> actions) {
     ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
     actions.add(c);
@@ -128,19 +137,19 @@ public class ActionsHelper {
     actions.add(c);
   }
 
-  static void runIncrAddController(int stage, List<ActionConf> actions) {
+  static void runIncrAddController(List<ActionConf> actions) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
     ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
-    c.setParamInt(IncrAddController.I_STAGE, stage);
     actions.add(c);
   }
 
   static void runIncrRemoveController(List<ActionConf> actions) {
-    runIncrRemoveControllerInStage(0, actions);
-  }
-
-  static void runIncrRemoveControllerInStage(int stage, List<ActionConf> actions) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
     ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
-    c.setParamInt(IncrRemoveController.I_STAGE, stage);
     actions.add(c);
   }
 
@@ -168,6 +177,22 @@ public class ActionsHelper {
     runMap(actions, incrementalFlag);
     runGroupBy(actions);
     runReduce(actions, incrementalFlag);
+  }
+
+  static void runOneStepRulesControllerFromMemory(List<ActionConf> actions) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
+    ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerFromMemory.class);
+    actions.add(a);
+  }
+
+  static void runOneStepRulesControllerToMemory(List<ActionConf> actions) {
+    if (actions.isEmpty()) {
+      readFakeTuple(actions);
+    }
+    ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerToMemory.class);
+    actions.add(a);
   }
 
   static void runPrecomputedRuleExecutorForRule(int ruleId, List<ActionConf> actions, boolean incrementalFlag) {
@@ -212,14 +237,6 @@ public class ActionsHelper {
     actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
   }
 
-  public static void runRulesController(List<ActionConf> actions) {
-    if (actions.isEmpty()) {
-      readFakeTuple(actions);
-    }
-    ActionConf c = ActionFactory.getActionConf(RulesController.class);
-    actions.add(c);
-  }
-
   static void runSchemaRulesInParallel(List<ActionConf> actions) {
     ActionConf a = ActionFactory.getActionConf(ParallelExecutionSchemaOnly.class);
     actions.add(a);
@@ -235,6 +252,12 @@ public class ActionsHelper {
 
   static void runWriteDerivationsOnBTree(List<ActionConf> actions) {
     actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
+  }
+
+  static void runWriteInMemory(List<ActionConf> actions, String inMemoryTriplesKey) {
+    ActionConf a = ActionFactory.getActionConf(WriteInMemory.class);
+    a.setParamString(WriteInMemory.IN_MEMORY_KEY, inMemoryTriplesKey);
+    actions.add(a);
   }
 
   static void writeInMemoryTuplesToBTree(ActionContext context, ActionOutput actionOutput, String inMemoryKey) throws Exception {

@@ -15,21 +15,12 @@ import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
 public class IncrAddController extends Action {
-  static final int I_STAGE = 0;
-  private int stage = 0;
-
   private InMemoryTupleSet currentDelta;
   private InMemoryTupleSet completeDelta;
   private Tuple currentTuple;
 
   @Override
-  public void registerActionParameters(ActionConf conf) {
-    conf.registerParameter(I_STAGE, "stage computation", 0, false);
-  }
-
-  @Override
   public void startProcess(ActionContext context) throws Exception {
-    stage = getParamInt(I_STAGE);
     completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
     currentDelta = new InMemoryTreeTupleSet();
     currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
@@ -37,7 +28,6 @@ public class IncrAddController extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (stage == 0) return;
     tuple.copyTo(currentTuple);
     if (!completeDelta.contains(currentTuple)) {
       currentDelta.add(currentTuple);
@@ -47,21 +37,6 @@ public class IncrAddController extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    switch (stage) {
-    case 0:
-      stop0(context, actionOutput);
-      break;
-    case 1:
-      stop1(context, actionOutput);
-      break;
-    }
-  }
-
-  private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
-    executeAForwardChainingIterationAndRestart(context, actionOutput);
-  }
-
-  private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
     // In case of new derivations, perform another iteration
     if (!currentDelta.isEmpty()) {
       saveCurrentDelta(context);
@@ -79,7 +54,7 @@ public class IncrAddController extends Action {
     ActionsHelper.runIncrRulesParallelExecution(actions);
     ActionsHelper.runCollectToNode(actions);
     ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runIncrAddController(1, actions);
+    ActionsHelper.runIncrAddController(actions);
     actionOutput.branch(actions);
   }
 

@@ -17,21 +17,12 @@ import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
 public class IncrRemoveController extends Action {
-  static final int I_STAGE = 0;
-  private int stage = 0;
-
   private InMemoryTupleSet currentDelta;
   private InMemoryTupleSet completeDelta;
   private Tuple currentTuple;
 
   @Override
-  public void registerActionParameters(ActionConf conf) {
-    conf.registerParameter(I_STAGE, "stage computation", 0, false);
-  }
-
-  @Override
   public void startProcess(ActionContext context) throws Exception {
-    stage = getParamInt(I_STAGE);
     currentDelta = new InMemoryTreeTupleSet();
     completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
     currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
@@ -39,7 +30,6 @@ public class IncrRemoveController extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (stage == 0) return;
     tuple.copyTo(currentTuple);
     if (!completeDelta.contains(currentTuple)) {
       currentDelta.add(currentTuple);
@@ -49,21 +39,6 @@ public class IncrRemoveController extends Action {
 
   @Override
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    switch (stage) {
-    case 0:
-      stop0(context, actionOutput);
-      break;
-    case 1:
-      stop1(context, actionOutput);
-      break;
-    }
-  }
-
-  private void stop0(ActionContext context, ActionOutput actionOutput) throws Exception {
-    executeOneForwardChainIterationAndRestartFromStage(context, actionOutput);
-  }
-
-  private void stop1(ActionContext context, ActionOutput actionOutput) throws Exception {
     saveCurrentDelta(context);
     if (!currentDelta.isEmpty()) {
       // Repeat the process (execute a new iteration) considering the current delta
@@ -71,12 +46,11 @@ public class IncrRemoveController extends Action {
     } else {
       // Move to the second stage of the algorithm.
       List<ActionConf> actions = new ArrayList<ActionConf>();
-      // FIXME: currently we re-derive everything.
-      // Implement the incremental algorithm as in the paper! 
+      List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
       removeAllInMemoryTuplesFromBTree(context);
-      cleanInMemoryTuples(context);
-      ActionsHelper.readEverythingFromBTree(actions);
-      ActionsHelper.runIncrAddController(1, actions);
+      ActionsHelper.runOneStepRulesControllerToMemory(actions);
+      ActionsHelper.runIncrAddController(actionsToBranch);
+      ActionsHelper.createBranch(actions, actionsToBranch);
       actionOutput.branch(actions);
     }
   }
@@ -87,7 +61,7 @@ public class IncrRemoveController extends Action {
     ActionsHelper.runIncrRulesParallelExecution(actions);
     ActionsHelper.runCollectToNode(actions);
     ActionsHelper.runRemoveDuplicates(actions);
-    ActionsHelper.runIncrRemoveControllerInStage(1, actions);
+    ActionsHelper.runIncrRemoveController(actions);
     actionOutput.branch(actions);
   }
 
@@ -108,12 +82,4 @@ public class IncrRemoveController extends Action {
       db.remove(t);
     }
   }
-
-  private void cleanInMemoryTuples(ActionContext context) {
-    currentDelta = new InMemoryTreeTupleSet();
-    completeDelta = new InMemoryTreeTupleSet();
-    context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
-    context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
-  }
-
 }

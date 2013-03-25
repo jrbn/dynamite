@@ -55,7 +55,7 @@ public class Reasoner {
     Job job = new Job();
     List<ActionConf> actions = new ArrayList<ActionConf>();
     if (deltaDir == null) {
-      ActionsHelper.runRulesController(actions);
+      ActionsHelper.runCompleteRulesController(actions);
     } else {
       ActionsHelper.runIncrRulesController(actions, deltaDir, add);
     }
