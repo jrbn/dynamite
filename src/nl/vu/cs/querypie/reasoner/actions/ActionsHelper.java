@@ -208,8 +208,8 @@ public class ActionsHelper {
     if (actions.isEmpty()) {
       readFakeTuple(actions);
     }
-    ActionConf a = ActionFactory.getActionConf(ReadAllInmemoryTriples.class);
-    a.setParamString(ReadAllInmemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
+    ActionConf a = ActionFactory.getActionConf(ReadAllInMemoryTriples.class);
+    a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
     actions.add(a);
   }
 
