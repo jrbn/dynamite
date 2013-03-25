@@ -43,10 +43,11 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runMapReduce(List<ActionConf> actions, boolean incrementalFlag) {
-		runMap(actions, incrementalFlag);
+	static void runMapReduce(List<ActionConf> actions, int minimumStep,
+			boolean incrementalFlag) {
+		runMap(actions, minimumStep, incrementalFlag);
 		runGroupBy(actions);
-		runReduce(actions, incrementalFlag);
+		runReduce(actions, minimumStep, incrementalFlag);
 	}
 
 	static void readEverythingFromBTree(List<ActionConf> actions) {
@@ -121,9 +122,11 @@ public class ActionsHelper {
 				.getActionConf(IncrRulesParallelExecution.class));
 	}
 
-	private static void runMap(List<ActionConf> actions, boolean incrementalFlag) {
+	private static void runMap(List<ActionConf> actions, int minimumStep,
+			boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
 		c.setParamBoolean(PrecompGenericMap.B_INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamInt(PrecompGenericMap.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
 	}
 
@@ -175,17 +178,24 @@ public class ActionsHelper {
 		actions.add(a);
 	}
 
-	private static void runReduce(List<ActionConf> actions,
+	private static void runReduce(List<ActionConf> actions, int minimumStep,
 			boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
 		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG,
 				incrementalFlag);
+		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
 	}
 
 	static void runReloadSchema(List<ActionConf> actions,
 			boolean incrementalFlag) {
-		ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
+		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
+		c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
+				TLong.class.getName(), TLong.class.getName(),
+				TLong.class.getName());
+		actions.add(c);
+
+		c = ActionFactory.getActionConf(ReloadSchema.class);
 		c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
 		actions.add(c);
 	}

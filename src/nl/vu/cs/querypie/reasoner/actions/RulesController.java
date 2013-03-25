@@ -38,12 +38,13 @@ public class RulesController extends Action {
 		hasDerived = true;
 	}
 
-	private void applyRulesWithGenericPatterns(List<ActionConf> actions) {
+	private void applyRulesWithGenericPatterns(int step,
+			List<ActionConf> actions) {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(2, actions);
 		ActionsHelper.runGenericRuleExecutor(step - 1, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.runMapReduce(actions, false);
+		ActionsHelper.runMapReduce(actions, step - 1, false);
 		ActionsHelper.runSort(actions);
 		ActionsHelper.runRemoveDuplicates(actions);
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
@@ -51,32 +52,33 @@ public class RulesController extends Action {
 
 	private void applyRulesSchemaOnly(int step, List<ActionConf> actions) {
 		ActionsHelper.readFakeTuple(actions);
-		ActionsHelper.runSchemaRulesInParallel(step, actions);
+		ActionsHelper.runSchemaRulesInParallel(step - 1, actions);
 		ActionsHelper.runSort(actions);
 		ActionsHelper.runRemoveDuplicates(actions);
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
 		ActionsHelper.runReloadSchema(actions, false);
 	}
 
-	private void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions) {
+	private void applyRulesWithGenericPatternsInABranch(int step,
+			List<ActionConf> actions) {
 		List<ActionConf> actions2 = new ArrayList<ActionConf>();
-		applyRulesWithGenericPatterns(actions2);
+		applyRulesWithGenericPatterns(step, actions2);
 		ActionsHelper.createBranch(actions, actions2);
 	}
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
-		context.incrCounter("Iterations", 1);
 		if (!hasDerived)
 			return;
+		context.incrCounter("Iterations", 1);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(step - 1, actions);
-			applyRulesWithGenericPatternsInABranch(actions);
+			applyRulesSchemaOnly(step, actions);
+			applyRulesWithGenericPatternsInABranch(step, actions);
 		} else {
-			applyRulesWithGenericPatterns(actions);
+			applyRulesWithGenericPatterns(step, actions);
 		}
 		ActionsHelper.runCollectToNode(actions);
 		ActionsHelper.runRulesController(step + 1, actions);

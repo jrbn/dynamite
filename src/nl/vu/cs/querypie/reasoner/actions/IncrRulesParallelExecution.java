@@ -112,7 +112,7 @@ public class IncrRulesParallelExecution extends Action {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.readFakeTuple(actions);
 		ActionsHelper.runReadAllInMemoryTuples(actions);
-		ActionsHelper.runMapReduce(actions, true);
+		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch(actions);
 	}
 
@@ -120,7 +120,7 @@ public class IncrRulesParallelExecution extends Action {
 			ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.runReadFromBTree(pattern, actions);
-		ActionsHelper.runMapReduce(actions, true);
+		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch(actions);
 	}
 

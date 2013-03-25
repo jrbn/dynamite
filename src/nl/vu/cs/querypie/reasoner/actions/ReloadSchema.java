@@ -12,23 +12,29 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class ReloadSchema extends Action {
 
-  public static final int INCREMENTAL_FLAG = 0;
+	public static final int INCREMENTAL_FLAG = 0;
 
-  @Override
-  public void registerActionParameters(ActionConf conf) {
-    conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, true);
-  }
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false,
+				true);
+	}
 
-  @Override
-  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    actionOutput.output(tuple);
-  }
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		actionOutput.output(tuple);
+	}
 
-  @Override
-  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (!context.isPrincipalBranch()) return;
-    boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
-    List<Rule> rulesWithSchemaAndGeneric = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
-    ActionsHelper.reloadPrecomputationOnRules(rulesWithSchemaAndGeneric, context, incrementalFlag);
-  }
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		if (!context.isPrincipalBranch())
+			return;
+		boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		List<Rule> rulesWithSchemaAndGeneric = ReasoningContext.getInstance()
+				.getRuleset().getAllRulesWithSchemaAndGeneric();
+		ActionsHelper.reloadPrecomputationOnRules(rulesWithSchemaAndGeneric,
+				context, incrementalFlag);
+	}
 }

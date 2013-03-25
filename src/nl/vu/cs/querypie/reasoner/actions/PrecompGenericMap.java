@@ -21,7 +21,7 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 public class PrecompGenericMap extends Action {
 
 	public static final int B_INCREMENTAL_FLAG = 0;
-	public static final int I_MINIMUM_STEP = 0;
+	public static final int I_MINIMUM_STEP = 1;
 
 	private int[][] key_positions;
 	private int[][] positions_to_check;
