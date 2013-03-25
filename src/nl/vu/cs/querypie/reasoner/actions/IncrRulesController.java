@@ -112,7 +112,7 @@ public class IncrRulesController extends Action {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.runIncrRulesParallelExecution(actions);
 		ActionsHelper.runCollectToNode(actions);
-		ActionsHelper.runRemoveDuplicates(actions);
+		ActionsHelper.addDerivationCount(actions);
 		updateAndSaveCompleteDelta(context);
 		ActionsHelper.runIncrRulesControllerInStage(1, actions, deltaDir);
 		actionOutput.branch(actions);

@@ -16,7 +16,6 @@ import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
-import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
@@ -200,8 +199,8 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runRemoveDuplicates(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+	static void addDerivationCount(List<ActionConf> actions) {
+		actions.add(ActionFactory.getActionConf(AddDerivationCount.class));
 	}
 
 	public static void runRulesController(int step, List<ActionConf> actions) {

@@ -46,7 +46,7 @@ public class RulesController extends Action {
 		ActionsHelper.reconnectAfter(4, actions);
 		ActionsHelper.runMapReduce(actions, step - 1, false);
 		ActionsHelper.runSort(actions);
-		ActionsHelper.runRemoveDuplicates(actions);
+		ActionsHelper.addDerivationCount(actions);
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
 	}
 
@@ -54,7 +54,7 @@ public class RulesController extends Action {
 		ActionsHelper.readFakeTuple(actions);
 		ActionsHelper.runSchemaRulesInParallel(step - 1, actions);
 		ActionsHelper.runSort(actions);
-		ActionsHelper.runRemoveDuplicates(actions);
+		ActionsHelper.addDerivationCount(actions);
 		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
 		ActionsHelper.runReloadSchema(actions, false);
 	}

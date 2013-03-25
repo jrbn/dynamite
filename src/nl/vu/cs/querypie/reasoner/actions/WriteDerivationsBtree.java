@@ -4,6 +4,7 @@ import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.utils.Utils;
@@ -20,7 +21,7 @@ public class WriteDerivationsBtree extends Action {
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private boolean newValue;
 	private final byte[] triple = new byte[24];
-	private final byte[] meta = new byte[4];
+	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
 	private int step;
 
@@ -56,25 +57,29 @@ public class WriteDerivationsBtree extends Action {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
+		TInt count = (TInt) tuple.get(3);
+
 		encode(s.getValue(), p.getValue(), o.getValue());
+		int c = count.getValue();
 
-		if (spo.write(triple, meta) == WritingSession.SUCCESS) {
-			// Add it also in the other permutations
-			encode(s.getValue(), o.getValue(), p.getValue());
-			sop.write(triple, meta);
+		boolean newTuple = spo.write(triple, meta, c, false) == WritingSession.SUCCESS;
+		// Add it also in the other permutations
+		encode(s.getValue(), o.getValue(), p.getValue());
+		sop.write(triple, meta, c, newTuple);
 
-			encode(p.getValue(), o.getValue(), s.getValue());
-			pos.write(triple, meta);
+		encode(p.getValue(), o.getValue(), s.getValue());
+		pos.write(triple, meta, c, newTuple);
 
-			encode(p.getValue(), s.getValue(), o.getValue());
-			pso.write(triple, meta);
+		encode(p.getValue(), s.getValue(), o.getValue());
+		pso.write(triple, meta, c, newTuple);
 
-			encode(o.getValue(), p.getValue(), s.getValue());
-			ops.write(triple, meta);
+		encode(o.getValue(), p.getValue(), s.getValue());
+		ops.write(triple, meta, c, newTuple);
 
-			encode(o.getValue(), s.getValue(), p.getValue());
-			osp.write(triple, meta);
+		encode(o.getValue(), s.getValue(), p.getValue());
+		osp.write(triple, meta, c, newTuple);
 
+		if (newTuple) {
 			if (!newValue) {
 				actionOutput.output(tuple);
 				newValue = true;
