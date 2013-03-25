@@ -48,9 +48,11 @@ public class IncrRulesController extends Action {
     // Initialization: one step derivation from the in-memory delta (set to add/remove)
     ActionsHelper.runOneStepRulesControllerToMemory(actions);
     if (add) {
+      ActionsHelper.runReadAllInMemoryTuples(actionsToBranch, Consts.CURRENT_DELTA_KEY);
       ActionsHelper.runIncrAddController(actionsToBranch);
       ActionsHelper.createBranch(actions, actionsToBranch);
     } else {
+      ActionsHelper.runReadAllInMemoryTuples(actionsToBranch, Consts.CURRENT_DELTA_KEY);
       ActionsHelper.runIncrRemoveController(actionsToBranch);
       ActionsHelper.createBranch(actions, actionsToBranch);
     }

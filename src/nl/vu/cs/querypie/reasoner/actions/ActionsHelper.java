@@ -21,7 +21,6 @@ import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
 import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.actions.support.WritableListActions;
-import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -94,7 +93,7 @@ public class ActionsHelper {
   private static void readFakeTuple(List<ActionConf> actions) {
     ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
     a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
-    a.setParamWritable(QueryInputLayer.W_QUERY, new Query(new TBoolean()));
+    a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
     actions.add(a);
   }
 

@@ -25,6 +25,11 @@ public class ReadAllInmemoryTriples extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+
+  }
+
+  @Override
+  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     for (Tuple t : inMemorySet) {
       actionOutput.output(t);
     }
