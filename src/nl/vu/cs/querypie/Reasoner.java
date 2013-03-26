@@ -32,26 +32,30 @@ public class Reasoner {
     }
     parseArgs(args);
 
-    // Start the architecture
     Ajira arch = new Ajira();
-    Configuration conf = arch.getConfiguration();
-    conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
-    conf.set(BerkeleydbLayer.DB_INPUT, args[0]);
-    conf.setInt(Consts.N_PROC_THREADS, 4);
+    initAjira(args[0], arch);
     arch.startup();
-
-    // Read rules from memory
     readRules(args[1]);
+    initGlobalContext(arch);
+    printDerivations(arch);
+    launchReasoning(arch);
+    printDerivations(arch);
+    closeGlobalContext(arch);
+    arch.shutdown();
+  }
 
-    // Init the global context
+  private static void initGlobalContext(Ajira arch) {
     Ruleset set = new Ruleset(rules);
     ReasoningContext.getInstance().setRuleset(set);
     ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
-
-    // The first time we initialize all the rules
     ReasoningContext.getInstance().init();
+  }
 
-    // Launch the reasoning
+  private static void closeGlobalContext(Ajira arch) {
+    ReasoningContext.getInstance().getKB().closeAll();
+  }
+
+  private static void launchReasoning(Ajira arch) {
     Job job = new Job();
     List<ActionConf> actions = new ArrayList<ActionConf>();
     if (deltaDir == null) {
@@ -65,13 +69,17 @@ public class Reasoner {
       try {
         Submission s = arch.waitForCompletion(job);
         s.printStatistics();
-        ReasoningContext.getInstance().getKB().closeAll();
       } catch (Exception e) {
         log.error("The job is failed!", e);
       }
     }
+  }
 
-    arch.shutdown();
+  private static void initAjira(String kbDir, Ajira arch) {
+    Configuration conf = arch.getConfiguration();
+    conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+    conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+    conf.setInt(Consts.N_PROC_THREADS, 4);
   }
 
   private static void parseArgs(String[] args) {
@@ -93,6 +101,21 @@ public class Reasoner {
       log.error("Error parsing... ", e);
       log.error("Failed parsing the ruleset file. Exiting... ");
       System.exit(1);
+    }
+  }
+
+  private static void printDerivations(Ajira arch) {
+    Job job = new Job();
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.printDebugInfo(actions);
+    job.setActions(actions);
+
+    if (arch.amItheServer()) {
+      try {
+        arch.waitForCompletion(job);
+      } catch (Exception e) {
+        log.error("The job is failed!", e);
+      }
     }
   }
 }

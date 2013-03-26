@@ -7,4 +7,6 @@ public class Consts {
   public static final int SORT_NUM_THREADS = 4;
   public static final int GROUP_BY_NUM_THREADS = 4;
   public static final int READ_NUM_THREADS = 4;
+
+  public static final boolean DEBUG = true;
 }
