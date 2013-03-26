@@ -16,6 +16,7 @@ import nl.vu.cs.querypie.storage.WritingSession;
 public class WriteDerivationsBtree extends Action {
 
 	public static final int I_STEP = 0;
+	public static final int B_FORCE_STEP = 1;
 
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
@@ -24,10 +25,12 @@ public class WriteDerivationsBtree extends Action {
 	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
 	private int step;
+	private boolean forceStep;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", -1, false);
+		conf.registerParameter(B_FORCE_STEP, "force step", null, true);
 	}
 
 	@Override
@@ -41,8 +44,12 @@ public class WriteDerivationsBtree extends Action {
 		ops = in.openWritingSession(DBType.OPS);
 		newValue = false;
 		newCount = dupCount = 0;
-		step = getParamInt(I_STEP);
-		Utils.encodeInt(meta, 0, step);
+
+		forceStep = getParamBoolean(B_FORCE_STEP);
+		if (forceStep) {
+			step = getParamInt(I_STEP);
+			Utils.encodeInt(meta, 0, step);
+		}
 	}
 
 	private void encode(long v1, long v2, long v3) {
@@ -58,6 +65,11 @@ public class WriteDerivationsBtree extends Action {
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
 		TInt count = (TInt) tuple.get(3);
+
+		if (!forceStep) {
+			TInt step = (TInt) tuple.get(4);
+			Utils.encodeInt(meta, 0, step.getValue());
+		}
 
 		encode(s.getValue(), p.getValue(), o.getValue());
 		int c = count.getValue();

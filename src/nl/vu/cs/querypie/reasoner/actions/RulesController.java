@@ -41,21 +41,23 @@ public class RulesController extends Action {
 	private void applyRulesWithGenericPatterns(int step,
 			List<ActionConf> actions) {
 		ActionsHelper.readEverythingFromBTree(actions);
-		ActionsHelper.reconnectAfter(2, actions);
-		ActionsHelper.runGenericRuleExecutor(step - 1, actions);
+		ActionsHelper.reconnectAfter(3, actions);
+		ActionsHelper.runGenericRuleExecutor(step - 3, actions);
+		ActionsHelper.setStep(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.runMapReduce(actions, step - 1, false);
-		ActionsHelper.runSort(actions);
-		ActionsHelper.addDerivationCount(actions);
-		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
+		ActionsHelper.runMapReduce(actions, step - 2, false);
+		ActionsHelper.setStep(step + 1, actions);
+		ActionsHelper.runSort(actions, true);
+		ActionsHelper.addDerivationCount(actions, true);
+		ActionsHelper.runWriteDerivationsOnBTree(false, step, actions);
 	}
 
 	private void applyRulesSchemaOnly(int step, List<ActionConf> actions) {
 		ActionsHelper.readFakeTuple(actions);
-		ActionsHelper.runSchemaRulesInParallel(step - 1, actions);
-		ActionsHelper.runSort(actions);
-		ActionsHelper.addDerivationCount(actions);
-		ActionsHelper.runWriteDerivationsOnBTree(step, actions);
+		ActionsHelper.runSchemaRulesInParallel(step - 3, actions);
+		ActionsHelper.runSort(actions, false);
+		ActionsHelper.addDerivationCount(actions, false);
+		ActionsHelper.runWriteDerivationsOnBTree(true, step, actions);
 		ActionsHelper.runReloadSchema(actions, false);
 	}
 
@@ -76,12 +78,12 @@ public class RulesController extends Action {
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(step, actions);
-			applyRulesWithGenericPatternsInABranch(step, actions);
+			applyRulesWithGenericPatternsInABranch(step + 1, actions);
 		} else {
-			applyRulesWithGenericPatterns(step, actions);
+			applyRulesWithGenericPatterns(step + 1, actions);
 		}
 		ActionsHelper.runCollectToNode(actions);
-		ActionsHelper.runRulesController(step + 1, actions);
+		ActionsHelper.runRulesController(step + 3, actions);
 		actionOutput.branch(actions);
 	}
 

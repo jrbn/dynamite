@@ -23,6 +23,7 @@ import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
+import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Consts;
@@ -199,8 +200,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void addDerivationCount(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(AddDerivationCount.class));
+	static void addDerivationCount(List<ActionConf> actions, boolean groupSteps) {
+		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
+		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
+		actions.add(c);
 	}
 
 	public static void runRulesController(int step, List<ActionConf> actions) {
@@ -216,19 +219,27 @@ public class ActionsHelper {
 		actions.add(a);
 	}
 
-	static void runSort(List<ActionConf> actions) {
+	static void runSort(List<ActionConf> actions, boolean additionalStepCounter) {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
-		c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
+		if (additionalStepCounter) {
+			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName(), TInt.class.getName());
+		} else {
+			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
+		}
 		c.setParamBoolean(PartitionToNodes.SORT, true);
 		actions.add(c);
 	}
 
-	static void runWriteDerivationsOnBTree(int step, List<ActionConf> actions) {
+	static void runWriteDerivationsOnBTree(boolean forceStep, int step,
+			List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
+		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
 		actions.add(c);
 	}
 
@@ -257,5 +268,11 @@ public class ActionsHelper {
 			reader.close();
 		}
 		return set;
+	}
+
+	public static void setStep(int step, List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(SetStep.class);
+		c.setParamInt(SetStep.I_STEP, step);
+		actions.add(c);
 	}
 }
