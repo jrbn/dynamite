@@ -5,6 +5,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
 import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
 
@@ -29,7 +30,9 @@ public class WriteInMemory extends Action {
 
   @Override
   public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    inMemorySet.add(tuple);
+    Tuple tupleCopy = TupleFactory.newTuple();
+    tuple.copyTo(tupleCopy);
+    inMemorySet.add(tupleCopy);
     actionOutput.output(tuple);
   }
 }

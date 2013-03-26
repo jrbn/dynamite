@@ -35,6 +35,7 @@ public abstract class AbstractRulesController extends Action {
     if (writeToCache) {
       ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
     }
+    ActionsHelper.collectToNode(actions);
     ActionsHelper.reloadSchema(actions, false);
   }
 

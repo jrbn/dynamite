@@ -47,6 +47,7 @@ public class IncrRulesController extends Action {
     List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
     // Initialization: one step derivation from the in-memory delta (set to add/remove)
     ActionsHelper.runOneStepRulesControllerToMemory(actions);
+    ActionsHelper.collectToNode(actions);
     if (add) {
       ActionsHelper.readAllInMemoryTuples(actionsToBranch, Consts.CURRENT_DELTA_KEY);
       ActionsHelper.runIncrAddController(actionsToBranch);
