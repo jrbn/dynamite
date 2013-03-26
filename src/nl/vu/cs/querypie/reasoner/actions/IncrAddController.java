@@ -61,7 +61,6 @@ public class IncrAddController extends Action {
   private void updateAndSaveCompleteDelta(ActionContext context) {
     completeDelta = (InMemoryTupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
     completeDelta.addAll(currentDelta);
-    context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
   }
 
   private void saveCurrentDelta(ActionContext context) {
