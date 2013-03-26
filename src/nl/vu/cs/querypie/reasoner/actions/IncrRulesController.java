@@ -6,13 +6,15 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.reasoner.common.Consts;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
+import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +29,8 @@ public class IncrRulesController extends Action {
 
 	private String deltaDir = null;
 	private int stage = 0;
-	private InMemoryTupleSet currentDelta = null;
-	private InMemoryTupleSet completeDelta = null;
+	private TupleStepMap currentDelta = null;
+	private TupleStepMap completeDelta = null;
 	private Tuple currentTuple = null;
 
 	@Override
@@ -45,9 +47,9 @@ public class IncrRulesController extends Action {
 		case 0:
 			readDeltaFromFileAndPutItInCache(context);
 		case 1:
-			completeDelta = (InMemoryTupleSet) context
+			completeDelta = (TupleStepMap) context
 					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-			currentDelta = new InMemoryTreeTupleSet();
+			currentDelta = new TupleStepMapImpl();
 			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 					new TLong());
 			break;
@@ -57,8 +59,8 @@ public class IncrRulesController extends Action {
 	private void process1(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) {
 		tuple.copyTo(currentTuple);
-		if (!completeDelta.contains(currentTuple)) {
-			currentDelta.add(currentTuple);
+		if (!completeDelta.containsKey(currentTuple)) {
+			currentDelta.put(currentTuple, 1);
 			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 					new TLong());
 		}
@@ -76,6 +78,8 @@ public class IncrRulesController extends Action {
 
 	private void stop0(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
+		updateAndSaveCompleteDelta(context);
+
 		executeOneForwardChainIteration(context, actionOutput);
 	}
 
@@ -85,11 +89,12 @@ public class IncrRulesController extends Action {
 			// Repeat the process (execute a new iteration) considering the
 			// current delta
 			saveCurrentDelta(context);
+
+			updateAndSaveCompleteDelta(context);
+
 			executeOneForwardChainIteration(context, actionOutput);
 		} else {
-			// TODO: Move to the second stage of the algorithm.
-			// 1) Remove everything in Delta
-			// 2) Recompute the remaining derivation
+			removeDerivationsFromBtree(context, actionOutput);
 		}
 		currentDelta = null;
 	}
@@ -107,19 +112,37 @@ public class IncrRulesController extends Action {
 		}
 	}
 
+	private void removeDerivationsFromBtree(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+
+		ActionsHelper.readFakeTuple(actions);
+
+		ActionConf c = ActionFactory
+				.getActionConf(RemoveDerivationsBtree.class);
+		actions.add(c);
+
+		actionOutput.branch(actions);
+
+	}
+
 	private void executeOneForwardChainIteration(ActionContext context,
 			ActionOutput actionOutput) throws Exception {
+
 		List<ActionConf> actions = new ArrayList<ActionConf>();
+
 		ActionsHelper.runIncrRulesParallelExecution(actions);
+
 		ActionsHelper.runCollectToNode(actions);
-		ActionsHelper.addDerivationCount(actions);
-		updateAndSaveCompleteDelta(context);
+
 		ActionsHelper.runIncrRulesControllerInStage(1, actions, deltaDir);
+
 		actionOutput.branch(actions);
 	}
 
 	private void readDeltaFromFileAndPutItInCache(ActionContext context) {
-		InMemoryTupleSet delta = null;
+		TupleSet delta = null;
 		try {
 			delta = ActionsHelper.parseTriplesFromFile(deltaDir);
 		} catch (Exception e) {
@@ -129,12 +152,12 @@ public class IncrRulesController extends Action {
 	}
 
 	private void updateAndSaveCompleteDelta(ActionContext context) {
-		completeDelta = (InMemoryTupleSet) context
+		completeDelta = (TupleStepMap) context
 				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		if (completeDelta == null) {
-			completeDelta = new InMemoryTreeTupleSet();
+			completeDelta = new TupleStepMapImpl();
 		}
-		completeDelta.addAll(currentDelta);
+		completeDelta.putAll(currentDelta);
 		context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
 	}
 

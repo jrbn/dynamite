@@ -18,7 +18,7 @@ import nl.vu.cs.querypie.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
@@ -139,7 +139,7 @@ public class SchemaManager {
 	}
 
 	private Tuples getFlaggedTuples(Pattern p, ActionContext context) {
-		InMemoryTupleSet inMemorySet = (InMemoryTupleSet) context
+		TupleSet inMemorySet = (TupleSet) context
 				.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
 		if (inMemorySet == null) {
 			log.error("Unable to retrieve in-memory tuple set from cache");

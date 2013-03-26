@@ -15,7 +15,7 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
@@ -23,7 +23,6 @@ public class IncrRulesParallelExecution extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-
 	}
 
 	@Override
@@ -46,8 +45,6 @@ public class IncrRulesParallelExecution extends Action {
 		executeGenericRules(context, actionOutput);
 
 		// Execute rules that require a map and a reduce
-		// FIXME This operation is necessary, but is this the right place to
-		// perform it?
 		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context,
 				true);
 		executePrecomGenericRules(context, actionOutput);
@@ -70,7 +67,7 @@ public class IncrRulesParallelExecution extends Action {
 	private void extractSchemaRulesWithInformationInDelta(
 			ActionContext context, List<Integer> rulesOnlySchema,
 			List<Rule> rulesSchemaGenerics) throws Exception {
-		InMemoryTupleSet set = (InMemoryTupleSet) context
+		TupleSet set = (TupleSet) context
 				.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
 		Map<Pattern, Collection<Rule>> patterns = ReasoningContext
 				.getInstance().getRuleset().getPrecomputedPatternSet();

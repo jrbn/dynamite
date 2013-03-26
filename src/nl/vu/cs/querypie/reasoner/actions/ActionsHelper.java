@@ -30,8 +30,8 @@ import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTreeTupleSet;
-import nl.vu.cs.querypie.storage.inmemory.InMemoryTupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 
 public class ActionsHelper {
 
@@ -159,8 +159,8 @@ public class ActionsHelper {
 		for (Integer ruleId : ruleIds) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(-1, ruleId, actions,
-					incrementalFlag);
+			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId,
+					actions, incrementalFlag);
 			actionOutput.branch(actions);
 		}
 	}
@@ -243,8 +243,8 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static InMemoryTupleSet parseTriplesFromFile(String input) throws Exception {
-		InMemoryTupleSet set = new InMemoryTreeTupleSet();
+	static TupleSet parseTriplesFromFile(String input) throws Exception {
+		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
 		File fInput = new File(input);
 		if (fInput.isDirectory()) {
