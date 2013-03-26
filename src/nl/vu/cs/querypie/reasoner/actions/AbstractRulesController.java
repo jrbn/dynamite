@@ -14,28 +14,28 @@ public abstract class AbstractRulesController extends Action {
     ActionsHelper.reconnectAfter(2, actions);
     ActionsHelper.runGenericRuleExecutor(actions);
     ActionsHelper.reconnectAfter(4, actions);
-    ActionsHelper.runMapReduce(actions, false);
-    ActionsHelper.runSort(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.mapReduce(actions, false);
+    ActionsHelper.sort(actions);
+    ActionsHelper.removeDuplicates(actions);
     if (writeToBTree) {
-      ActionsHelper.runWriteDerivationsOnBTree(actions);
+      ActionsHelper.writeDerivationsOnBTree(actions);
     }
     if (writeToCache) {
-      ActionsHelper.runWriteInMemory(actions, Consts.CURRENT_DELTA_KEY);
+      ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
     }
   }
 
   protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, boolean writeToCache) {
     ActionsHelper.runSchemaRulesInParallel(actions);
-    ActionsHelper.runSort(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.sort(actions);
+    ActionsHelper.removeDuplicates(actions);
     if (writeToBTree) {
-      ActionsHelper.runWriteDerivationsOnBTree(actions);
+      ActionsHelper.writeDerivationsOnBTree(actions);
     }
     if (writeToCache) {
-      ActionsHelper.runWriteInMemory(actions, Consts.CURRENT_DELTA_KEY);
+      ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
     }
-    ActionsHelper.runReloadSchema(actions, false);
+    ActionsHelper.reloadSchema(actions, false);
   }
 
   protected void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions, boolean writeToBTree, boolean writeToCache) {

@@ -36,7 +36,7 @@ public class CompleteRulesController extends AbstractRulesController {
     } else {
       applyRulesWithGenericPatterns(actions, true, false);
     }
-    ActionsHelper.runCollectToNode(actions);
+    ActionsHelper.collectToNode(actions);
     ActionsHelper.runCompleteRulesController(actions);
     actionOutput.branch(actions);
   }

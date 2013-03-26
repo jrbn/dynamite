@@ -49,6 +49,7 @@ public class IncrRemoveController extends Action {
       List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
       removeAllInMemoryTuplesFromBTree(context);
       ActionsHelper.runOneStepRulesControllerToMemory(actions);
+      ActionsHelper.readAllInMemoryTuples(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
       ActionsHelper.runIncrAddController(actionsToBranch);
       ActionsHelper.createBranch(actions, actionsToBranch);
       actionOutput.branch(actions);
@@ -59,8 +60,8 @@ public class IncrRemoveController extends Action {
     updateAndSaveCompleteDelta(context);
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runIncrRulesParallelExecution(actions);
-    ActionsHelper.runCollectToNode(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.collectToNode(actions);
+    ActionsHelper.removeDuplicates(actions);
     ActionsHelper.runIncrRemoveController(actions);
     actionOutput.branch(actions);
   }

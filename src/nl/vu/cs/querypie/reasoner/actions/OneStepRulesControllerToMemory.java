@@ -30,7 +30,7 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
     } else {
       applyRulesWithGenericPatterns(actions, false, true);
     }
-    ActionsHelper.runCollectToNode(actions);
+    ActionsHelper.collectToNode(actions);
     actionOutput.branch(actions);
   }
 

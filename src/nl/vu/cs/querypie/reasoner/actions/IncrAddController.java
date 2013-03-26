@@ -52,8 +52,8 @@ public class IncrAddController extends Action {
     updateAndSaveCompleteDelta(context);
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runIncrRulesParallelExecution(actions);
-    ActionsHelper.runCollectToNode(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.collectToNode(actions);
+    ActionsHelper.removeDuplicates(actions);
     ActionsHelper.runIncrAddController(actions);
     actionOutput.branch(actions);
   }

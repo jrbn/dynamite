@@ -25,8 +25,8 @@ public class OneStepRulesControllerFromMemory extends Action {
   public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
     ActionsHelper.runIncrRulesParallelExecution(actions);
-    ActionsHelper.runCollectToNode(actions);
-    ActionsHelper.runRemoveDuplicates(actions);
+    ActionsHelper.collectToNode(actions);
+    ActionsHelper.removeDuplicates(actions);
     actionOutput.branch(actions);
   }
 

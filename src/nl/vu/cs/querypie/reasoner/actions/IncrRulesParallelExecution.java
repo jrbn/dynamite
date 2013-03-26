@@ -78,22 +78,22 @@ public class IncrRulesParallelExecution extends Action {
 
   private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionsHelper.runReadAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
+    ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
     ActionsHelper.runGenericRuleExecutor(actions);
     actionOutput.branch(actions);
   }
 
   private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionsHelper.runReadAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
-    ActionsHelper.runMapReduce(actions, true);
+    ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
+    ActionsHelper.mapReduce(actions, true);
     actionOutput.branch(actions);
   }
 
   private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
     List<ActionConf> actions = new ArrayList<ActionConf>();
-    ActionsHelper.runReadFromBTree(pattern, actions);
-    ActionsHelper.runMapReduce(actions, true);
+    ActionsHelper.readFromBTree(pattern, actions);
+    ActionsHelper.mapReduce(actions, true);
     actionOutput.branch(actions);
   }
 
