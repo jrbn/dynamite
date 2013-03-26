@@ -19,77 +19,103 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Reasoner {
+  static final Logger log = LoggerFactory.getLogger(Reasoner.class);
 
-	static final Logger log = LoggerFactory.getLogger(Reasoner.class);
+  private static String deltaDir;
+  private static List<Rule> rules;
+  private static boolean add;
 
-	private static String deltaDir = null;
+  public static void main(String[] args) {
+    if (args.length < 2) {
+      System.out.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove]");
+      return;
+    }
+    parseArgs(args);
 
-	private static void parseArgs(String[] args) {
-		for (int i = 0; i < args.length; ++i) {
-			if (args[i].equals("--remove")) {
-				deltaDir = args[++i];
-			}
-		}
-	}
+    Ajira arch = new Ajira();
+    initAjira(args[0], arch);
+    arch.startup();
+    readRules(args[1]);
+    initGlobalContext(arch);
+    printDerivations(arch);
+    launchReasoning(arch);
+    printDerivations(arch);
+    closeGlobalContext(arch);
+    arch.shutdown();
+  }
 
-	public static void main(String[] args) {
-		if (args.length < 2) {
-			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove]");
-			return;
-		}
-		parseArgs(args);
+  private static void initGlobalContext(Ajira arch) {
+    Ruleset set = new Ruleset(rules);
+    ReasoningContext.getInstance().setRuleset(set);
+    ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
+    ReasoningContext.getInstance().init();
+  }
 
-		// Start the architecture
-		Ajira arch = new Ajira();
-		Configuration conf = arch.getConfiguration();
-		conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
-		conf.set(BerkeleydbLayer.DB_INPUT, args[0]);
-		conf.setInt(Consts.N_PROC_THREADS, 4);
-		arch.startup();
+  private static void closeGlobalContext(Ajira arch) {
+    ReasoningContext.getInstance().getKB().closeAll();
+  }
 
-		// Parse the rules from the file
-		Rule[] rules = null;
-		try {
-			String ruleFile = args[1];
-			rules = new RuleParser().parseRules(ruleFile);
-		} catch (Exception e) {
-			log.error("Error parsing... ", e);
-			log.error("Failed parsing the ruleset file. Exiting... ");
-			System.exit(1);
-		}
+  private static void launchReasoning(Ajira arch) {
+    Job job = new Job();
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    if (deltaDir == null) {
+      ActionsHelper.runCompleteRulesController(actions);
+    } else {
+      ActionsHelper.runIncrRulesController(actions, deltaDir, add);
+    }
+    job.setActions(actions);
 
-		// Init the global context
-		Ruleset set = new Ruleset(rules);
-		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(
-				(BerkeleydbLayer) arch.getContext().getInputLayer(
-						Consts.DEFAULT_INPUT_LAYER_ID));
+    if (arch.amItheServer()) {
+      try {
+        Submission s = arch.waitForCompletion(job);
+        s.printStatistics();
+      } catch (Exception e) {
+        log.error("The job is failed!", e);
+      }
+    }
+  }
 
-		// The first time we initialize all the rules
-		ReasoningContext.getInstance().init();
+  private static void initAjira(String kbDir, Ajira arch) {
+    Configuration conf = arch.getConfiguration();
+    conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+    conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+    conf.setInt(Consts.N_PROC_THREADS, 4);
+  }
 
-		// Launch the reasoning
-		Job job = new Job();
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readFakeTuple(actions);
-		if (deltaDir == null) {
-			ActionsHelper.runRulesController(1, actions);
-		} else {
-			ActionsHelper.runIncrRulesController(actions, deltaDir);
-		}
-		job.setActions(actions);
+  private static void parseArgs(String[] args) {
+    for (int i = 0; i < args.length; ++i) {
+      if (args[i].equals("--remove")) {
+        deltaDir = args[++i];
+        add = false;
+      } else if (args[i].equals("--add")) {
+        deltaDir = args[++i];
+        add = true;
+      }
+    }
+  }
 
-		if (arch.amItheServer()) {
-			try {
-				Submission s = arch.waitForCompletion(job);
-				s.printStatistics();
-				ReasoningContext.getInstance().getKB().closeAll();
-			} catch (Exception e) {
-				log.error("The job is failed!", e);
-			}
-		}
+  private static void readRules(String fileName) {
+    try {
+      rules = new RuleParser().parseRules(fileName);
+    } catch (Exception e) {
+      log.error("Error parsing... ", e);
+      log.error("Failed parsing the ruleset file. Exiting... ");
+      System.exit(1);
+    }
+  }
 
-		arch.shutdown();
-	}
+  private static void printDerivations(Ajira arch) {
+    Job job = new Job();
+    List<ActionConf> actions = new ArrayList<ActionConf>();
+    ActionsHelper.printDebugInfo(actions);
+    job.setActions(actions);
+
+    if (arch.amItheServer()) {
+      try {
+        arch.waitForCompletion(job);
+      } catch (Exception e) {
+        log.error("The job is failed!", e);
+      }
+    }
+  }
 }

@@ -30,8 +30,8 @@ import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class ActionsHelper {
 

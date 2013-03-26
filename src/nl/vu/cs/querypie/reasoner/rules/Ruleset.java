@@ -15,7 +15,7 @@ public class Ruleset {
   private List<Rule> oneAntecedent = null;
   private List<Rule> schemaGeneric = null;
 
-  public Ruleset(Rule[] rules) {
+  public Ruleset(List<Rule> rules) {
     schemaOnly = new ArrayList<Rule>();
     oneAntecedent = new ArrayList<Rule>();
     schemaGeneric = new ArrayList<Rule>();
