@@ -29,6 +29,7 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.querypie.reasoner.support.Debugging;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
@@ -120,6 +121,14 @@ public class ActionsHelper {
 	static void runIncrRulesParallelExecution(List<ActionConf> actions) {
 		actions.add(ActionFactory
 				.getActionConf(IncrRulesParallelExecution.class));
+	}
+
+	public static void printDebugInfo(List<ActionConf> actions) {
+		if (actions.isEmpty()) {
+			readFakeTuple(actions);
+		}
+		ActionConf c = ActionFactory.getActionConf(Debugging.class);
+		actions.add(c);
 	}
 
 	private static void runMap(List<ActionConf> actions, int minimumStep,
