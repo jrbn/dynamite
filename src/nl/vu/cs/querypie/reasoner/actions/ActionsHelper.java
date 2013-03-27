@@ -56,6 +56,7 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
+	// FIXME
 	public static void collectToNode(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
 		c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
@@ -94,6 +95,16 @@ public class ActionsHelper {
 					actions, incrementalFlag);
 			actionOutput.branch(actions);
 		}
+	}
+
+	static void runSchemaRulesInParallel(int step, List<ActionConf> actions) {
+		if (actions.isEmpty()) {
+			readFakeTuple(actions);
+		}
+		ActionConf a = ActionFactory
+				.getActionConf(ParallelExecutionSchemaOnly.class);
+		a.setParamInt(ParallelExecutionSchemaOnly.I_STEP, step);
+		actions.add(a);
 	}
 
 	static TupleSet parseTriplesFromFile(String input) throws Exception {
@@ -179,7 +190,7 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void readFakeTuple(List<ActionConf> actions) {
+	private static void readFakeTuple(List<ActionConf> actions) {
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
 		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
 		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
@@ -212,20 +223,21 @@ public class ActionsHelper {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	public static void runCollectToNode(List<ActionConf> actions) {
-		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
-		actions.add(c);
+	public static void runCompleteRulesController(List<ActionConf> actions,
+			boolean countDerivations) {
+		runCompleteRulesController(actions, countDerivations, 1);
 	}
 
-	public static void runCompleteRulesController(List<ActionConf> actions) {
+	public static void runCompleteRulesController(List<ActionConf> actions,
+			boolean countDerivations, int step) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
 		ActionConf c = ActionFactory
 				.getActionConf(CompleteRulesController.class);
+		c.setParamBoolean(CompleteRulesController.B_COUNT_DERIVATIONS,
+				countDerivations);
+		c.setParamInt(CompleteRulesController.I_STEP, step);
 		actions.add(c);
 	}
 
@@ -260,11 +272,13 @@ public class ActionsHelper {
 	}
 
 	public static void runIncrRulesController(List<ActionConf> actions,
-			String deltaDir, boolean add) {
+			String deltaDir, boolean add, boolean countDerivations) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
+		a.setParamBoolean(IncrRulesController.B_COUNT_DERIVATIONS,
+				countDerivations);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.ADD, add);
 		actions.add(a);
@@ -321,12 +335,7 @@ public class ActionsHelper {
 		actions.add(a);
 	}
 
-	public static void runReadAllInMemoryTuples(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(ReadAllInMemoryTriples.class));
-	}
-
-	public static void runReadFromBTree(Pattern pattern,
-			List<ActionConf> actions) {
+	public static void readFromBTree(Pattern pattern, List<ActionConf> actions) {
 		ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
 		Query query = new Query(new TLong(pattern.getTerm(0).getValue()),
 				new TLong(pattern.getTerm(1).getValue()), new TLong(pattern
@@ -342,32 +351,6 @@ public class ActionsHelper {
 				incrementalFlag);
 		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
-	}
-
-	static void runReloadSchema(List<ActionConf> actions,
-			boolean incrementalFlag) {
-		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
-		actions.add(c);
-
-		c = ActionFactory.getActionConf(ReloadSchema.class);
-		c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
-		actions.add(c);
-	}
-
-	public static void runRulesController(int step, List<ActionConf> actions) {
-		ActionConf c = ActionFactory.getActionConf(RulesController.class);
-		c.setParamInt(RulesController.I_STEP, step);
-		actions.add(c);
-	}
-
-	static void runSchemaRulesInParallel(int step, List<ActionConf> actions) {
-		ActionConf a = ActionFactory
-				.getActionConf(ParallelExecutionSchemaOnly.class);
-		a.setParamInt(ParallelExecutionSchemaOnly.I_STEP, step);
-		actions.add(a);
 	}
 
 	static void runSort(List<ActionConf> actions, boolean additionalStepCounter) {
@@ -386,7 +369,7 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void runWriteDerivationsOnBTree(boolean forceStep, int step,
+	static void writeDerivationsOnBTree(boolean forceStep, int step,
 			List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
@@ -398,10 +381,6 @@ public class ActionsHelper {
 		ActionConf c = ActionFactory.getActionConf(SetStep.class);
 		c.setParamInt(SetStep.I_STEP, step);
 		actions.add(c);
-	}
-
-	static void writeDerivationsOnBTree(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(WriteDerivationsBtree.class));
 	}
 
 	static void writeInMemory(List<ActionConf> actions,

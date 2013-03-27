@@ -10,14 +10,17 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 public abstract class AbstractRulesController extends Action {
 
 	protected void applyRulesSchemaOnly(List<ActionConf> actions,
-			boolean writeToBTree, boolean writeToCache) {
-		ActionsHelper.runSchemaRulesInParallel(Integer.MIN_VALUE, actions);
+			boolean writeToBTree, boolean countDerivations, int step) {
+		ActionsHelper.runSchemaRulesInParallel(step - 3, actions);
 		ActionsHelper.runSort(actions, false);
-		ActionsHelper.removeDuplicates(actions);
-		if (writeToBTree) {
-			ActionsHelper.writeDerivationsOnBTree(actions);
+		if (countDerivations) {
+			ActionsHelper.addDerivationCount(actions, false);
+		} else {
+			ActionsHelper.removeDuplicates(actions);
 		}
-		if (writeToCache) {
+		if (writeToBTree) {
+			ActionsHelper.writeDerivationsOnBTree(true, step, actions);
+		} else {
 			ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
 		}
 		ActionsHelper.collectToNode(actions);
@@ -25,26 +28,32 @@ public abstract class AbstractRulesController extends Action {
 	}
 
 	protected void applyRulesWithGenericPatterns(List<ActionConf> actions,
-			boolean writeToBTree, boolean writeToCache) {
+			boolean writeToBTree, boolean countDerivations, int step) {
 		ActionsHelper.readEverythingFromBTree(actions);
-		ActionsHelper.reconnectAfter(2, actions);
-		ActionsHelper.runGenericRuleExecutor(Integer.MIN_VALUE, actions);
+		ActionsHelper.reconnectAfter(3, actions);
+		ActionsHelper.runGenericRuleExecutor(step - 3, actions);
+		ActionsHelper.setStep(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, false);
-		ActionsHelper.runSort(actions, false);
-		ActionsHelper.removeDuplicates(actions);
-		if (writeToBTree) {
-			ActionsHelper.writeDerivationsOnBTree(actions);
+		ActionsHelper.runMapReduce(actions, step - 2, false);
+		ActionsHelper.runSort(actions, true);
+		if (countDerivations) {
+			ActionsHelper.addDerivationCount(actions, true);
+		} else {
+			ActionsHelper.removeDuplicates(actions);
 		}
-		if (writeToCache) {
+		if (writeToBTree) {
+			ActionsHelper.writeDerivationsOnBTree(false, step, actions);
+		} else {
 			ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
 		}
 	}
 
 	protected void applyRulesWithGenericPatternsInABranch(
-			List<ActionConf> actions, boolean writeToBTree, boolean writeToCache) {
+			List<ActionConf> actions, boolean writeToBTree,
+			boolean countDerivations, int step) {
 		List<ActionConf> actions2 = new ArrayList<ActionConf>();
-		applyRulesWithGenericPatterns(actions2, writeToBTree, writeToCache);
+		applyRulesWithGenericPatterns(actions2, writeToBTree, countDerivations,
+				step);
 		ActionsHelper.createBranch(actions, actions2);
 	}
 

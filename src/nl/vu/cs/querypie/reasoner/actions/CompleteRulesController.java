@@ -10,35 +10,58 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 
 /**
- * A rules controller that execute the complete materialization of all the tuples based on the facts written on the
- * knowledge base and on the derivation rules.
+ * A rules controller that execute the complete materialization of all the
+ * tuples based on the facts written on the knowledge base and on the derivation
+ * rules.
  */
 public class CompleteRulesController extends AbstractRulesController {
-  private boolean hasDerived;
+	public static final int I_STEP = 0;
+	public static final int B_COUNT_DERIVATIONS = 1;
 
-  @Override
-  public void startProcess(ActionContext context) throws Exception {
-    hasDerived = false;
-  }
+	private boolean hasDerived;
+	private int step;
+	private boolean countDerivations;
 
-  @Override
-  public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-    hasDerived = true;
-  }
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_STEP, "step", null, true);
+		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false,
+				true);
+	}
 
-  @Override
-  public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-    if (!hasDerived) return;
-    List<ActionConf> actions = new ArrayList<ActionConf>();
-    if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-      applyRulesSchemaOnly(actions, true, false);
-      applyRulesWithGenericPatternsInABranch(actions, true, false);
-    } else {
-      applyRulesWithGenericPatterns(actions, true, false);
-    }
-    ActionsHelper.collectToNode(actions);
-    ActionsHelper.runCompleteRulesController(actions);
-    actionOutput.branch(actions);
-  }
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		hasDerived = false;
+		step = getParamInt(I_STEP);
+		countDerivations = getParamBoolean(B_COUNT_DERIVATIONS);
+	}
+
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		hasDerived = true;
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		if (!hasDerived)
+			return;
+		context.incrCounter("Iterations", 1);
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		if (!ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().isEmpty()) {
+			applyRulesSchemaOnly(actions, true, countDerivations, step);
+			applyRulesWithGenericPatternsInABranch(actions, true,
+					countDerivations, step + 1);
+		} else {
+			applyRulesWithGenericPatterns(actions, true, countDerivations,
+					step + 1);
+		}
+		ActionsHelper.collectToNode(actions);
+		ActionsHelper.runCompleteRulesController(actions, countDerivations,
+				step + 3);
+		actionOutput.branch(actions);
+	}
 
 }

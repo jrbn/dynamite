@@ -15,10 +15,12 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class IncrRulesController extends Action {
 	public static final int S_DELTA_DIR = 0;
-	public static final int ADD = 1;
+	public static final int B_ADD = 1;
+	public static final int B_COUNT_DERIVATIONS = 2;
 
 	private boolean add;
 	private String deltaDir;
+	private boolean countDerivations;
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
@@ -29,13 +31,14 @@ public class IncrRulesController extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(S_DELTA_DIR, "dir of the update", null, true);
-		conf.registerParameter(ADD, "add or remove", true, false);
+		conf.registerParameter(B_ADD, "add or remove", true, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		deltaDir = getParamString(S_DELTA_DIR);
-		add = getParamBoolean(ADD);
+		add = getParamBoolean(B_ADD);
+		countDerivations = getParamBoolean(B_COUNT_DERIVATIONS);
 	}
 
 	@Override
