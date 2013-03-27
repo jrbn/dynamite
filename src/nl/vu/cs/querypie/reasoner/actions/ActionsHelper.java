@@ -49,8 +49,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class ActionsHelper {
 
-	public static void addDerivationCount(List<ActionConf> actions,
-			boolean groupSteps) {
+	public static void addDerivationCount(List<ActionConf> actions, boolean groupSteps) {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
 		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
 		actions.add(c);
@@ -59,41 +58,31 @@ public class ActionsHelper {
 	// FIXME
 	public static void collectToNode(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
-				TLong.class.getName(), TLong.class.getName(),
-				TLong.class.getName());
+		c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
 		actions.add(c);
 	}
 
-	public static void createBranch(List<ActionConf> actions,
-			List<ActionConf> actionsToBranch) {
+	public static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
 		ActionConf c = ActionFactory.getActionConf(Branch.class);
-		c.setParamWritable(Branch.BRANCH, new WritableListActions(
-				actionsToBranch));
+		c.setParamWritable(Branch.BRANCH, new WritableListActions(actionsToBranch));
 		actions.add(c);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int step,
-			int numRules, boolean incrementalFlag, ActionOutput actionOutput)
-			throws Exception {
+	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
 		for (int ruleId = 0; ruleId < numRules; ++ruleId) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(step, ruleId, actions,
-					incrementalFlag);
-			actionOutput.branch(actions);
+			runPrecomputedRuleExecutorForRule(step, ruleId, actions, incrementalFlag);
+			actionOutput.branch((ActionConf[]) actions.toArray());
 		}
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(
-			List<Integer> ruleIds, boolean incrementalFlag,
-			ActionOutput actionOutput) throws Exception {
+	public static void parallelRunPrecomputedRuleExecutorForRules(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
 		for (Integer ruleId : ruleIds) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId,
-					actions, incrementalFlag);
-			actionOutput.branch(actions);
+			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId, actions, incrementalFlag);
+			actionOutput.branch((ActionConf[]) actions.toArray());
 		}
 	}
 
@@ -101,8 +90,7 @@ public class ActionsHelper {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
-		ActionConf a = ActionFactory
-				.getActionConf(ParallelExecutionSchemaOnly.class);
+		ActionConf a = ActionFactory.getActionConf(ParallelExecutionSchemaOnly.class);
 		a.setParamInt(ParallelExecutionSchemaOnly.I_STEP, step);
 		actions.add(a);
 	}
@@ -134,8 +122,7 @@ public class ActionsHelper {
 		return set;
 	}
 
-	public static TupleSet populateInMemorySetFromFile(String fileName)
-			throws Exception {
+	public static TupleSet populateInMemorySetFromFile(String fileName) throws Exception {
 		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
 		File fInput = new File(fileName);
@@ -170,23 +157,19 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void readAllInMemoryTuples(List<ActionConf> actions,
-			String inMemoryTriplesKey) {
+	public static void readAllInMemoryTuples(List<ActionConf> actions, String inMemoryTriplesKey) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
-		ActionConf a = ActionFactory
-				.getActionConf(ReadAllInMemoryTriples.class);
-		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY,
-				inMemoryTriplesKey);
+		ActionConf a = ActionFactory.getActionConf(ReadAllInMemoryTriples.class);
+		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
 	}
 
 	public static void readEverythingFromBTree(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
 		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, 4);
-		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1),
-				new TLong(-1), new TLong(-1)));
+		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1), new TLong(-1), new TLong(-1)));
 		actions.add(c);
 	}
 
@@ -197,23 +180,19 @@ public class ActionsHelper {
 		actions.add(a);
 	}
 
-	public static void reconnectAfter(int reconnectAfter,
-			List<ActionConf> actions) {
+	public static void reconnectAfter(int reconnectAfter, List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(Split.class);
 		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAfter);
 		actions.add(c);
 	}
 
-	public static void reloadPrecomputationOnRules(Collection<Rule> rules,
-			ActionContext context, boolean incrementalFlag) {
+	public static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean incrementalFlag) {
 		for (Rule r : rules) {
-			r.reloadPrecomputation(ReasoningContext.getInstance(), context,
-					incrementalFlag);
+			r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag);
 		}
 	}
 
-	public static void reloadSchema(List<ActionConf> actions,
-			boolean incrementalFlag) {
+	public static void reloadSchema(List<ActionConf> actions, boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
 		c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
 		actions.add(c);
@@ -223,20 +202,16 @@ public class ActionsHelper {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	public static void runCompleteRulesController(List<ActionConf> actions,
-			boolean countDerivations) {
+	public static void runCompleteRulesController(List<ActionConf> actions, boolean countDerivations) {
 		runCompleteRulesController(actions, countDerivations, 1);
 	}
 
-	public static void runCompleteRulesController(List<ActionConf> actions,
-			boolean countDerivations, int step) {
+	public static void runCompleteRulesController(List<ActionConf> actions, boolean countDerivations, int step) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
-		ActionConf c = ActionFactory
-				.getActionConf(CompleteRulesController.class);
-		c.setParamBoolean(CompleteRulesController.B_COUNT_DERIVATIONS,
-				countDerivations);
+		ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
+		c.setParamBoolean(CompleteRulesController.B_COUNT_DERIVATIONS, countDerivations);
 		c.setParamInt(CompleteRulesController.I_STEP, step);
 		actions.add(c);
 	}
@@ -251,9 +226,7 @@ public class ActionsHelper {
 	private static void runGroupBy(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(),
-				TBoolean.class.getName(), TByte.class.getName(),
-				TLong.class.getName());
+		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
 		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, 4);
 		actions.add(c);
 	}
@@ -273,84 +246,68 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void runIncrRulesController(List<ActionConf> actions,
-			String deltaDir, boolean add, boolean countDerivations) {
+	public static void runIncrRulesController(List<ActionConf> actions, String deltaDir, boolean add, boolean countDerivations) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
-		a.setParamBoolean(IncrRulesController.B_COUNT_DERIVATIONS,
-				countDerivations);
+		a.setParamBoolean(IncrRulesController.B_COUNT_DERIVATIONS, countDerivations);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
 		actions.add(a);
 	}
 
 	public static void runIncrRulesParallelExecution(List<ActionConf> actions) {
-		actions.add(ActionFactory
-				.getActionConf(IncrRulesParallelExecution.class));
+		actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
 	}
 
-	private static void runMap(List<ActionConf> actions, int minimumStep,
-			boolean incrementalFlag) {
+	private static void runMap(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
 		c.setParamBoolean(PrecompGenericMap.B_INCREMENTAL_FLAG, incrementalFlag);
 		c.setParamInt(PrecompGenericMap.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
 	}
 
-	public static void runMapReduce(List<ActionConf> actions, int minimumStep,
-			boolean incrementalFlag) {
+	public static void runMapReduce(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
 		runMap(actions, minimumStep, incrementalFlag);
 		runGroupBy(actions);
 		runReduce(actions, minimumStep, incrementalFlag);
 	}
 
-	public static void runOneStepRulesControllerFromMemory(
-			List<ActionConf> actions) {
+	public static void runOneStepRulesControllerFromMemory(List<ActionConf> actions) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
-		ActionConf a = ActionFactory
-				.getActionConf(OneStepRulesControllerFromMemory.class);
+		ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerFromMemory.class);
 		actions.add(a);
 	}
 
-	public static void runOneStepRulesControllerToMemory(
-			List<ActionConf> actions) {
+	public static void runOneStepRulesControllerToMemory(List<ActionConf> actions) {
 		if (actions.isEmpty()) {
 			readFakeTuple(actions);
 		}
-		ActionConf a = ActionFactory
-				.getActionConf(OneStepRulesControllerToMemory.class);
+		ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerToMemory.class);
 		actions.add(a);
 	}
 
-	public static void runPrecomputedRuleExecutorForRule(int step, int ruleId,
-			List<ActionConf> actions, boolean incrementalFlag) {
-		ActionConf a = ActionFactory
-				.getActionConf(PrecomputedRuleExecutor.class);
+	public static void runPrecomputedRuleExecutorForRule(int step, int ruleId, List<ActionConf> actions, boolean incrementalFlag) {
+		ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
 		a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
-		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG,
-				incrementalFlag);
+		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, incrementalFlag);
 		a.setParamInt(PrecomputedRuleExecutor.I_STEP, step);
 		actions.add(a);
 	}
 
 	public static void readFromBTree(Pattern pattern, List<ActionConf> actions) {
 		ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
-		Query query = new Query(new TLong(pattern.getTerm(0).getValue()),
-				new TLong(pattern.getTerm(1).getValue()), new TLong(pattern
-						.getTerm(2).getValue()));
+		Query query = new Query(new TLong(pattern.getTerm(0).getValue()), new TLong(pattern.getTerm(1).getValue()), new TLong(pattern.getTerm(2).getValue()));
 		a.setParamWritable(ReadFromBtree.TUPLE, query);
 		actions.add(a);
 	}
 
-	private static void runReduce(List<ActionConf> actions, int minimumStep,
-			boolean incrementalFlag) {
+	private static void runReduce(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
-		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG,
-				incrementalFlag);
+		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, incrementalFlag);
 		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
 	}
@@ -359,20 +316,15 @@ public class ActionsHelper {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, 4);
 		if (additionalStepCounter) {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-					TLong.class.getName(), TLong.class.getName(),
-					TLong.class.getName(), TInt.class.getName());
+			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
-					TLong.class.getName(), TLong.class.getName(),
-					TLong.class.getName());
+			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
 		}
 		c.setParamBoolean(PartitionToNodes.SORT, true);
 		actions.add(c);
 	}
 
-	static void writeDerivationsOnBTree(boolean forceStep, int step,
-			List<ActionConf> actions) {
+	static void writeDerivationsOnBTree(boolean forceStep, int step, List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
 		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
@@ -385,19 +337,17 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	static void writeInMemory(List<ActionConf> actions,
-			String inMemoryTriplesKey) {
+	static void writeInMemory(List<ActionConf> actions, String inMemoryTriplesKey) {
 		ActionConf a = ActionFactory.getActionConf(WriteInMemory.class);
 		a.setParamString(WriteInMemory.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
 	}
 
-	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step,
-			ActionContext context, ActionOutput actionOutput, String inMemoryKey)
+	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step, ActionContext context, ActionOutput actionOutput, String inMemoryKey)
 			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.readAllInMemoryTuples(actions, inMemoryKey);
 		ActionsHelper.writeDerivationsOnBTree(forceStep, step, actions);
-		actionOutput.branch(actions);
+		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 }

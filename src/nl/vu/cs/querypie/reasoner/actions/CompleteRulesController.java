@@ -25,8 +25,7 @@ public class CompleteRulesController extends AbstractRulesController {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", null, true);
-		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false,
-				true);
+		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false, true);
 	}
 
 	@Override
@@ -37,31 +36,25 @@ public class CompleteRulesController extends AbstractRulesController {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		hasDerived = true;
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!hasDerived)
 			return;
 		context.incrCounter("Iterations", 1);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		if (!ReasoningContext.getInstance().getRuleset()
-				.getAllSchemaOnlyRules().isEmpty()) {
+		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, true, countDerivations, step, false);
-			applyRulesWithGenericPatternsInABranch(actions, true,
-					countDerivations, step + 1, false);
+			applyRulesWithGenericPatternsInABranch(actions, true, countDerivations, step + 1, false);
 		} else {
-			applyRulesWithGenericPatterns(actions, true, countDerivations,
-					step + 1, false);
+			applyRulesWithGenericPatterns(actions, true, countDerivations, step + 1, false);
 		}
 		ActionsHelper.collectToNode(actions);
-		ActionsHelper.runCompleteRulesController(actions, countDerivations,
-				step + 3);
-		actionOutput.branch(actions);
+		ActionsHelper.runCompleteRulesController(actions, countDerivations, step + 3);
+		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 }

@@ -8,10 +8,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 
 public abstract class AbstractRulesController extends Action {
-
-	protected void applyRulesSchemaOnly(List<ActionConf> actions,
-			boolean writeToBTree, boolean countDerivations, int step,
-			boolean flaggedOnly) {
+	protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step, boolean flaggedOnly) {
 		ActionsHelper.runSchemaRulesInParallel(step - 3, actions);
 		ActionsHelper.runSort(actions, false);
 		if (countDerivations) {
@@ -28,9 +25,7 @@ public abstract class AbstractRulesController extends Action {
 		ActionsHelper.reloadSchema(actions, false);
 	}
 
-	protected void applyRulesWithGenericPatterns(List<ActionConf> actions,
-			boolean writeToBTree, boolean countDerivations, int step,
-			boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatterns(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step, boolean flaggedOnly) {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
 		ActionsHelper.runGenericRuleExecutor(step - 3, actions);
@@ -50,12 +45,10 @@ public abstract class AbstractRulesController extends Action {
 		}
 	}
 
-	protected void applyRulesWithGenericPatternsInABranch(
-			List<ActionConf> actions, boolean writeToBTree,
-			boolean countDerivations, int step, boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step,
+			boolean flaggedOnly) {
 		List<ActionConf> actions2 = new ArrayList<ActionConf>();
-		applyRulesWithGenericPatterns(actions2, writeToBTree, countDerivations,
-				step, flaggedOnly);
+		applyRulesWithGenericPatterns(actions2, writeToBTree, countDerivations, step, flaggedOnly);
 		ActionsHelper.createBranch(actions, actions2);
 	}
 

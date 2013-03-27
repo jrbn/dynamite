@@ -27,8 +27,7 @@ public class IncrRulesController extends Action {
 	private int lastStep;
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 
 	}
 
@@ -36,8 +35,7 @@ public class IncrRulesController extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(S_DELTA_DIR, "dir of the update", null, true);
 		conf.registerParameter(B_ADD, "add or remove", true, false);
-		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false,
-				true);
+		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false, true);
 		conf.registerParameter(I_LAST_STEP, "last_step", 0, true);
 	}
 
@@ -50,10 +48,8 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		TupleSet currentDelta = ActionsHelper
-				.populateInMemorySetFromFile(deltaDir);
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+		TupleSet currentDelta = ActionsHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (countDerivations) {
 			TupleStepMap completeDelta = new TupleStepMapImpl();
@@ -73,17 +69,15 @@ public class IncrRulesController extends Action {
 		ActionsHelper.runOneStepRulesControllerToMemory(actions);
 		ActionsHelper.collectToNode(actions);
 		if (add) {
-			ActionsHelper.readAllInMemoryTuples(actionsToBranch,
-					Consts.CURRENT_DELTA_KEY);
+			ActionsHelper.readAllInMemoryTuples(actionsToBranch, Consts.CURRENT_DELTA_KEY);
 			ActionsHelper.runIncrAddController(actionsToBranch, lastStep + 1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {
-			ActionsHelper.readAllInMemoryTuples(actionsToBranch,
-					Consts.CURRENT_DELTA_KEY);
+			ActionsHelper.readAllInMemoryTuples(actionsToBranch, Consts.CURRENT_DELTA_KEY);
 			ActionsHelper.runIncrRemoveController(actionsToBranch);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		}
-		actionOutput.branch(actions);
+		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 }

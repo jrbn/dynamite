@@ -22,8 +22,7 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false,
-				true);
+		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false, true);
 	}
 
 	@Override
@@ -32,26 +31,20 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		if (!ReasoningContext.getInstance().getRuleset()
-				.getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, false, countDerivations,
-					Integer.MIN_VALUE, true);
-			applyRulesWithGenericPatternsInABranch(actions, false,
-					countDerivations, Integer.MIN_VALUE, true);
+		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
+			applyRulesSchemaOnly(actions, false, countDerivations, Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatternsInABranch(actions, false, countDerivations, Integer.MIN_VALUE, true);
 		} else {
-			applyRulesWithGenericPatterns(actions, false, countDerivations,
-					Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatterns(actions, false, countDerivations, Integer.MIN_VALUE, true);
 		}
 		ActionsHelper.collectToNode(actions);
-		actionOutput.branch(actions);
+		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 }

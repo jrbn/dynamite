@@ -35,25 +35,21 @@ public class IncrAddController extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-				new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 		step = getParamInt(I_STEP);
 		forceStep = getParamBoolean(B_FORCE_STEP);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		tuple.copyTo(currentTuple);
-		Object completeDeltaObj = context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		if (completeDeltaObj instanceof TupleSet) {
 			TupleSet completeDelta = (TupleSet) completeDeltaObj;
 			if (!completeDelta.contains(currentTuple)) {
 				currentDelta.add(currentTuple);
 				completeDelta.add(currentTuple);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-						new TLong());
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 			}
 		} else {
 			TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
@@ -61,14 +57,12 @@ public class IncrAddController extends Action {
 				currentDelta.add(currentTuple);
 			}
 			completeDelta.put(currentTuple, 1);
-			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-					new TLong());
+			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 		}
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		// In case of new derivations, perform another iteration
 		if (!currentDelta.isEmpty()) {
 			saveCurrentDelta(context);
@@ -80,24 +74,21 @@ public class IncrAddController extends Action {
 		}
 	}
 
-	private void executeAForwardChainingIterationAndRestart(
-			ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.runIncrRulesParallelExecution(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
 		ActionsHelper.runIncrAddController(actions, step);
-		actionOutput.branch(actions);
+		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 	}
 
-	private void writeCompleteDeltaToBTree(ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context,
-				actionOutput, Consts.COMPLETE_DELTA_KEY);
+	private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context, actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }

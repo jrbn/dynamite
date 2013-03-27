@@ -18,20 +18,17 @@ import nl.vu.cs.ajira.datalayer.InputQuery;
 import nl.vu.cs.ajira.utils.Consts;
 
 public class ReadFromBtree extends Action {
-
 	public static final int TUPLE = 0;
 	public static final int PARALLEL_TASKS = 1;
 
 	private boolean first;
 	private int tasks;
-	private final Query query = new Query(TupleFactory.newTuple(new TLong(),
-			new TLong(), new TLong()));
+	private final Query query = new Query(TupleFactory.newTuple(new TLong(), new TLong(), new TLong()));
 
 	public static class CustomProcessor extends ActionConf.Configurator {
 
 		@Override
-		public void setupAction(InputQuery query, Object[] params,
-				ActionController controller, ActionContext context) {
+		public void setupAction(InputQuery query, Object[] params, ActionController controller, ActionContext context) {
 			// Add the input tuple
 			Query tuple = null;
 			if (params[TUPLE] instanceof byte[]) {
@@ -68,7 +65,7 @@ public class ReadFromBtree extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(TUPLE, "tuple", null, true);
 		conf.registerParameter(PARALLEL_TASKS, "parallel tasks", 1, false);
-		conf.registerCustomConfigurator(CustomProcessor.class);
+		conf.registerCustomConfigurator(new CustomProcessor());
 	}
 
 	@Override
@@ -79,15 +76,12 @@ public class ReadFromBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (first) {
 			first = false;
 			for (int i = 1; i < tasks; ++i) {
-				ActionConf c = ActionFactory
-						.getActionConf(QueryInputLayer.class);
-				c.setParamInt(QueryInputLayer.I_INPUTLAYER,
-						Consts.DEFAULT_INPUT_LAYER_ID);
+				ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
+				c.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DEFAULT_INPUT_LAYER_ID);
 
 				Tuple t = query.getTuple();
 				SimpleData[] newTuple = new SimpleData[5];
@@ -99,8 +93,7 @@ public class ReadFromBtree extends Action {
 				t.set(newTuple);
 
 				c.setParamWritable(QueryInputLayer.W_QUERY, query);
-				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY,
-						t.getSignature());
+				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY, t.getSignature());
 				actionOutput.branch(c);
 			}
 		}
