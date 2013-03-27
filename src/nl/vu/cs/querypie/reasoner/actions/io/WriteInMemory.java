@@ -1,22 +1,25 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.io;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
-public class ReadAllInMemoryTriples extends Action {
-	static final int IN_MEMORY_KEY = 0;
+public class WriteInMemory extends Action {
+	public static final int IN_MEMORY_KEY = 0;
 	private TupleSet inMemorySet;
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		for (Tuple t : inMemorySet) {
-			actionOutput.output(t);
-		}
+		Tuple tupleCopy = TupleFactory.newTuple();
+		tuple.copyTo(tupleCopy);
+		inMemorySet.add(tupleCopy);
+		actionOutput.output(tuple);
 	}
 
 	@Override
@@ -28,7 +31,9 @@ public class ReadAllInMemoryTriples extends Action {
 	public void startProcess(ActionContext context) throws Exception {
 		String inMemoryKey = getParamString(IN_MEMORY_KEY);
 		inMemorySet = (TupleSet) context.getObjectFromCache(inMemoryKey);
-		assert (inMemorySet != null);
+		if (inMemorySet == null) {
+			inMemorySet = new TupleSetImpl();
+			context.putObjectInCache(inMemoryKey, inMemorySet);
+		}
 	}
-
 }

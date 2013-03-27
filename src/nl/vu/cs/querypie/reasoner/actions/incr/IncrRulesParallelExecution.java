@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.incr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
+import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Pattern;

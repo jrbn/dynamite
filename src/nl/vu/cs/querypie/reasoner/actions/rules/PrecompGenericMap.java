@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.rules;
 
 import java.util.List;
 import java.util.Map;
