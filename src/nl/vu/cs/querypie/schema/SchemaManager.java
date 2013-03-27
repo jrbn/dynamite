@@ -25,9 +25,6 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
-
 public class SchemaManager {
 
 	static final Logger log = LoggerFactory.getLogger(SchemaManager.class);
@@ -119,22 +116,23 @@ public class SchemaManager {
 		Tuple row = TupleFactory.newTuple(new TLong(), new TLong(),
 				new TLong(), new TInt());
 
-		Collection<Long> resultList = new ArrayList<Long>();
-		Collection<Integer> steps = new ArrayList<Integer>();
+		List<Tuple> resultList = new ArrayList<Tuple>();
+		List<Integer> steps = new ArrayList<Integer>();
 		try {
 			while (itr != null && itr.isReady() && itr.nextTuple()) {
 				itr.getTuple(row);
+				Tuple resultTuple = TupleFactory.newTuple();
 				for (int i = 0; i < nVars; ++i) {
-					resultList.add(((TLong) row.get(pos_vars[i])).getValue());
+					resultTuple.set(row.get(pos_vars[i]), i);
 				}
+				resultList.add(resultTuple);
 				steps.add(((TInt) row.get(3)).getValue());
 			}
 		} catch (Exception e) {
 			log.error("Error", e);
 		}
 
-		Tuples tuples = new Tuples(nVars, Longs.toArray(resultList),
-				Ints.toArray(steps));
+		Tuples tuples = new Tuples(resultList, nVars, steps);
 		return tuples;
 	}
 
@@ -155,16 +153,17 @@ public class SchemaManager {
 		// Determine position variables
 		int[] pos_vars = p.getPositionVariables();
 
-		Collection<Long> resultList = new ArrayList<Long>();
-		Collection<Integer> steps = new ArrayList<Integer>();
+		List<Tuple> resultList = new ArrayList<Tuple>();
+		List<Integer> steps = new ArrayList<Integer>();
 		for (Tuple t : result) {
+			Tuple resultTuple = TupleFactory.newTuple();
 			for (int i = 0; i < pos_vars.length; ++i) {
-				resultList.add(((TLong) t.get(pos_vars[i])).getValue());
+				resultTuple.set(t.get(pos_vars[i]), i);
 			}
+			resultList.add(resultTuple);
 			steps.add(Integer.MAX_VALUE);
 		}
-		return new Tuples(pos_vars.length, Longs.toArray(resultList),
-				Ints.toArray(steps));
+		return new Tuples(resultList, pos_vars.length, steps);
 	}
 
 	private Tuples joinSets(Collection<String> var1, Tuples t1,
@@ -181,27 +180,31 @@ public class SchemaManager {
 			throw new Exception("Not supported");
 		}
 
-		Collection<Long> results = new ArrayList<Long>();
-		Collection<Integer> steps = new ArrayList<Integer>();
+		List<Tuple> resultList = new ArrayList<Tuple>();
+		List<Integer> steps = new ArrayList<Integer>();
 
-		int n1 = t1.getNTuples();
-		int l1 = t1.getLengthRow();
-		for (int i = 0; i < n1; ++i) {
+		int l1 = t1.getTuplesLength();
+		for (int i = 0; i < t1.getNTuples(); ++i) {
 			Row r1 = t1.getRow(i);
-			Collection<Row> r2s = t2.get(pos_shared_vars[0][1],
-					r1.getValue(pos_shared_vars[0][0]));
+			Set<Row> r2s = t2.get(pos_shared_vars[0][1],
+					r1.getValue(pos_shared_vars[0][0]).getValue());
 			if (r2s != null) {
 				for (Row r2 : r2s) {
-					for (int j = 0; j < l1; ++j)
-						results.add(r1.getValue(j));
-					for (int j = 0; j < pos_not_shared_vars[1].length; ++j)
-						results.add(r2.getValue(pos_not_shared_vars[1][j]));
+					Tuple resultTuple = TupleFactory.newTuple();
+					int currentPosition = 0;
+					for (int j = 0; j < l1; ++j) {
+						resultTuple.set(r1.getValue(j), currentPosition++);
+					}
+					for (int j = 0; j < pos_not_shared_vars[1].length; ++j) {
+						resultTuple.set(r2.getValue(pos_not_shared_vars[1][j]),
+								currentPosition++);
+					}
+					resultList.add(resultTuple);
 					steps.add(Math.max(r1.getStep(), r2.getStep()));
 				}
 			}
 		}
-		return new Tuples(sizeTupleResult, Longs.toArray(results),
-				Ints.toArray(steps));
+		return new Tuples(resultList, sizeTupleResult, steps);
 	}
 
 	private boolean isCurrentlySupported(
