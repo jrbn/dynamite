@@ -20,48 +20,28 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
 
-	@Override
-	public void process(Tuple tuple, ActionContext context,
+	private void executeGenericRules(ActionContext context,
 			ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
+		ActionsHelper.runGenericRuleExecutor(Integer.MIN_VALUE, actions);
+		actionOutput.branch(actions);
 	}
 
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		List<Integer> rulesOnlySchema = new ArrayList<Integer>();
-		List<Rule> rulesSchemaGenerics = new ArrayList<Rule>();
+	private void executePrecomGenericRules(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
+		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
+		actionOutput.branch(actions);
+	}
 
-		// Determine the rules that have information in delta and organize them
-		// according to their type
-		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema,
-				rulesSchemaGenerics);
-
-		// Execute all schema rules in parallel (on different branches)
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(
-				rulesOnlySchema, true, actionOutput);
-
-		// Read all the delta triples and apply all the rules with a single
-		// antecedent
-		executeGenericRules(context, actionOutput);
-
-		// Execute rules that require a map and a reduce
-		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context,
-				true);
-		executePrecomGenericRules(context, actionOutput);
-
-		// If some schema is changed, re-apply the rules over the entire input
-		// which is affected
-		for (Rule rule : rulesSchemaGenerics) {
-			Pattern pattern = getQueryPattern(rule);
-			Collection<Long> possibleValues = getValuesMatchingTheSchema(rule);
-			int varPos = getVariablePosition(rule);
-			for (long v : possibleValues) {
-				pattern.setTerm(varPos, new Term(v));
-				executePrecomGenericRulesForPattern(pattern, context,
-						actionOutput);
-			}
-		}
-
+	private void executePrecomGenericRulesForPattern(Pattern pattern,
+			ActionContext context, ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.runReadFromBTree(pattern, actions);
+		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
+		actionOutput.branch(actions);
 	}
 
 	private void extractSchemaRulesWithInformationInDelta(
@@ -95,32 +75,6 @@ public class IncrRulesParallelExecution extends Action {
 		}
 	}
 
-	private void executeGenericRules(ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readFakeTuple(actions);
-		ActionsHelper.runReadAllInMemoryTuples(actions);
-		ActionsHelper.runGenericRuleExecutor(Integer.MIN_VALUE, actions);
-		actionOutput.branch(actions);
-	}
-
-	private void executePrecomGenericRules(ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readFakeTuple(actions);
-		ActionsHelper.runReadAllInMemoryTuples(actions);
-		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
-		actionOutput.branch(actions);
-	}
-
-	private void executePrecomGenericRulesForPattern(Pattern pattern,
-			ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.runReadFromBTree(pattern, actions);
-		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
-		actionOutput.branch(actions);
-	}
-
 	private Pattern getQueryPattern(Rule rule) {
 		Pattern pattern = new Pattern();
 		rule.getGenericBodyPatterns().get(0).copyTo(pattern);
@@ -136,5 +90,45 @@ public class IncrRulesParallelExecution extends Action {
 	private int getVariablePosition(Rule rule) {
 		int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
 		return shared_pos[0][0];
+	}
+
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
+		List<Integer> rulesOnlySchema = new ArrayList<Integer>();
+		List<Rule> rulesSchemaGenerics = new ArrayList<Rule>();
+		// Determine the rules that have information in delta and organize them
+		// according to their type
+		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema,
+				rulesSchemaGenerics);
+		// FIXME This operation is necessary, but is this the right place to
+		// perform it?
+		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context,
+				true);
+		// Execute all schema rules in parallel (on different branches)
+		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(
+				rulesOnlySchema, true, actionOutput);
+		// Read all the delta triples and apply all the rules with a single
+		// antecedent
+		executeGenericRules(context, actionOutput);
+		// Execute rules that require a map and a reduce
+		executePrecomGenericRules(context, actionOutput);
+		// If some schema is changed, re-apply the rules over the entire input
+		// which is affected
+		for (Rule rule : rulesSchemaGenerics) {
+			Pattern pattern = getQueryPattern(rule);
+			Collection<Long> possibleValues = getValuesMatchingTheSchema(rule);
+			int varPos = getVariablePosition(rule);
+			for (long v : possibleValues) {
+				pattern.setTerm(varPos, new Term(v));
+				executePrecomGenericRulesForPattern(pattern, context,
+						actionOutput);
+			}
+		}
 	}
 }
