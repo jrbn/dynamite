@@ -136,8 +136,9 @@ public class PrecompGenericReduce extends Action {
 					// Get current values
 					for (int i = 0; i < pos_head_precomps[currentRule].length; ++i) {
 						outputTuples[currentRule][pos_head_precomps[currentRule][i][0]]
-								.setValue(row
-										.getValue(pos_head_precomps[currentRule][i][1]));
+								.setValue(row.getValue(
+										pos_head_precomps[currentRule][i][1])
+										.getValue());
 					}
 					supportTuple.set(outputTuples[currentRule]);
 					if (!duplicates.contains(supportTuple)) {
