@@ -85,7 +85,7 @@ public class IncrRulesController extends Action {
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch,
 					Consts.CURRENT_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1, countDuplicates);
+			IncrAddController.addToChain(actionsToBranch, -1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {
 			ActionsHelper.readFakeTuple(actionsToBranch);

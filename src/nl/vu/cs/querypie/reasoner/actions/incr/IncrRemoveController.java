@@ -96,7 +96,7 @@ public class IncrRemoveController extends Action {
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch,
 					Consts.COMPLETE_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1, false);
+			IncrAddController.addToChain(actionsToBranch, -1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 
 			actionOutput.branch((ActionConf[]) actions.toArray());

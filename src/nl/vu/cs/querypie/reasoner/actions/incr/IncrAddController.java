@@ -20,14 +20,11 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 public class IncrAddController extends Action {
 	public static final int I_STEP = 0;
 	public static final int B_FORCE_STEP = 1;
-	public static final int B_COUNT_DUPLICATES = 2;
 
-	public static void addToChain(List<ActionConf> actions, int step,
-			boolean duplicates) {
+	public static void addToChain(List<ActionConf> actions, int step) {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
 		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
 		c.setParamInt(IncrAddController.I_STEP, step);
-		c.setParamBoolean(IncrAddController.B_COUNT_DUPLICATES, duplicates);
 		actions.add(c);
 	}
 
@@ -35,7 +32,7 @@ public class IncrAddController extends Action {
 	private Tuple currentTuple;
 
 	private int step;
-	private boolean forceStep, countDuplicates;
+	private boolean forceStep;
 
 	private void executeAForwardChainingIterationAndRestart(
 			ActionContext context, ActionOutput actionOutput) throws Exception {
@@ -43,7 +40,7 @@ public class IncrAddController extends Action {
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		IncrAddController.addToChain(actions, step, countDuplicates);
+		IncrAddController.addToChain(actions, step);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
@@ -76,8 +73,6 @@ public class IncrAddController extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", 0, true);
 		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
-		conf.registerParameter(B_COUNT_DUPLICATES, "count duplicates", null,
-				true);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
@@ -91,7 +86,6 @@ public class IncrAddController extends Action {
 				new TLong());
 		step = getParamInt(I_STEP);
 		forceStep = getParamBoolean(B_FORCE_STEP);
-		countDuplicates = getParamBoolean(B_COUNT_DUPLICATES);
 	}
 
 	@Override
@@ -110,9 +104,8 @@ public class IncrAddController extends Action {
 
 	private void writeCompleteDeltaToBTree(ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step,
-				countDuplicates, context, actionOutput,
-				Consts.COMPLETE_DELTA_KEY);
+		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context,
+				actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }

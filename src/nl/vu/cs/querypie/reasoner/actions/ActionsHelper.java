@@ -163,8 +163,8 @@ public class ActionsHelper {
 	}
 
 	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step,
-			boolean countDuplicates, ActionContext context,
-			ActionOutput actionOutput, String inMemoryKey) throws Exception {
+			ActionContext context, ActionOutput actionOutput, String inMemoryKey)
+			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
