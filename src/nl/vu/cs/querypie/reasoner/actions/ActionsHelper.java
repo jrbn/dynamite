@@ -38,11 +38,11 @@ public class ActionsHelper {
 	public static void collectToNode(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
 		if (ParamHandler.get().isUsingCount()) {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
 					TLong.class.getName(), TLong.class.getName(),
 					TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS,
+			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
 					TLong.class.getName(), TLong.class.getName(),
 					TLong.class.getName());
 		}
@@ -83,7 +83,8 @@ public class ActionsHelper {
 			readFakeTuple(actions);
 			runPrecomputedRuleExecutorForRule(step, ruleId, actions,
 					incrementalFlag);
-			actionOutput.branch((ActionConf[]) actions.toArray());
+			actionOutput
+					.branch(actions.toArray(new ActionConf[actions.size()]));
 		}
 	}
 
@@ -169,6 +170,6 @@ public class ActionsHelper {
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 }

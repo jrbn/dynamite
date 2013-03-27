@@ -18,25 +18,31 @@ import nl.vu.cs.querypie.ReasoningContext;
  */
 public class OneStepRulesControllerToMemory extends AbstractRulesController {
 	public static void addToChain(List<ActionConf> actions) {
-		ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerToMemory.class);
+		ActionConf a = ActionFactory
+				.getActionConf(OneStepRulesControllerToMemory.class);
 		actions.add(a);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
+		if (!ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, false, Integer.MIN_VALUE, true);
-			applyRulesWithGenericPatternsInABranch(actions, false, Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatternsInABranch(actions, false,
+					Integer.MIN_VALUE, true);
 		} else {
-			applyRulesWithGenericPatterns(actions, false, Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatterns(actions, false, Integer.MIN_VALUE,
+					true);
 		}
 		ActionsHelper.collectToNode(actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 }

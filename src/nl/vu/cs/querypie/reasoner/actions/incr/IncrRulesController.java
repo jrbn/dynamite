@@ -22,9 +22,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
 	public static final int S_DELTA_DIR = 0;
-
 	public static final int B_ADD = 1;
-	public static final int B_DUPLICATES = 2;
 
 	public static void addToChain(List<ActionConf> actions, String deltaDir,
 			boolean add) {
@@ -34,7 +32,7 @@ public class IncrRulesController extends Action {
 		actions.add(a);
 	}
 
-	private boolean add, countDuplicates;
+	private boolean add;
 	private String deltaDir;
 
 	@Override
@@ -47,15 +45,12 @@ public class IncrRulesController extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(S_DELTA_DIR, "dir of the update", null, true);
 		conf.registerParameter(B_ADD, "add or remove", true, false);
-		conf.registerParameter(B_DUPLICATES, "exploit the duplicates", null,
-				true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		deltaDir = getParamString(S_DELTA_DIR);
 		add = getParamBoolean(B_ADD);
-		countDuplicates = getParamBoolean(B_DUPLICATES);
 	}
 
 	@Override
@@ -91,14 +86,14 @@ public class IncrRulesController extends Action {
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch,
 					Consts.CURRENT_DELTA_KEY);
-			if (countDuplicates) {
+			if (ParamHandler.get().isUsingCount()) {
 				IncrRemoveDuplController.addToChain(actionsToBranch);
 			} else {
 				IncrRemoveController.addToChain(actionsToBranch);
 			}
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		}
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 }
