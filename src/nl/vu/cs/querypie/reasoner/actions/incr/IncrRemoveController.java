@@ -13,7 +13,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
+import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerFromMemory;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
@@ -58,11 +58,14 @@ public class IncrRemoveController extends Action {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
 			removeAllInMemoryTuplesFromBTree(context);
-			OneStepRulesControllerToMemory.addToChain(actions);
+			OneStepRulesControllerFromMemory.addToChain(actions);
 			ActionsHelper.collectToNode(actions);
+
+			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
 			IncrAddController.addToChain(actionsToBranch, -1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
+
 			actionOutput.branch((ActionConf[]) actions.toArray());
 		}
 	}

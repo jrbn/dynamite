@@ -9,6 +9,7 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.CompleteRulesController;
 import nl.vu.cs.querypie.reasoner.actions.incr.IncrRulesController;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
@@ -62,8 +63,10 @@ public class Reasoner {
 		Job job = new Job();
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (deltaDir == null) {
+			ActionsHelper.readFakeTuple(actions);
 			CompleteRulesController.addToChain(actions);
 		} else {
+			ActionsHelper.readFakeTuple(actions);
 			IncrRulesController.addToChain(actions, deltaDir, add);
 		}
 		job.setActions(actions);
@@ -112,6 +115,7 @@ public class Reasoner {
 	private static void printDerivations(Ajira arch) {
 		Job job = new Job();
 		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
 		Debugging.addToChain(actions);
 		job.setActions(actions);
 

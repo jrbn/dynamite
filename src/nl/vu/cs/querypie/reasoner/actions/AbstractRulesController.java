@@ -13,6 +13,7 @@ import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
 	protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
+		ActionsHelper.readFakeTuple(actions);
 		ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
 		ActionsHelper.sort(actions, false);
 		if (ParamHandler.get().isUsingCount()) {

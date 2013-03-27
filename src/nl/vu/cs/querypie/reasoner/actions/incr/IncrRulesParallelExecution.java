@@ -30,6 +30,7 @@ public class IncrRulesParallelExecution extends Action {
 
 	private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, actions);
 		actionOutput.branch((ActionConf[]) actions.toArray());
@@ -37,6 +38,7 @@ public class IncrRulesParallelExecution extends Action {
 
 	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch((ActionConf[]) actions.toArray());

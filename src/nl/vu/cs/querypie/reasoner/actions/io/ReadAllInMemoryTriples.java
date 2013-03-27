@@ -11,14 +11,14 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 
 public class ReadAllInMemoryTriples extends Action {
-	public static final int IN_MEMORY_KEY = 0;
-	private TupleSet inMemorySet;
-
 	public static void addToChain(List<ActionConf> actions, String inMemoryTriplesKey) {
 		ActionConf a = ActionFactory.getActionConf(ReadAllInMemoryTriples.class);
 		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
 	}
+
+	public static final int IN_MEMORY_KEY = 0;
+	private TupleSet inMemorySet;
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {

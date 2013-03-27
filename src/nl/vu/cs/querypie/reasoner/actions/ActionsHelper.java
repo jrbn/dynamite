@@ -136,6 +136,7 @@ public class ActionsHelper {
 	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step, ActionContext context, ActionOutput actionOutput, String inMemoryKey)
 			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
+		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
 		actionOutput.branch((ActionConf[]) actions.toArray());
