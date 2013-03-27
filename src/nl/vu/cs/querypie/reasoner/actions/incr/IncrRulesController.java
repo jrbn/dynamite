@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.incr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,13 +8,14 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class IncrRulesController extends Action {
-	static final int S_DELTA_DIR = 0;
-	static final int ADD = 1;
+	public static final int S_DELTA_DIR = 0;
+	public static final int ADD = 1;
 
 	private boolean add;
 	private String deltaDir;
