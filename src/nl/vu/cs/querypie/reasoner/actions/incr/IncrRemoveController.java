@@ -6,18 +6,26 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
+import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
+import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class IncrRemoveController extends Action {
+	public static void addToChain(List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
+		actions.add(c);
+	}
+
 	private TupleSet currentDelta;
 	private TupleSet completeDelta;
 	private Tuple currentTuple;
@@ -50,10 +58,10 @@ public class IncrRemoveController extends Action {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
 			removeAllInMemoryTuplesFromBTree(context);
-			ActionsHelper.runOneStepRulesControllerToMemory(actions);
+			OneStepRulesControllerToMemory.addToChain(actions);
 			ActionsHelper.collectToNode(actions);
-			ActionsHelper.readAllInMemoryTuples(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
-			ActionsHelper.runIncrAddController(actionsToBranch, -1);
+			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
+			IncrAddController.addToChain(actionsToBranch, -1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 			actionOutput.branch((ActionConf[]) actions.toArray());
 		}
@@ -62,10 +70,10 @@ public class IncrRemoveController extends Action {
 	private void executeOneForwardChainIterationAndRestartFromStage(ActionContext context, ActionOutput actionOutput) throws Exception {
 		updateAndSaveCompleteDelta(context);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.runIncrRulesParallelExecution(actions);
+		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		ActionsHelper.runIncrRemoveController(actions);
+		IncrRemoveController.addToChain(actions);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 

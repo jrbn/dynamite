@@ -1,8 +1,11 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
@@ -14,6 +17,12 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
+	public static void addToChain(boolean forceStep, int step, List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
+		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
+		actions.add(c);
+	}
 
 	public static final int I_STEP = 0;
 	public static final int B_FORCE_STEP = 1;
@@ -59,8 +68,7 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
@@ -103,8 +111,7 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();

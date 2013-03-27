@@ -5,6 +5,7 @@ import java.util.List;
 
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
@@ -15,24 +16,30 @@ import nl.vu.cs.querypie.ReasoningContext;
  * rules.
  */
 public class CompleteRulesController extends AbstractRulesController {
+	public static void addToChain(List<ActionConf> actions) {
+		addToChain(actions, 1);
+	}
+
+	public static void addToChain(List<ActionConf> actions, int step) {
+		ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
+		c.setParamInt(CompleteRulesController.I_STEP, step);
+		actions.add(c);
+	}
+
 	public static final int I_STEP = 0;
-	public static final int B_COUNT_DERIVATIONS = 1;
 
 	private boolean hasDerived;
 	private int step;
-	private boolean countDerivations;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", null, true);
-		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false, true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		hasDerived = false;
 		step = getParamInt(I_STEP);
-		countDerivations = getParamBoolean(B_COUNT_DERIVATIONS);
 	}
 
 	@Override
@@ -47,13 +54,13 @@ public class CompleteRulesController extends AbstractRulesController {
 		context.incrCounter("Iterations", 1);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, true, countDerivations, step, false);
-			applyRulesWithGenericPatternsInABranch(actions, true, countDerivations, step + 1, false);
+			applyRulesSchemaOnly(actions, true, step, false);
+			applyRulesWithGenericPatternsInABranch(actions, true, step + 1, false);
 		} else {
-			applyRulesWithGenericPatterns(actions, true, countDerivations, step + 1, false);
+			applyRulesWithGenericPatterns(actions, true, step + 1, false);
 		}
 		ActionsHelper.collectToNode(actions);
-		ActionsHelper.runCompleteRulesController(actions, countDerivations, step + 3);
+		CompleteRulesController.addToChain(actions, step + 3);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 

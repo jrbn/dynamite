@@ -1,5 +1,7 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
@@ -16,8 +18,16 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.data.types.bytearray.BDataInput;
 import nl.vu.cs.ajira.datalayer.InputQuery;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.storage.Pattern;
 
 public class ReadFromBtree extends Action {
+	public static void addToChain(Pattern pattern, List<ActionConf> actions) {
+		ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
+		Query query = new Query(new TLong(pattern.getTerm(0).getValue()), new TLong(pattern.getTerm(1).getValue()), new TLong(pattern.getTerm(2).getValue()));
+		a.setParamWritable(ReadFromBtree.TUPLE, query);
+		actions.add(a);
+	}
+
 	public static final int TUPLE = 0;
 	public static final int PARALLEL_TASKS = 1;
 

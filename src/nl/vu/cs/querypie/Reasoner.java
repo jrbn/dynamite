@@ -9,10 +9,13 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
-import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
+import nl.vu.cs.querypie.reasoner.actions.CompleteRulesController;
+import nl.vu.cs.querypie.reasoner.actions.incr.IncrRulesController;
+import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
 import nl.vu.cs.querypie.reasoner.rules.Ruleset;
+import nl.vu.cs.querypie.reasoner.support.Debugging;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 import org.slf4j.Logger;
@@ -24,12 +27,10 @@ public class Reasoner {
 	private static String deltaDir;
 	private static List<Rule> rules;
 	private static boolean add;
-	private static boolean countingAlgo = false;
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
-			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove] [--countingAlgorithm]");
+			System.out.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove] [--countingAlgorithm]");
 			return;
 		}
 		parseArgs(args);
@@ -49,9 +50,7 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(
-				(BerkeleydbLayer) arch.getContext().getInputLayer(
-						Consts.DEFAULT_INPUT_LAYER_ID));
+		ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
 		ReasoningContext.getInstance().init();
 	}
 
@@ -63,10 +62,9 @@ public class Reasoner {
 		Job job = new Job();
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (deltaDir == null) {
-			ActionsHelper.runCompleteRulesController(actions, countingAlgo);
+			CompleteRulesController.addToChain(actions);
 		} else {
-			ActionsHelper.runIncrRulesController(actions, deltaDir, add,
-					countingAlgo);
+			IncrRulesController.addToChain(actions, deltaDir, add);
 		}
 		job.setActions(actions);
 
@@ -96,7 +94,7 @@ public class Reasoner {
 				deltaDir = args[++i];
 				add = true;
 			} else if (args[i].equals("--countingAlgorithm")) {
-				countingAlgo = true;
+				ParamHandler.get().setUsingCount(true);
 			}
 		}
 	}
@@ -114,7 +112,7 @@ public class Reasoner {
 	private static void printDerivations(Ajira arch) {
 		Job job = new Job();
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.printDebugInfo(actions);
+		Debugging.addToChain(actions);
 		job.setActions(actions);
 
 		if (arch.amItheServer()) {

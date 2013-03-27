@@ -5,50 +5,53 @@ import java.util.List;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
+import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
+import nl.vu.cs.querypie.reasoner.actions.io.WriteInMemory;
+import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
 import nl.vu.cs.querypie.reasoner.common.Consts;
+import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
-	protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step, boolean flaggedOnly) {
-		ActionsHelper.runSchemaRulesInParallel(step - 3, actions);
-		ActionsHelper.runSort(actions, false);
-		if (countDerivations) {
-			ActionsHelper.addDerivationCount(actions, false);
+	protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
+		ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
+		ActionsHelper.sort(actions, false);
+		if (ParamHandler.get().isUsingCount()) {
+			AddDerivationCount.addToChain(actions, false);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		if (writeToBTree) {
-			ActionsHelper.writeDerivationsOnBTree(true, step, actions);
+			WriteDerivationsBtree.addToChain(true, step, actions);
 		} else {
-			ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
+			WriteInMemory.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		}
 		ActionsHelper.collectToNode(actions);
-		ActionsHelper.reloadSchema(actions, false);
+		ReloadSchema.addToChain(actions, false);
 	}
 
-	protected void applyRulesWithGenericPatterns(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step, boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatterns(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
-		ActionsHelper.runGenericRuleExecutor(step - 3, actions);
-		ActionsHelper.setStep(step, actions);
+		GenericRuleExecutor.addToChain(step, actions);
+		SetStep.addToChain(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.runMapReduce(actions, step - 2, false);
-		ActionsHelper.runSort(actions, true);
-		if (countDerivations) {
-			ActionsHelper.addDerivationCount(actions, true);
+		ActionsHelper.mapReduce(actions, step - 2, false);
+		ActionsHelper.sort(actions, true);
+		if (ParamHandler.get().isUsingCount()) {
+			AddDerivationCount.addToChain(actions, true);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		if (writeToBTree) {
-			ActionsHelper.writeDerivationsOnBTree(false, step, actions);
+			WriteDerivationsBtree.addToChain(false, step, actions);
 		} else {
-			ActionsHelper.writeInMemory(actions, Consts.CURRENT_DELTA_KEY);
+			WriteInMemory.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		}
 	}
 
-	protected void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions, boolean writeToBTree, boolean countDerivations, int step,
-			boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
 		List<ActionConf> actions2 = new ArrayList<ActionConf>();
-		applyRulesWithGenericPatterns(actions2, writeToBTree, countDerivations, step, flaggedOnly);
+		applyRulesWithGenericPatterns(actions2, writeToBTree, step, flaggedOnly);
 		ActionsHelper.createBranch(actions, actions2);
 	}
 

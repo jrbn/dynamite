@@ -6,6 +6,7 @@ import java.util.Map;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
@@ -19,6 +20,12 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class PrecompGenericMap extends Action {
+	public static void addToChain(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
+		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
+		c.setParamBoolean(PrecompGenericMap.B_INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamInt(PrecompGenericMap.I_MINIMUM_STEP, minimumStep);
+		actions.add(c);
+	}
 
 	public static final int B_INCREMENTAL_FLAG = 0;
 	public static final int I_MINIMUM_STEP = 1;
@@ -39,10 +46,8 @@ public class PrecompGenericMap extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental_flag", false,
-				false);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step",
-				Integer.MIN_VALUE, false);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental_flag", false, false);
+		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, false);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -50,8 +55,7 @@ public class PrecompGenericMap extends Action {
 	public void startProcess(ActionContext context) throws Exception {
 		boolean incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minimumStep = getParamInt(I_MINIMUM_STEP);
-		rules = ReasoningContext.getInstance().getRuleset()
-				.getAllRulesWithSchemaAndGeneric();
+		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
 		key_positions = new int[rules.size()][];
 		positions_to_check = new int[rules.size()][];
 		acceptableValues = new Map[rules.size()];
@@ -83,25 +87,19 @@ public class PrecompGenericMap extends Action {
 				throw new Exception("Not implemented yet");
 			}
 
-			acceptableValues[r] = incrementalFlag ? rule
-					.getFlaggedPrecomputedTuples().getSortedSetWithStep(
-							shared_vars[0][1]) : rule.getAllPrecomputedTuples()
+			acceptableValues[r] = incrementalFlag ? rule.getFlaggedPrecomputedTuples().getSortedSetWithStep(shared_vars[0][1]) : rule.getAllPrecomputedTuples()
 					.getSortedSetWithStep(shared_vars[0][1]);
-			pos_constants_to_check[r] = rule
-					.getPositionsConstantGenericPattern();
+			pos_constants_to_check[r] = rule.getPositionsConstantGenericPattern();
 			value_constants_to_check[r] = rule.getValueConstantGenericPattern();
 		}
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 
 		for (int r = 0; r < rules.size(); r++) {
 			// Does the input match with the generic pattern?
-			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(
-					tuple, pos_constants_to_check[r],
-					value_constants_to_check[r])) {
+			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
 				continue;
 			}
 			TLong t = (TLong) tuple.get(positions_to_check[r][0]);
@@ -117,17 +115,12 @@ public class PrecompGenericMap extends Action {
 				ruleID.setValue(r);
 				valid.setValue(currentStep >= minimumStep);
 				if (key_positions[r].length == 1) {
-					Utils.encodeLong(oneKey.getArray(), 0,
-							((TLong) tuple.get(key_positions[r][0])).getValue());
-					outputTuple.set(oneKey, valid, ruleID,
-							tuple.get(positions_to_check[r][0]));
+					Utils.encodeLong(oneKey.getArray(), 0, ((TLong) tuple.get(key_positions[r][0])).getValue());
+					outputTuple.set(oneKey, valid, ruleID, tuple.get(positions_to_check[r][0]));
 				} else { // Two keys
-					Utils.encodeLong(twoKeys.getArray(), 0,
-							((TLong) tuple.get(key_positions[r][0])).getValue());
-					Utils.encodeLong(twoKeys.getArray(), 8,
-							((TLong) tuple.get(key_positions[r][1])).getValue());
-					outputTuple.set(twoKeys, valid, ruleID,
-							tuple.get(positions_to_check[r][0]));
+					Utils.encodeLong(twoKeys.getArray(), 0, ((TLong) tuple.get(key_positions[r][0])).getValue());
+					Utils.encodeLong(twoKeys.getArray(), 8, ((TLong) tuple.get(key_positions[r][1])).getValue());
+					outputTuple.set(twoKeys, valid, ruleID, tuple.get(positions_to_check[r][0]));
 				}
 				actionOutput.output(outputTuple);
 			}
@@ -135,8 +128,7 @@ public class PrecompGenericMap extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		rules = null;
 		acceptableValues = null;
 		key_positions = null;

@@ -6,6 +6,7 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -17,6 +18,13 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrAddController extends Action {
+	public static void addToChain(List<ActionConf> actions, int step) {
+		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
+		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
+		c.setParamInt(IncrAddController.I_STEP, step);
+		actions.add(c);
+	}
+
 	public static final int I_STEP = 0;
 	public static final int B_FORCE_STEP = 1;
 
@@ -76,10 +84,10 @@ public class IncrAddController extends Action {
 
 	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.runIncrRulesParallelExecution(actions);
+		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		ActionsHelper.runIncrAddController(actions, step);
+		IncrAddController.addToChain(actions, step);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 

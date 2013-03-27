@@ -6,6 +6,7 @@ import java.util.List;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
@@ -18,6 +19,12 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
+	public static void addToChain(int step, List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
+		c.setParamInt(GenericRuleExecutor.I_MIN_STEP_TO_INCLUDE, step);
+		c.setParamBoolean(GenericRuleExecutor.B_CHECK_VALID_INPUT, true);
+		actions.add(c);
+	}
 
 	public static final int B_CHECK_VALID_INPUT = 0;
 	public static final int I_MIN_STEP_TO_INCLUDE = 1;
@@ -34,16 +41,14 @@ public class GenericRuleExecutor extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(B_CHECK_VALID_INPUT, "check input", false, false);
-		conf.registerParameter(I_MIN_STEP_TO_INCLUDE,
-				"minimum step to include", Integer.MIN_VALUE, false);
+		conf.registerParameter(I_MIN_STEP_TO_INCLUDE, "minimum step to include", Integer.MIN_VALUE, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		checkInput = getParamBoolean(B_CHECK_VALID_INPUT);
 		minimumStep = getParamInt(I_MIN_STEP_TO_INCLUDE);
-		rules = ReasoningContext.getInstance().getRuleset()
-				.getAllRulesWithOneAntecedent();
+		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
 		counters = new int[rules.size()];
 		pos_constants_to_check = new int[rules.size()][];
 		value_constants_to_check = new long[rules.size()][];
@@ -53,8 +58,7 @@ public class GenericRuleExecutor extends Action {
 			int[][] pos_gen_head = rule.getSharedVariablesGen_Head();
 			positions_gen_head.add(pos_gen_head);
 			// Determines the positions and values of constants
-			pos_constants_to_check[r] = rule
-					.getPositionsConstantGenericPattern();
+			pos_constants_to_check[r] = rule.getPositionsConstantGenericPattern();
 			value_constants_to_check[r] = rule.getValueConstantGenericPattern();
 			// Prepares the known parts of the output triples
 			Pattern head = rule.getHead();
@@ -70,8 +74,7 @@ public class GenericRuleExecutor extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 
 		if (checkInput && ((TInt) tuple.get(3)).getValue() < minimumStep) {
 			return;
@@ -80,15 +83,13 @@ public class GenericRuleExecutor extends Action {
 		// Bind the variables in the output triple
 		for (int r = 0; r < outputTriples.size(); r++) {
 			// Does the input match with the generic pattern?
-			if (!Utils.tupleMatchConstants(tuple, pos_constants_to_check[r],
-					value_constants_to_check[r])) {
+			if (!Utils.tupleMatchConstants(tuple, pos_constants_to_check[r], value_constants_to_check[r])) {
 				continue;
 			}
 			int[][] pos_gen_head = positions_gen_head.get(r);
 			SimpleData[] outputTriple = outputTriples.get(r);
 			for (int i = 0; i < pos_gen_head.length; ++i) {
-				outputTriple[pos_gen_head[i][1]] = tuple
-						.get(pos_gen_head[i][0]);
+				outputTriple[pos_gen_head[i][1]] = tuple.get(pos_gen_head[i][0]);
 			}
 			actionOutput.output(outputTriple);
 			counters[r]++;
@@ -96,11 +97,9 @@ public class GenericRuleExecutor extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		for (int i = 0; i < counters.length; ++i) {
-			context.incrCounter("derivation-rule-" + rules.get(i).getId(),
-					counters[i]);
+			context.incrCounter("derivation-rule-" + rules.get(i).getId(), counters[i]);
 		}
 	}
 

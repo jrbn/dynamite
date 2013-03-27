@@ -1,8 +1,11 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
+import java.util.List;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
@@ -11,6 +14,11 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 
 public class AddDerivationCount extends Action {
+	public static void addToChain(List<ActionConf> actions, boolean groupSteps) {
+		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
+		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
+		actions.add(c);
+	}
 
 	public static final int B_GROUP_STEPS = 0;
 
@@ -50,8 +58,7 @@ public class AddDerivationCount extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (first) {
 			first = false;
 			currentCount = 1;
@@ -87,8 +94,7 @@ public class AddDerivationCount extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!first) {
 			refCount.setValue(currentCount);
 			if (countStep) {

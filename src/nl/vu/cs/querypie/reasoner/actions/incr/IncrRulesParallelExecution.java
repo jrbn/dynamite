@@ -8,10 +8,14 @@ import java.util.Map;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
+import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
+import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
+import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.Pattern;
@@ -20,25 +24,28 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
+	public static void addToChain(List<ActionConf> actions) {
+		actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
+	}
 
 	private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
-		ActionsHelper.runGenericRuleExecutor(Integer.MIN_VALUE, actions);
+		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
+		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, actions);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readAllInMemoryTuples(actions, Consts.CURRENT_DELTA_KEY);
-		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
+		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
+		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 	private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readFromBTree(pattern, actions);
-		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
+		ReadFromBtree.addToChain(pattern, actions);
+		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
