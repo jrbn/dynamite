@@ -16,17 +16,19 @@ import nl.vu.cs.querypie.ReasoningContext;
  * It writes the newly derived rules in memory (in a cached object)
  */
 public class OneStepRulesControllerToMemory extends AbstractRulesController {
-	public static final int I_STEP = 0;
-	public static final int B_COUNT_DERIVATIONS = 1;
+	public static final int B_COUNT_DERIVATIONS = 0;
 
-	private int step;
 	private boolean countDerivations;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_STEP, "step", null, true);
 		conf.registerParameter(B_COUNT_DERIVATIONS, "count_derivations", false,
 				true);
+	}
+
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		countDerivations = getParamBoolean(B_COUNT_DERIVATIONS);
 	}
 
 	@Override
@@ -41,10 +43,12 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, false, countDerivations,
-					Integer.MIN_VALUE);
-			applyRulesWithGenericPatternsInABranch(actions, false);
+					Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatternsInABranch(actions, false,
+					countDerivations, Integer.MIN_VALUE, true);
 		} else {
-			applyRulesWithGenericPatterns(actions, false);
+			applyRulesWithGenericPatterns(actions, false, countDerivations,
+					Integer.MIN_VALUE, true);
 		}
 		ActionsHelper.collectToNode(actions);
 		actionOutput.branch(actions);

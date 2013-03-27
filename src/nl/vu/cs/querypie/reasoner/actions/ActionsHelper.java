@@ -258,8 +258,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void runIncrAddController(List<ActionConf> actions) {
+	public static void runIncrAddController(List<ActionConf> actions, int step) {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
+		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
+		c.setParamInt(IncrAddController.I_STEP, step);
 		actions.add(c);
 	}
 
@@ -280,7 +282,7 @@ public class ActionsHelper {
 		a.setParamBoolean(IncrRulesController.B_COUNT_DERIVATIONS,
 				countDerivations);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
-		a.setParamBoolean(IncrRulesController.ADD, add);
+		a.setParamBoolean(IncrRulesController.B_ADD, add);
 		actions.add(a);
 	}
 
@@ -390,11 +392,12 @@ public class ActionsHelper {
 		actions.add(a);
 	}
 
-	public static void writeInMemoryTuplesToBTree(ActionContext context,
-			ActionOutput actionOutput, String inMemoryKey) throws Exception {
+	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step,
+			ActionContext context, ActionOutput actionOutput, String inMemoryKey)
+			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.readAllInMemoryTuples(actions, inMemoryKey);
-		ActionsHelper.writeDerivationsOnBTree(actions);
+		ActionsHelper.writeDerivationsOnBTree(forceStep, step, actions);
 		actionOutput.branch(actions);
 	}
 }

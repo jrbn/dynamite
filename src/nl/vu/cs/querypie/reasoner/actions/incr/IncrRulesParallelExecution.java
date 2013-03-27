@@ -40,7 +40,7 @@ public class IncrRulesParallelExecution extends Action {
 	private void executePrecomGenericRulesForPattern(Pattern pattern,
 			ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.runReadFromBTree(pattern, actions);
+		ActionsHelper.readFromBTree(pattern, actions);
 		ActionsHelper.runMapReduce(actions, Integer.MIN_VALUE, true);
 		actionOutput.branch(actions);
 	}

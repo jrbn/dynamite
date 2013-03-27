@@ -14,27 +14,53 @@ import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrAddController extends Action {
+	public static final int I_STEP = 0;
+	public static final int B_FORCE_STEP = 1;
+
 	private TupleSet currentDelta;
-	private TupleSet completeDelta;
 	private Tuple currentTuple;
+
+	private int step;
+	private boolean forceStep;
+
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_STEP, "step", 0, true);
+		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
+	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		completeDelta = (TupleSet) context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		currentDelta = new TupleSetImpl();
 		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 				new TLong());
+		step = getParamInt(I_STEP);
+		forceStep = getParamBoolean(B_FORCE_STEP);
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
 		tuple.copyTo(currentTuple);
-		if (!completeDelta.contains(currentTuple)) {
-			currentDelta.add(currentTuple);
+		Object completeDeltaObj = context
+				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		if (completeDeltaObj instanceof TupleSet) {
+			TupleSet completeDelta = (TupleSet) completeDeltaObj;
+			if (!completeDelta.contains(currentTuple)) {
+				currentDelta.add(currentTuple);
+				completeDelta.add(currentTuple);
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+						new TLong());
+			}
+		} else {
+			TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
+			if (!completeDelta.containsKey(tuple)) {
+				currentDelta.add(currentTuple);
+			}
+			completeDelta.put(currentTuple, 1);
 			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 					new TLong());
 		}
@@ -56,19 +82,12 @@ public class IncrAddController extends Action {
 
 	private void executeAForwardChainingIterationAndRestart(
 			ActionContext context, ActionOutput actionOutput) throws Exception {
-		updateAndSaveCompleteDelta(context);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.runIncrRulesParallelExecution(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		ActionsHelper.runIncrAddController(actions);
+		ActionsHelper.runIncrAddController(actions, step);
 		actionOutput.branch(actions);
-	}
-
-	private void updateAndSaveCompleteDelta(ActionContext context) {
-		completeDelta = (TupleSet) context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-		completeDelta.addAll(currentDelta);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
@@ -77,9 +96,8 @@ public class IncrAddController extends Action {
 
 	private void writeCompleteDeltaToBTree(ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		updateAndSaveCompleteDelta(context);
-		ActionsHelper.writeInMemoryTuplesToBTree(context, actionOutput,
-				Consts.COMPLETE_DELTA_KEY);
+		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context,
+				actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }

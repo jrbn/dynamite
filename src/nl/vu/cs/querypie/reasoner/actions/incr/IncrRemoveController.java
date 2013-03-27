@@ -60,7 +60,7 @@ public class IncrRemoveController extends Action {
 			ActionsHelper.collectToNode(actions);
 			ActionsHelper.readAllInMemoryTuples(actionsToBranch,
 					Consts.COMPLETE_DELTA_KEY);
-			ActionsHelper.runIncrAddController(actionsToBranch);
+			ActionsHelper.runIncrAddController(actionsToBranch, -1);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 			actionOutput.branch(actions);
 		}

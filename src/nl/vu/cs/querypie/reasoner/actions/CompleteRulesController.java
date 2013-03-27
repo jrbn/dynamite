@@ -51,12 +51,12 @@ public class CompleteRulesController extends AbstractRulesController {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, true, countDerivations, step);
+			applyRulesSchemaOnly(actions, true, countDerivations, step, false);
 			applyRulesWithGenericPatternsInABranch(actions, true,
-					countDerivations, step + 1);
+					countDerivations, step + 1, false);
 		} else {
 			applyRulesWithGenericPatterns(actions, true, countDerivations,
-					step + 1);
+					step + 1, false);
 		}
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.runCompleteRulesController(actions, countDerivations,
