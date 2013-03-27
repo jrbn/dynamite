@@ -20,10 +20,11 @@ import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
-public class IncrRemoveController extends Action {
+public class IncrRemoveDuplController extends Action {
 
 	public static void addToChain(List<ActionConf> actions) {
-		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
+		ActionConf c = ActionFactory
+				.getActionConf(IncrRemoveDuplController.class);
 		actions.add(c);
 	}
 
@@ -39,7 +40,7 @@ public class IncrRemoveController extends Action {
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		IncrRemoveController.addToChain(actions);
+		IncrRemoveDuplController.addToChain(actions);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
@@ -96,7 +97,7 @@ public class IncrRemoveController extends Action {
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch,
 					Consts.COMPLETE_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1, false);
+			IncrAddController.addToChain(actionsToBranch, -1, true);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 
 			actionOutput.branch((ActionConf[]) actions.toArray());

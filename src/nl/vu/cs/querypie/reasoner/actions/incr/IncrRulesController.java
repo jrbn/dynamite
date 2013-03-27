@@ -21,21 +21,25 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static void addToChain(List<ActionConf> actions, String deltaDir, boolean add) {
+	public static final int S_DELTA_DIR = 0;
+
+	public static final int B_ADD = 1;
+	public static final int B_DUPLICATES = 2;
+
+	public static void addToChain(List<ActionConf> actions, String deltaDir,
+			boolean add) {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
 		actions.add(a);
 	}
 
-	public static final int S_DELTA_DIR = 0;
-	public static final int B_ADD = 1;
-
-	private boolean add;
+	private boolean add, countDuplicates;
 	private String deltaDir;
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 
 	}
 
@@ -43,16 +47,20 @@ public class IncrRulesController extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(S_DELTA_DIR, "dir of the update", null, true);
 		conf.registerParameter(B_ADD, "add or remove", true, false);
+		conf.registerParameter(B_DUPLICATES, "exploit the duplicates", null,
+				true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		deltaDir = getParamString(S_DELTA_DIR);
 		add = getParamBoolean(B_ADD);
+		countDuplicates = getParamBoolean(B_DUPLICATES);
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -75,13 +83,19 @@ public class IncrRulesController extends Action {
 		ActionsHelper.collectToNode(actions);
 		if (add) {
 			ActionsHelper.readFakeTuple(actionsToBranch);
-			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.CURRENT_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1);
+			ReadAllInMemoryTriples.addToChain(actionsToBranch,
+					Consts.CURRENT_DELTA_KEY);
+			IncrAddController.addToChain(actionsToBranch, -1, countDuplicates);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {
 			ActionsHelper.readFakeTuple(actionsToBranch);
-			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.CURRENT_DELTA_KEY);
-			IncrRemoveController.addToChain(actionsToBranch);
+			ReadAllInMemoryTriples.addToChain(actionsToBranch,
+					Consts.CURRENT_DELTA_KEY);
+			if (countDuplicates) {
+				IncrRemoveDuplController.addToChain(actionsToBranch);
+			} else {
+				IncrRemoveController.addToChain(actionsToBranch);
+			}
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		}
 		actionOutput.branch((ActionConf[]) actions.toArray());
