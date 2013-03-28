@@ -14,13 +14,13 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 
 public class AddDerivationCount extends Action {
+	public static final int B_GROUP_STEPS = 0;
+
 	public static void addToChain(List<ActionConf> actions, boolean groupSteps) {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
 		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
 		actions.add(c);
 	}
-
-	public static final int B_GROUP_STEPS = 0;
 
 	private boolean first = true;
 	private int currentCount = 0;
@@ -34,31 +34,8 @@ public class AddDerivationCount extends Action {
 	private int minStep;
 
 	@Override
-	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_GROUP_STEPS, "group", null, true);
-	}
-
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-
-		countStep = getParamBoolean(B_GROUP_STEPS);
-		if (countStep) {
-			outputTuple = new SimpleData[5];
-			outputTuple[4] = refStep = new TInt();
-		} else {
-			outputTuple = new SimpleData[4];
-		}
-		outputTuple[0] = new TLong();
-		outputTuple[1] = new TLong();
-		outputTuple[2] = new TLong();
-		outputTuple[3] = refCount = new TInt();
-
-		previousTuple = TupleFactory.newTuple(outputTuple);
-		first = true;
-	}
-
-	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		if (first) {
 			first = false;
 			currentCount = 1;
@@ -68,7 +45,7 @@ public class AddDerivationCount extends Action {
 			if (countStep) {
 				int cv = ((TInt) tuple.get(3)).getValue();
 				if (cv < minStep) {
-					cv = minStep;
+					minStep = cv;
 				}
 			}
 
@@ -85,7 +62,7 @@ public class AddDerivationCount extends Action {
 			if (countStep) {
 				int cv = ((TInt) tuple.get(3)).getValue();
 				if (cv < minStep) {
-					cv = minStep;
+					minStep = cv;
 				}
 			}
 		} else {
@@ -94,7 +71,36 @@ public class AddDerivationCount extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	protected void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(B_GROUP_STEPS, "group", null, true);
+	}
+
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+
+		countStep = getParamBoolean(B_GROUP_STEPS);
+		if (countStep) {
+			previousTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+					new TLong(), new TInt());
+			outputTuple = new SimpleData[5];
+			outputTuple[4] = refStep = new TInt();
+		} else {
+			previousTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+					new TLong());
+			outputTuple = new SimpleData[4];
+		}
+
+		outputTuple[0] = previousTuple.get(0);
+		outputTuple[1] = previousTuple.get(1);
+		outputTuple[2] = previousTuple.get(2);
+		outputTuple[3] = refCount = new TInt();
+
+		first = true;
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (!first) {
 			refCount.setValue(currentCount);
 			if (countStep) {
