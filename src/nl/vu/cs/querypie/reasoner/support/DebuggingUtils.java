@@ -13,15 +13,16 @@ import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 class DebuggingUtils {
 
+	private static final String separator = " ---------------- \n";
+
 	static void printDerivations(BerkeleydbLayer db, ActionContext context) {
 		String debugString = printDerivationsToString(db, context);
 		System.out.println(debugString);
 	}
 
-	static void printDerivationsToFile(String filename, BerkeleydbLayer db,
-			ActionContext context) {
+	static void printDerivationsToFile(String filename, BerkeleydbLayer db, ActionContext context) {
 		try {
-			FileOutputStream fos = new FileOutputStream(new File(filename));
+			FileOutputStream fos = new FileOutputStream(new File(filename), true);
 			String debugString = printDerivationsToString(db, context);
 			fos.write(debugString.getBytes());
 			fos.close();
@@ -30,11 +31,9 @@ class DebuggingUtils {
 		}
 	}
 
-	private static String printDerivationsToString(BerkeleydbLayer db,
-			ActionContext context) {
-		String result = "";
-		Tuple query = TupleFactory.newTuple(new TLong(-1), new TLong(-1),
-				new TLong(-1));
+	private static String printDerivationsToString(BerkeleydbLayer db, ActionContext context) {
+		String result = separator;
+		Tuple query = TupleFactory.newTuple(new TLong(-1), new TLong(-1), new TLong(-1));
 		TupleIterator it = db.getIterator(query, context);
 		Tuple tuple = TupleFactory.newTuple();
 		try {
@@ -81,6 +80,7 @@ class DebuggingUtils {
 				}
 				result = result.concat("\n");
 			}
+			result = result.concat(separator);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

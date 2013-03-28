@@ -45,7 +45,7 @@ public class IncrAddController extends Action {
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
 		IncrAddController.addToChain(actions, step, false);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 	@Override

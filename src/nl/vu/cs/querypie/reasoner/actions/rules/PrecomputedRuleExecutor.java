@@ -41,7 +41,7 @@ public class PrecomputedRuleExecutor extends Action {
 		rule = ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().get(ruleId);
 		rule.reloadPrecomputation(ReasoningContext.getInstance(), context,
-				incrementalFlag);
+				incrementalFlag, !incrementalFlag);
 		pos_head_precomp = rule.getSharedVariablesHead_Precomp();
 		counter = 0;
 	}

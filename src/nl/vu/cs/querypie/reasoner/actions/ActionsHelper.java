@@ -124,10 +124,10 @@ public class ActionsHelper {
 	}
 
 	public static void reloadPrecomputationOnRules(Collection<Rule> rules,
-			ActionContext context, boolean incrementalFlag) {
+			ActionContext context, boolean incrementalFlag, boolean allRules) {
 		for (Rule r : rules) {
 			r.reloadPrecomputation(ReasoningContext.getInstance(), context,
-					incrementalFlag);
+					incrementalFlag, allRules);
 		}
 	}
 

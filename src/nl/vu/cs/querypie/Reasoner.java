@@ -28,10 +28,13 @@ public class Reasoner {
 	private static String deltaDir;
 	private static List<Rule> rules;
 	private static boolean add;
+	private static boolean debug = false;
+	private static String debugFile = null;
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
-			System.out.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove] [--countingAlgorithm]");
+			System.out
+					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove] [--countingAlgorithm] [--debug] [--debugToFile file for debugging]");
 			return;
 		}
 		parseArgs(args);
@@ -41,9 +44,9 @@ public class Reasoner {
 		arch.startup();
 		readRules(args[1]);
 		initGlobalContext(arch);
-		printDerivations(arch);
+		printDebug(arch);
 		launchReasoning(arch);
-		printDerivations(arch);
+		printDebug(arch);
 		closeGlobalContext(arch);
 		arch.shutdown();
 	}
@@ -98,6 +101,10 @@ public class Reasoner {
 				add = true;
 			} else if (args[i].equals("--countingAlgorithm")) {
 				ParamHandler.get().setUsingCount(true);
+			} else if (args[i].equals("--debug")) {
+				debug = true;
+			} else if (args[i].equals("--debugFile")) {
+				debugFile = args[++i];
 			}
 		}
 	}
@@ -112,11 +119,36 @@ public class Reasoner {
 		}
 	}
 
+	private static void printDebug(Ajira arch) {
+		if (debug) {
+			printDerivations(arch);
+		}
+		if (debugFile != null) {
+			printDerivationsOnFile(arch);
+		}
+	}
+
 	private static void printDerivations(Ajira arch) {
 		Job job = new Job();
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ActionsHelper.readFakeTuple(actions);
 		Debugging.addToChain(actions);
+		job.setActions(actions);
+
+		if (arch.amItheServer()) {
+			try {
+				arch.waitForCompletion(job);
+			} catch (Exception e) {
+				log.error("The job is failed!", e);
+			}
+		}
+	}
+
+	private static void printDerivationsOnFile(Ajira arch) {
+		Job job = new Job();
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
+		Debugging.addToChain(actions, debugFile);
 		job.setActions(actions);
 
 		if (arch.amItheServer()) {

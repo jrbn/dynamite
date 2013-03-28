@@ -98,15 +98,16 @@ public class Rule {
 	}
 
 	public void reloadPrecomputation(ReasoningContext c, ActionContext context,
-			boolean flaggedOnly) {
+			boolean flagged, boolean all) {
 
 		if (precomputedPatterns.isEmpty())
 			return;
 		try {
-			if (flaggedOnly) {
+			if (flagged) {
 				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(
-						precomputedPatterns, context, flaggedOnly);
-			} else {
+						precomputedPatterns, context, true);
+			}
+			if (all) {
 				allPrecomputedTuples = c.getSchemaManager().getTuples(
 						precomputedPatterns, context);
 			}
