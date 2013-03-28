@@ -14,7 +14,6 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerFromMemory;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
@@ -32,7 +31,7 @@ public class IncrRemoveController extends Action {
 	private TupleSet completeDelta;
 	private Tuple currentTuple;
 
-	private void executeOneForwardChainIterationAndRestartFromStage(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		updateAndSaveCompleteDelta(context);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
@@ -76,7 +75,7 @@ public class IncrRemoveController extends Action {
 		if (!currentDelta.isEmpty()) {
 			// Repeat the process (execute a new iteration) considering the
 			// current delta
-			executeOneForwardChainIterationAndRestartFromStage(context, actionOutput);
+			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
 			// Move to the second stage of the algorithm.
 			List<ActionConf> actions = new ArrayList<ActionConf>();
@@ -85,12 +84,14 @@ public class IncrRemoveController extends Action {
 			OneStepRulesControllerFromMemory.addToChain(actions);
 			ActionsHelper.collectToNode(actions);
 
-			ActionsHelper.readFakeTuple(actionsToBranch);
-			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1);
-			ActionsHelper.createBranch(actions, actionsToBranch);
+			// FIXME
+			// ActionsHelper.readFakeTuple(actionsToBranch);
+			// ReadAllInMemoryTriples.addToChain(actionsToBranch,
+			// Consts.COMPLETE_DELTA_KEY);
+			// IncrAddController.addToChain(actionsToBranch, -1);
+			// ActionsHelper.createBranch(actions, actionsToBranch);
 
-			actionOutput.branch(actions.toArray(new ActionConf[0]));
+			actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 		}
 	}
 
