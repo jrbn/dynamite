@@ -11,10 +11,37 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
 
 public class Debugging extends Action {
-
 	public static void addToChain(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(Debugging.class);
+		c.setParamBoolean(B_PRINT_ON_FILE, false);
 		actions.add(c);
+	}
+
+	public static void addToChain(List<ActionConf> actions, String fileName) {
+		ActionConf c = ActionFactory.getActionConf(Debugging.class);
+		c.setParamBoolean(B_PRINT_ON_FILE, true);
+		c.setParamString(S_FILE_NAME, fileName);
+		actions.add(c);
+	}
+
+	public static final int B_PRINT_ON_FILE = 0;
+	public static final int S_FILE_NAME = 1;
+
+	private boolean printOnFile;
+	private String fileName;
+
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(B_PRINT_ON_FILE, "print_on_file", false, true);
+		conf.registerParameter(S_FILE_NAME, "file_name", null, false);
+	}
+
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		printOnFile = getParamBoolean(B_PRINT_ON_FILE);
+		if (printOnFile) {
+			fileName = getParamString(S_FILE_NAME);
+		}
 	}
 
 	@Override
@@ -24,7 +51,10 @@ public class Debugging extends Action {
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-		// TODO define parameters for writing to file
-		DebuggingUtils.printDerivations(ReasoningContext.getInstance().getKB(), context);
+		if (printOnFile) {
+			DebuggingUtils.printDerivationsToFile(fileName, ReasoningContext.getInstance().getKB(), context);
+		} else {
+			DebuggingUtils.printDerivations(ReasoningContext.getInstance().getKB(), context);
+		}
 	}
 }
