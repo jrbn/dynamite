@@ -25,6 +25,7 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
+import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriplesWithStep;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
@@ -173,7 +174,11 @@ public class ActionsHelper {
 			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		readFakeTuple(actions);
-		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
+		if (ParamHandler.get().isUsingCount()) {
+			ReadAllInMemoryTriplesWithStep.addToChain(actions, inMemoryKey);
+		} else {
+			ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
+		}
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
