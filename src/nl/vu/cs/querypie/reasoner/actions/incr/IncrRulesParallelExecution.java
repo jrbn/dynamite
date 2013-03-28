@@ -33,7 +33,7 @@ public class IncrRulesParallelExecution extends Action {
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[0]));
 	}
 
 	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
@@ -41,14 +41,14 @@ public class IncrRulesParallelExecution extends Action {
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[0]));
 	}
 
 	private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		ReadFromBtree.addToChain(pattern, actions);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[0]));
 	}
 
 	private void extractSchemaRulesWithInformationInDelta(ActionContext context, List<Integer> rulesOnlySchema, List<Rule> rulesSchemaGenerics)

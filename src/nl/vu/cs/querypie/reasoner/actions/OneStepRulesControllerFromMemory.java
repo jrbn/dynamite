@@ -33,7 +33,7 @@ public class OneStepRulesControllerFromMemory extends Action {
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[0]));
 	}
 
 }
