@@ -39,7 +39,7 @@ public class IncrRemoveController extends Action {
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
 		IncrRemoveController.addToChain(actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 	@Override
