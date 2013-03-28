@@ -12,7 +12,8 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
-	protected void applyRulesSchemaOnly(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
+	protected void applyRulesSchemaOnly(List<ActionConf> actions,
+			boolean writeToBTree, int step, boolean flaggedOnly) {
 		ActionsHelper.readFakeTuple(actions);
 		ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
 		ActionsHelper.sort(actions, false);
@@ -30,13 +31,15 @@ public abstract class AbstractRulesController extends Action {
 		ReloadSchema.addToChain(actions, false);
 	}
 
-	protected void applyRulesWithGenericPatterns(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatterns(List<ActionConf> actions,
+			boolean writeToBTree, int step, boolean flaggedOnly) {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
 		GenericRuleExecutor.addToChain(step, actions);
 		SetStep.addToChain(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
 		ActionsHelper.mapReduce(actions, step - 2, false);
+		SetStep.addToChain(step + 1, actions);
 		ActionsHelper.sort(actions, true);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions, true);
@@ -50,7 +53,9 @@ public abstract class AbstractRulesController extends Action {
 		}
 	}
 
-	protected void applyRulesWithGenericPatternsInABranch(List<ActionConf> actions, boolean writeToBTree, int step, boolean flaggedOnly) {
+	protected void applyRulesWithGenericPatternsInABranch(
+			List<ActionConf> actions, boolean writeToBTree, int step,
+			boolean flaggedOnly) {
 		List<ActionConf> actions2 = new ArrayList<ActionConf>();
 		applyRulesWithGenericPatterns(actions2, writeToBTree, step, flaggedOnly);
 		ActionsHelper.createBranch(actions, actions2);
