@@ -19,21 +19,24 @@ import nl.vu.cs.querypie.reasoner.actions.incr.IncrRulesParallelExecution;
  */
 public class OneStepRulesControllerFromMemory extends Action {
 	public static void addToChain(List<ActionConf> actions) {
-		ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerFromMemory.class);
+		ActionConf a = ActionFactory
+				.getActionConf(OneStepRulesControllerFromMemory.class);
 		actions.add(a);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		actionOutput.branch(actions.toArray(new ActionConf[0]));
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 }

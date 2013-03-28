@@ -99,7 +99,8 @@ public class IncrRemoveController extends Action {
 			IncrAddController.addToChain(actionsToBranch, -1, false);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 
-			actionOutput.branch(actions.toArray(new ActionConf[0]));
+			actionOutput
+					.branch(actions.toArray(new ActionConf[actions.size()]));
 		}
 	}
 

@@ -42,7 +42,7 @@ public class IncrAddController extends Action {
 			ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(actions, false);
 		ActionsHelper.removeDuplicates(actions);
 		IncrAddController.addToChain(actions, step, false);
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));

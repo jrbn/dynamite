@@ -36,8 +36,13 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 public class ActionsHelper {
 
 	public static void collectToNode(List<ActionConf> actions) {
+		collectToNode(actions, ParamHandler.get().isUsingCount());
+	}
+
+	public static void collectToNode(List<ActionConf> actions,
+			boolean hasAdditionalField) {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		if (ParamHandler.get().isUsingCount()) {
+		if (hasAdditionalField) {
 			c.setParamStringArray(CollectToNode.TUPLE_FIELDS,
 					TLong.class.getName(), TLong.class.getName(),
 					TLong.class.getName(), TInt.class.getName());
@@ -169,9 +174,6 @@ public class ActionsHelper {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
-		if (ParamHandler.get().isUsingCount()) {
-			AddDerivationCount.addToChain(actions, false);
-		}
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
