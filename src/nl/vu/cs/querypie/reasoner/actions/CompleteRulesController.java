@@ -16,20 +16,27 @@ import nl.vu.cs.querypie.ReasoningContext;
  * rules.
  */
 public class CompleteRulesController extends AbstractRulesController {
+	public static final int I_STEP = 0;
+
 	public static void addToChain(List<ActionConf> actions) {
 		addToChain(actions, 1);
 	}
 
 	public static void addToChain(List<ActionConf> actions, int step) {
-		ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
+		ActionConf c = ActionFactory
+				.getActionConf(CompleteRulesController.class);
 		c.setParamInt(CompleteRulesController.I_STEP, step);
 		actions.add(c);
 	}
 
-	public static final int I_STEP = 0;
-
 	private boolean hasDerived;
 	private int step;
+
+	@Override
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		hasDerived = true;
+	}
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -43,25 +50,23 @@ public class CompleteRulesController extends AbstractRulesController {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		hasDerived = true;
-	}
-
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (!hasDerived)
 			return;
 		context.incrCounter("Iterations", 1);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
-		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
+		if (!ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, true, step, false);
-			applyRulesWithGenericPatternsInABranch(actions, true, step + 1, false);
+			applyRulesWithGenericPatternsInABranch(actions, true, step + 1,
+					false);
 		} else {
 			applyRulesWithGenericPatterns(actions, true, step + 1, false);
 		}
 		ActionsHelper.collectToNode(actions);
 		CompleteRulesController.addToChain(actions, step + 3);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 }
