@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -34,8 +35,7 @@ public class SchemaManager {
 	}
 
 	private Tuples getFlaggedTuples(Pattern p, ActionContext context) {
-		TupleSet inMemorySet = (TupleSet) context
-				.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+		TupleSet inMemorySet = (TupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
 		if (inMemorySet == null) {
 			log.error("Unable to retrieve in-memory tuple set from cache");
 		}
@@ -50,31 +50,29 @@ public class SchemaManager {
 		List<Tuple> resultList = new ArrayList<Tuple>();
 		List<Integer> steps = new ArrayList<Integer>();
 		for (Tuple t : result) {
-			Tuple resultTuple = TupleFactory.newTuple();
+			SimpleData[] data = new SimpleData[pos_vars.length];
 			for (int i = 0; i < pos_vars.length; ++i) {
-				resultTuple.set(t.get(pos_vars[i]), i);
+				data[i] = t.get(pos_vars[i]);
 			}
+			Tuple resultTuple = TupleFactory.newTuple(data);
 			resultList.add(resultTuple);
 			steps.add(Integer.MAX_VALUE);
 		}
 		return new Tuples(resultList, pos_vars.length, steps);
 	}
 
-	public Tuples getTuples(List<Pattern> patterns, ActionContext context)
-			throws Exception {
+	public Tuples getTuples(List<Pattern> patterns, ActionContext context) throws Exception {
 		return getTuples(patterns, context, false);
 	}
 
-	public Tuples getTuples(List<Pattern> patterns, ActionContext context,
-			boolean flaggedOnly) throws Exception {
+	public Tuples getTuples(List<Pattern> patterns, ActionContext context, boolean flaggedOnly) throws Exception {
 		List<Map<String, Integer>> variablesPositions = retrieveVariablesFromPatterns(patterns);
 		if (!isCurrentlySupported(variablesPositions)) {
 			throw new Exception("Currently not implemented");
 		}
 		if (patterns.size() == 1) {
 			Pattern p = patterns.get(0);
-			Tuples tuples = flaggedOnly ? getFlaggedTuples(p, context)
-					: getTuples(p, context);
+			Tuples tuples = flaggedOnly ? getFlaggedTuples(p, context) : getTuples(p, context);
 			return tuples;
 		} else {
 			Pattern p1 = patterns.get(0);
@@ -84,15 +82,12 @@ public class SchemaManager {
 			if (flaggedOnly) {
 				Tuples flaggedTuples1 = getFlaggedTuples(p1, context);
 				Tuples flaggedTuples2 = getFlaggedTuples(p2, context);
-				Tuples result1 = joinSets(p1.getVariables(), flaggedTuples1,
-						p2.getVariables(), allTuples2);
-				Tuples result2 = joinSets(p1.getVariables(), allTuples1,
-						p2.getVariables(), flaggedTuples2);
+				Tuples result1 = joinSets(p1.getVariables(), flaggedTuples1, p2.getVariables(), allTuples2);
+				Tuples result2 = joinSets(p1.getVariables(), allTuples1, p2.getVariables(), flaggedTuples2);
 				// Merge the two
 				return result1.merge(result2);
 			} else {
-				return joinSets(p1.getVariables(), allTuples1,
-						p2.getVariables(), allTuples2);
+				return joinSets(p1.getVariables(), allTuples1, p2.getVariables(), allTuples2);
 			}
 		}
 	}
@@ -113,8 +108,7 @@ public class SchemaManager {
 
 		Tuple t = TupleFactory.newTuple(query);
 		TupleIterator itr = kb.getIterator(t, context);
-		Tuple row = TupleFactory.newTuple(new TLong(), new TLong(),
-				new TLong(), new TInt());
+		Tuple row = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 
 		List<Tuple> resultList = new ArrayList<Tuple>();
 		List<Integer> steps = new ArrayList<Integer>();
@@ -139,8 +133,7 @@ public class SchemaManager {
 		return tuples;
 	}
 
-	private boolean isCurrentlySupported(
-			List<Map<String, Integer>> variablesPositions) {
+	private boolean isCurrentlySupported(List<Map<String, Integer>> variablesPositions) {
 		if (variablesPositions.size() < 1 || variablesPositions.size() > 2) {
 			return false;
 		}
@@ -165,14 +158,11 @@ public class SchemaManager {
 		}
 	}
 
-	private Tuples joinSets(Collection<String> var1, Tuples t1,
-			Collection<String> var2, Tuples t2) throws Exception {
+	private Tuples joinSets(Collection<String> var1, Tuples t1, Collection<String> var2, Tuples t2) throws Exception {
 		// Determine position of variables
 		int[][] pos_shared_vars = Utils.getPositionSharedVariables(var1, var2);
-		int[][] pos_not_shared_vars = Utils.getPositionNotSharedVariables(var1,
-				var2);
-		int sizeTupleResult = var1.size() + var2.size()
-				- pos_shared_vars.length;
+		int[][] pos_not_shared_vars = Utils.getPositionNotSharedVariables(var1, var2);
+		int sizeTupleResult = var1.size() + var2.size() - pos_shared_vars.length;
 		if (pos_shared_vars.length > 1) {
 			throw new Exception("Not supported");
 		}
@@ -181,8 +171,7 @@ public class SchemaManager {
 		int l1 = t1.getTuplesLength();
 		for (int i = 0; i < t1.getNTuples(); ++i) {
 			Row r1 = t1.getRow(i);
-			Set<Row> r2s = t2.get(pos_shared_vars[0][1],
-					r1.getValue(pos_shared_vars[0][0]).getValue());
+			Set<Row> r2s = t2.get(pos_shared_vars[0][1], r1.getValue(pos_shared_vars[0][0]).getValue());
 			if (r2s != null) {
 				for (Row r2 : r2s) {
 
@@ -197,8 +186,7 @@ public class SchemaManager {
 						resultTuple.set(r1.getValue(j), currentPosition++);
 					}
 					for (int j = 0; j < pos_not_shared_vars[1].length; ++j) {
-						resultTuple.set(r2.getValue(pos_not_shared_vars[1][j]),
-								currentPosition++);
+						resultTuple.set(r2.getValue(pos_not_shared_vars[1][j]), currentPosition++);
 					}
 					resultList.add(resultTuple);
 					steps.add(Math.max(r1.getStep(), r2.getStep()));
@@ -220,8 +208,7 @@ public class SchemaManager {
 		return variables;
 	}
 
-	private List<Map<String, Integer>> retrieveVariablesFromPatterns(
-			List<Pattern> patterns) {
+	private List<Map<String, Integer>> retrieveVariablesFromPatterns(List<Pattern> patterns) {
 		List<Map<String, Integer>> variablesPositions = new ArrayList<Map<String, Integer>>();
 		for (Pattern p : patterns) {
 			Map<String, Integer> map = retrieveVariablesFromPatter(p);

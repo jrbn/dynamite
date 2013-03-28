@@ -44,13 +44,14 @@ public class IncrAddController extends Action {
 		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
 	}
 
-	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions, false);
-		ActionsHelper.removeDuplicates(actions);
-		IncrAddController.addToChain(actions, step, false);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		step = getParamInt(I_STEP);
+		forceStep = getParamBoolean(B_FORCE_STEP);
+		firstIteration = getParamBoolean(B_FIRST_ITERATION);
+
+		currentDelta = new TupleSetImpl();
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 	}
 
 	@Override
@@ -76,20 +77,6 @@ public class IncrAddController extends Action {
 		}
 	}
 
-	private void saveCurrentDelta(ActionContext context) {
-		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
-	}
-
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		step = getParamInt(I_STEP);
-		forceStep = getParamBoolean(B_FORCE_STEP);
-		firstIteration = getParamBoolean(B_FIRST_ITERATION);
-
-		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
-	}
-
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		// In case of new derivations, perform another iteration
@@ -103,6 +90,20 @@ public class IncrAddController extends Action {
 		else {
 			writeCompleteDeltaToBTree(context, actionOutput);
 		}
+	}
+
+	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+		System.out.println("AAA");
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		IncrRulesParallelExecution.addToChain(actions);
+		ActionsHelper.collectToNode(actions, false);
+		ActionsHelper.removeDuplicates(actions);
+		IncrAddController.addToChain(actions, step, false);
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+	}
+
+	private void saveCurrentDelta(ActionContext context) {
+		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 	}
 
 	private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
