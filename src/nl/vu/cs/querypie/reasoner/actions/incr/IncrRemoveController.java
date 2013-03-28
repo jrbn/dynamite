@@ -32,7 +32,7 @@ public class IncrRemoveController extends Action {
 	private TupleSet completeDelta;
 	private Tuple currentTuple;
 
-	private void executeOneForwardChainIterationAndRestartFromStage(
+	private void executeOneForwardChainIterationAndRestart(
 			ActionContext context, ActionOutput actionOutput) throws Exception {
 		updateAndSaveCompleteDelta(context);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
@@ -40,7 +40,7 @@ public class IncrRemoveController extends Action {
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
 		IncrRemoveController.addToChain(actions);
-		actionOutput.branch((ActionConf[]) actions.toArray());
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 	@Override
@@ -83,8 +83,7 @@ public class IncrRemoveController extends Action {
 		if (!currentDelta.isEmpty()) {
 			// Repeat the process (execute a new iteration) considering the
 			// current delta
-			executeOneForwardChainIterationAndRestartFromStage(context,
-					actionOutput);
+			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
 			// Move to the second stage of the algorithm.
 			List<ActionConf> actions = new ArrayList<ActionConf>();
@@ -98,7 +97,6 @@ public class IncrRemoveController extends Action {
 					Consts.COMPLETE_DELTA_KEY);
 			IncrAddController.addToChain(actionsToBranch, -1, false);
 			ActionsHelper.createBranch(actions, actionsToBranch);
-
 			actionOutput
 					.branch(actions.toArray(new ActionConf[actions.size()]));
 		}

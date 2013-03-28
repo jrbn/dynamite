@@ -13,15 +13,15 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
-public class ReadAllInMemoryTriplesWithStep extends Action {
+public class ReadAllInMemoryTriplesWithCount extends Action {
 
 	public static final int IN_MEMORY_KEY = 0;
 
 	public static void addToChain(List<ActionConf> actions,
 			String inMemoryTriplesKey) {
 		ActionConf a = ActionFactory
-				.getActionConf(ReadAllInMemoryTriplesWithStep.class);
-		a.setParamString(ReadAllInMemoryTriplesWithStep.IN_MEMORY_KEY,
+				.getActionConf(ReadAllInMemoryTriplesWithCount.class);
+		a.setParamString(ReadAllInMemoryTriplesWithCount.IN_MEMORY_KEY,
 				inMemoryTriplesKey);
 		actions.add(a);
 	}

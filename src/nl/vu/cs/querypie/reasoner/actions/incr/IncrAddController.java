@@ -18,18 +18,17 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrAddController extends Action {
-	public static final int I_STEP = 0;
-	public static final int B_FORCE_STEP = 1;
-	public static final int B_FIRST_ITERATION = 2;
-
-	public static void addToChain(List<ActionConf> actions, int step,
-			boolean firstIteration) {
+	public static void addToChain(List<ActionConf> actions, int step, boolean firstIteration) {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
 		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
 		c.setParamInt(IncrAddController.I_STEP, step);
 		c.setParamBoolean(IncrAddController.B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
 	}
+
+	public static final int I_STEP = 0;
+	public static final int B_FORCE_STEP = 1;
+	public static final int B_FIRST_ITERATION = 2;
 
 	private TupleSet currentDelta;
 	private Tuple currentTuple;
@@ -38,8 +37,14 @@ public class IncrAddController extends Action {
 	private boolean forceStep;
 	private boolean firstIteration;
 
-	private void executeAForwardChainingIterationAndRestart(
-			ActionContext context, ActionOutput actionOutput) throws Exception {
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_STEP, "step", 0, true);
+		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
+		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
+	}
+
+	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions, false);
@@ -49,19 +54,16 @@ public class IncrAddController extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			tuple.copyTo(currentTuple);
-			Object completeDeltaObj = context
-					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 			if (completeDeltaObj instanceof TupleSet) {
 				TupleSet completeDelta = (TupleSet) completeDeltaObj;
 				if (!completeDelta.contains(currentTuple)) {
 					currentDelta.add(currentTuple);
 					completeDelta.add(currentTuple);
-					currentTuple = TupleFactory.newTuple(new TLong(),
-							new TLong(), new TLong());
+					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 				}
 			} else {
 				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
@@ -69,18 +71,9 @@ public class IncrAddController extends Action {
 					currentDelta.add(currentTuple);
 				}
 				completeDelta.put(currentTuple, 1);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-						new TLong());
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 			}
 		}
-	}
-
-	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_STEP, "step", 0, true);
-		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
-		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true,
-				false);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
@@ -94,13 +87,11 @@ public class IncrAddController extends Action {
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-				new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		// In case of new derivations, perform another iteration
 		if (firstIteration) {
 			executeAForwardChainingIterationAndRestart(context, actionOutput);
@@ -114,10 +105,8 @@ public class IncrAddController extends Action {
 		}
 	}
 
-	private void writeCompleteDeltaToBTree(ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context,
-				actionOutput, Consts.COMPLETE_DELTA_KEY);
+	private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context, actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }

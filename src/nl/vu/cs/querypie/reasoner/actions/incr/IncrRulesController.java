@@ -24,8 +24,7 @@ public class IncrRulesController extends Action {
 	public static final int S_DELTA_DIR = 0;
 	public static final int B_ADD = 1;
 
-	public static void addToChain(List<ActionConf> actions, String deltaDir,
-			boolean add) {
+	public static void addToChain(List<ActionConf> actions, String deltaDir, boolean add) {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -36,8 +35,7 @@ public class IncrRulesController extends Action {
 	private String deltaDir;
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 
 	}
 
@@ -54,8 +52,7 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -83,8 +80,7 @@ public class IncrRulesController extends Action {
 			ActionsHelper.collectToNode(actions);
 			// Create branch
 			ActionsHelper.readFakeTuple(actionsToBranch);
-			ReadAllInMemoryTriples.addToChain(actionsToBranch,
-					Consts.CURRENT_DELTA_KEY);
+			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.CURRENT_DELTA_KEY);
 			if (ParamHandler.get().isUsingCount()) {
 				IncrRemoveDuplController.addToChain(actionsToBranch);
 			} else {
