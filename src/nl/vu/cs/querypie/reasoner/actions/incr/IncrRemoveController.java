@@ -85,12 +85,10 @@ public class IncrRemoveController extends Action {
 			OneStepRulesControllerFromMemory.addToChain(actions);
 			ActionsHelper.collectToNode(actions);
 
-			// FIXME
-			// ActionsHelper.readFakeTuple(actionsToBranch);
-			// ReadAllInMemoryTriples.addToChain(actionsToBranch,
-			// Consts.COMPLETE_DELTA_KEY);
-			// IncrAddController.addToChain(actionsToBranch, -1);
-			// ActionsHelper.createBranch(actions, actionsToBranch);
+			ActionsHelper.readFakeTuple(actionsToBranch);
+			ReadAllInMemoryTriples.addToChain(actionsToBranch, Consts.COMPLETE_DELTA_KEY);
+			IncrAddController.addToChain(actionsToBranch, -1, false);
+			ActionsHelper.createBranch(actions, actionsToBranch);
 
 			actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 		}
