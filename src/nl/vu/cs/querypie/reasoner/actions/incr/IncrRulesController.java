@@ -71,18 +71,17 @@ public class IncrRulesController extends Action {
 		}
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
-		// Initialization: one step derivation from the in-memory delta (set to
-		// add/remove)
-		ActionsHelper.readFakeTuple(actions);
-		OneStepRulesControllerToMemory.addToChain(actions);
-		ActionsHelper.collectToNode(actions);
 		if (add) {
 			ActionsHelper.readFakeTuple(actionsToBranch);
-			ReadAllInMemoryTriples.addToChain(actionsToBranch,
-					Consts.CURRENT_DELTA_KEY);
-			IncrAddController.addToChain(actionsToBranch, -1);
+			IncrAddController.addToChain(actionsToBranch, -1, true);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {
+			// Initialization: one step derivation from the in-memory delta (set
+			// to add/remove)
+			ActionsHelper.readFakeTuple(actions);
+			OneStepRulesControllerToMemory.addToChain(actions);
+			ActionsHelper.collectToNode(actions);
+			// Create branch
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			ReadAllInMemoryTriples.addToChain(actionsToBranch,
 					Consts.CURRENT_DELTA_KEY);

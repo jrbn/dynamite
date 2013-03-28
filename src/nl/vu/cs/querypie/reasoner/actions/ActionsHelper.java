@@ -124,10 +124,10 @@ public class ActionsHelper {
 	}
 
 	public static void reloadPrecomputationOnRules(Collection<Rule> rules,
-			ActionContext context, boolean incrementalFlag) {
+			ActionContext context, boolean incrementalFlag, boolean allRules) {
 		for (Rule r : rules) {
 			r.reloadPrecomputation(ReasoningContext.getInstance(), context,
-					incrementalFlag);
+					incrementalFlag, allRules);
 		}
 	}
 
@@ -169,6 +169,9 @@ public class ActionsHelper {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
+		if (ParamHandler.get().isUsingCount()) {
+			AddDerivationCount.addToChain(actions, false);
+		}
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}

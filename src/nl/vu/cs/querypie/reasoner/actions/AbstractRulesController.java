@@ -35,7 +35,7 @@ public abstract class AbstractRulesController extends Action {
 			boolean writeToBTree, int step, boolean flaggedOnly) {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
-		GenericRuleExecutor.addToChain(step, actions);
+		GenericRuleExecutor.addToChain(true, step, actions);
 		SetStep.addToChain(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
 		ActionsHelper.mapReduce(actions, step - 2, false);

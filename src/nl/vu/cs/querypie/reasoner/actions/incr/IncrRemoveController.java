@@ -14,6 +14,7 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerFromMemory;
+import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
