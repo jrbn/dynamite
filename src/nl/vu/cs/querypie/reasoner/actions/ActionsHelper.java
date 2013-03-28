@@ -169,6 +169,9 @@ public class ActionsHelper {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
+		if (ParamHandler.get().isUsingCount()) {
+			AddDerivationCount.addToChain(actions, false);
+		}
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}

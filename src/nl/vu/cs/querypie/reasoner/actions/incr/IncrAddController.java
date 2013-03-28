@@ -20,11 +20,14 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 public class IncrAddController extends Action {
 	public static final int I_STEP = 0;
 	public static final int B_FORCE_STEP = 1;
+	public static final int B_FIRST_ITERATION = 2;
 
-	public static void addToChain(List<ActionConf> actions, int step) {
+	public static void addToChain(List<ActionConf> actions, int step,
+			boolean firstIteration) {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
 		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
 		c.setParamInt(IncrAddController.I_STEP, step);
+		c.setParamBoolean(IncrAddController.B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
 	}
 
@@ -33,6 +36,7 @@ public class IncrAddController extends Action {
 
 	private int step;
 	private boolean forceStep;
+	private boolean firstIteration;
 
 	private void executeAForwardChainingIterationAndRestart(
 			ActionContext context, ActionOutput actionOutput) throws Exception {
@@ -40,32 +44,34 @@ public class IncrAddController extends Action {
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
 		ActionsHelper.removeDuplicates(actions);
-		IncrAddController.addToChain(actions, step);
+		IncrAddController.addToChain(actions, step, false);
 		actionOutput.branch((ActionConf[]) actions.toArray());
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		tuple.copyTo(currentTuple);
-		Object completeDeltaObj = context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-		if (completeDeltaObj instanceof TupleSet) {
-			TupleSet completeDelta = (TupleSet) completeDeltaObj;
-			if (!completeDelta.contains(currentTuple)) {
-				currentDelta.add(currentTuple);
-				completeDelta.add(currentTuple);
+		if (!firstIteration) {
+			tuple.copyTo(currentTuple);
+			Object completeDeltaObj = context
+					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			if (completeDeltaObj instanceof TupleSet) {
+				TupleSet completeDelta = (TupleSet) completeDeltaObj;
+				if (!completeDelta.contains(currentTuple)) {
+					currentDelta.add(currentTuple);
+					completeDelta.add(currentTuple);
+					currentTuple = TupleFactory.newTuple(new TLong(),
+							new TLong(), new TLong());
+				}
+			} else {
+				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
+				if (!completeDelta.containsKey(tuple)) {
+					currentDelta.add(currentTuple);
+				}
+				completeDelta.put(currentTuple, 1);
 				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 						new TLong());
 			}
-		} else {
-			TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
-			if (!completeDelta.containsKey(tuple)) {
-				currentDelta.add(currentTuple);
-			}
-			completeDelta.put(currentTuple, 1);
-			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-					new TLong());
 		}
 	}
 
@@ -73,6 +79,8 @@ public class IncrAddController extends Action {
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", 0, true);
 		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
+		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true,
+				false);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
@@ -81,18 +89,22 @@ public class IncrAddController extends Action {
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
+		step = getParamInt(I_STEP);
+		forceStep = getParamBoolean(B_FORCE_STEP);
+		firstIteration = getParamBoolean(B_FIRST_ITERATION);
+
 		currentDelta = new TupleSetImpl();
 		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
 				new TLong());
-		step = getParamInt(I_STEP);
-		forceStep = getParamBoolean(B_FORCE_STEP);
 	}
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
 		// In case of new derivations, perform another iteration
-		if (!currentDelta.isEmpty()) {
+		if (firstIteration) {
+			executeAForwardChainingIterationAndRestart(context, actionOutput);
+		} else if (!currentDelta.isEmpty()) {
 			saveCurrentDelta(context);
 			executeAForwardChainingIterationAndRestart(context, actionOutput);
 		}
