@@ -72,14 +72,8 @@ public class IncrRulesController extends Action {
 			IncrAddController.addToChain(actionsToBranch, -1, true);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {
-			if (ParamHandler.get().isUsingCount()) {
-				ActionsHelper.readFakeTuple(actions);
-				IncrRemoveDuplController.addToChain(actions, true);
-			} else {
-				ActionsHelper.readFakeTuple(actions);
-				IncrRemoveController.addToChain(actions, true);
-			}
-
+			ActionsHelper.readFakeTuple(actions);
+			IncrRemoveController.addToChain(actions, true);
 		}
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}

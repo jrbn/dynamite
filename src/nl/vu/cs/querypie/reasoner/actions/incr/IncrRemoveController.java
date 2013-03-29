@@ -14,11 +14,13 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
+import nl.vu.cs.querypie.reasoner.actions.io.RemoveDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveController extends Action {
 	public static void addToChain(List<ActionConf> actions, boolean firstIteration) {
@@ -31,7 +33,6 @@ public class IncrRemoveController extends Action {
 
 	private boolean firstIteration;
 	private TupleSet currentDelta;
-	private TupleSet completeDelta;
 	private Tuple currentTuple;
 
 	@Override
@@ -42,7 +43,6 @@ public class IncrRemoveController extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		currentDelta = new TupleSetImpl();
-		completeDelta = (TupleSetImpl) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 	}
@@ -51,9 +51,20 @@ public class IncrRemoveController extends Action {
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			tuple.copyTo(currentTuple);
-			if (!completeDelta.contains(currentTuple)) {
-				currentDelta.add(currentTuple);
-				completeDelta.add(currentTuple);
+			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			if (completeDeltaObj instanceof TupleSet) {
+				TupleSet completeDelta = (TupleSet) completeDeltaObj;
+				if (!completeDelta.contains(currentTuple)) {
+					currentDelta.add(currentTuple);
+					completeDelta.add(currentTuple);
+					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+				}
+			} else {
+				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
+				if (!completeDelta.containsKey(tuple)) {
+					currentDelta.add(currentTuple);
+				}
+				completeDelta.put(currentTuple, 1);
 				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 			}
 		}
@@ -71,32 +82,49 @@ public class IncrRemoveController extends Action {
 				executeOneForwardChainIterationAndRestart(context, actionOutput);
 			} else {
 				// Move to the second stage of the algorithm
-				removeAllInMemoryTuplesFromBTree(context);
-				clearCache(context);
-				List<ActionConf> actions = new ArrayList<ActionConf>();
-				List<ActionConf> firstBranch = new ArrayList<ActionConf>();
-				List<ActionConf> secondBranch = new ArrayList<ActionConf>();
-
-				ActionsHelper.readFakeTuple(firstBranch);
-				OneStepRulesControllerToMemory.addToChain(firstBranch);
-
-				ActionsHelper.readFakeTuple(secondBranch);
-				IncrAddController.addToChain(secondBranch, -1, true);
-
-				ActionsHelper.createBranch(firstBranch, secondBranch);
-				ActionsHelper.createBranch(actions, firstBranch);
-
-				actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+				deleteAndReDerive(context, actionOutput);
 			}
 		}
+	}
+
+	/**
+	 * Starts the second stage of the algorithm:
+	 * 
+	 * 1. Remove information derived from deleted facts
+	 * 
+	 * 2. Start re-derivation from remaining facts
+	 */
+	private void deleteAndReDerive(ActionContext context, ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		// No need for re-derivation in case of counting algorithm
+		if (ParamHandler.get().isUsingCount()) {
+			// Remove the derivations from the B-tree
+			removeDerivationsFromBtree(context, actionOutput);
+		} else {
+			// Remove the derivations from the B-tree
+			removeAllInMemoryTuplesFromBTree(context);
+			clearCache(context);
+			List<ActionConf> firstBranch = new ArrayList<ActionConf>();
+			List<ActionConf> secondBranch = new ArrayList<ActionConf>();
+
+			// Start one step derivation and write results in memory
+			ActionsHelper.readFakeTuple(firstBranch);
+			OneStepRulesControllerToMemory.addToChain(firstBranch);
+
+			// Continue deriving by iterating on the IncrAddController
+			ActionsHelper.readFakeTuple(secondBranch);
+			IncrAddController.addToChain(secondBranch, -1, true);
+
+			ActionsHelper.createBranch(firstBranch, secondBranch);
+			ActionsHelper.createBranch(actions, firstBranch);
+		}
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions);
-		// TODO: this check is necessary only if we merge this class with
-		// IncrRemoveDupl
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
@@ -104,12 +132,21 @@ public class IncrRemoveController extends Action {
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
+	// TODO: substituite every call with removeDerivationsFromBTree
 	private void removeAllInMemoryTuplesFromBTree(ActionContext context) {
 		TupleSet set = (TupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		BerkeleydbLayer db = ReasoningContext.getInstance().getKB();
 		for (Tuple t : set) {
 			db.remove(t);
 		}
+	}
+
+	private void removeDerivationsFromBtree(ActionContext context, ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
+		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
+		actions.add(c);
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
 	private void saveCurrentDelta(ActionContext context) {
