@@ -10,9 +10,7 @@ import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
 import nl.vu.cs.querypie.reasoner.actions.io.IOHelper;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
@@ -21,9 +19,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-
-	public static void addToChain(List<ActionConf> actions, String deltaDir,
-			boolean add) {
+	public static void addToChain(List<ActionConf> actions, String deltaDir, boolean add) {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -35,12 +31,6 @@ public class IncrRulesController extends Action {
 
 	private boolean add;
 	private String deltaDir;
-
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-
-	}
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -55,8 +45,12 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -81,18 +75,8 @@ public class IncrRulesController extends Action {
 				ActionsHelper.readFakeTuple(actions);
 				IncrRemoveDuplController.addToChain(actions, true);
 			} else {
-				// Initialization: one step derivation from the in-memory delta
-				// (set
-				// to add/remove)
 				ActionsHelper.readFakeTuple(actions);
-				OneStepRulesControllerToMemory.addToChain(actions);
-				ActionsHelper.collectToNode(actions);
-				// Create branch
-				ActionsHelper.readFakeTuple(actionsToBranch);
-				ReadAllInMemoryTriples.addToChain(actionsToBranch,
-						Consts.CURRENT_DELTA_KEY);
-				IncrRemoveController.addToChain(actionsToBranch);
-				ActionsHelper.createBranch(actions, actionsToBranch);
+				IncrRemoveController.addToChain(actions, true);
 			}
 
 		}
