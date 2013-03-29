@@ -127,7 +127,7 @@ public class IncrRemoveController extends Action {
 	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(actions, false);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
