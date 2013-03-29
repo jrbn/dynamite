@@ -3,6 +3,7 @@ package nl.vu.cs.querypie.reasoner.actions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
@@ -78,7 +79,7 @@ public class ActionsHelper {
 		}
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(List<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
 		for (Integer ruleId : ruleIds) {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
