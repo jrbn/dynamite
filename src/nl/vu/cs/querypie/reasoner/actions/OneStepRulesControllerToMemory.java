@@ -9,6 +9,9 @@ import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.querypie.ReasoningContext;
+import nl.vu.cs.querypie.reasoner.common.Consts;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
+import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 /**
  * A rules controller that execute a single step of materialization based on the
@@ -28,6 +31,8 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+		cleanInMemoryContainer(context, Consts.COMPLETE_DELTA_KEY);
+		cleanInMemoryContainer(context, Consts.CURRENT_DELTA_KEY);
 		List<ActionConf> actions = new ArrayList<ActionConf>();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, false, Integer.MIN_VALUE, true);
@@ -39,4 +44,14 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 	}
 
+	private void cleanInMemoryContainer(ActionContext context, String key) {
+		Object obj = context.getObjectFromCache(key);
+		if (obj == null) {
+			return;
+		} else if (obj instanceof TupleSet) {
+			((TupleSet) obj).clear();
+		} else if (obj instanceof TupleStepMap) {
+			((TupleStepMap) obj).clear();
+		}
+	}
 }
