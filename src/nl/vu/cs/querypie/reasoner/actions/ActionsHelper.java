@@ -43,9 +43,9 @@ public class ActionsHelper {
 	public static void collectToNode(List<ActionConf> actions, boolean hasAdditionalField) {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
 		if (hasAdditionalField) {
-			c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(CollectToNode.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
 		}
 		actions.add(c);
 	}
@@ -58,9 +58,9 @@ public class ActionsHelper {
 
 	private static void groupBy(List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
-		c.setParamByteArray(GroupBy.FIELDS_TO_GROUP, (byte) 0);
-		c.setParamStringArray(GroupBy.TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
-		c.setParamInt(GroupBy.NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.GROUP_BY_NUM_THREADS);
+		c.setParamByteArray(GroupBy.IA_FIELDS_TO_GROUP, (byte) 0);
+		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
+		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.GROUP_BY_NUM_THREADS);
 		actions.add(c);
 	}
 
@@ -97,14 +97,14 @@ public class ActionsHelper {
 
 	public static void readFakeTuple(List<ActionConf> actions) {
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-		a.setParamInt(QueryInputLayer.INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
 		a.setParamWritable(QueryInputLayer.QUERY, new Query());
 		actions.add(a);
 	}
 
 	public static void reconnectAfter(int reconnectAfter, List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.RECONNECT_AFTER_ACTIONS, reconnectAfter);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAfter);
 		actions.add(c);
 	}
 
@@ -128,13 +128,13 @@ public class ActionsHelper {
 
 	static void sort(List<ActionConf> actions, boolean additionalStepCounter) {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamInt(PartitionToNodes.NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
+		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
 		if (additionalStepCounter) {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
+			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(PartitionToNodes.TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
 		}
-		c.setParamBoolean(PartitionToNodes.SORT, true);
+		c.setParamBoolean(PartitionToNodes.B_SORT, true);
 		actions.add(c);
 	}
 

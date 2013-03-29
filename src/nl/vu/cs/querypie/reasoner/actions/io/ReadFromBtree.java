@@ -91,7 +91,7 @@ public class ReadFromBtree extends Action {
 			first = false;
 			for (int i = 1; i < tasks; ++i) {
 				ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
-				c.setParamInt(QueryInputLayer.INPUTLAYER, Consts.DEFAULT_INPUT_LAYER_ID);
+				c.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DEFAULT_INPUT_LAYER_ID);
 
 				Tuple t = query.getTuple();
 				SimpleData[] newTuple = new SimpleData[5];
@@ -103,7 +103,7 @@ public class ReadFromBtree extends Action {
 				t.set(newTuple);
 
 				c.setParamWritable(QueryInputLayer.QUERY, query);
-				c.setParamStringArray(QueryInputLayer.SIGNATURE_QUERY, t.getSignature());
+				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY, t.getSignature());
 				actionOutput.branch(c);
 			}
 		}
