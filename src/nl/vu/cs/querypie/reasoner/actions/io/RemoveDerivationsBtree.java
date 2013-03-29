@@ -1,9 +1,12 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.util.Map;
+import java.util.List;
+import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
+import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -13,15 +16,20 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
+import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class RemoveDerivationsBtree extends Action {
+	public static void addToChain(List<ActionConf> actions) {
+		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
+		actions.add(c);
+	}
 
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private long removedTriples;
 	private long notRemovedTriples;
-	private byte[] key = new byte[24];
+	private final byte[] key = new byte[24];
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
@@ -36,17 +44,25 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		// Remove the content of the derivation from the btrees
+		Object obj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		Set<Tuple> tuplesToRemove = null;
+		if (obj instanceof TupleSet) {
+			tuplesToRemove = ((TupleSet) obj);
+		} else if (obj instanceof TupleStepMap) {
+			tuplesToRemove = ((TupleStepMap) obj).keySet();
+		} else {
+			throw new Exception("Unknown in memory implementation");
+		}
+		removeAllTuplesInSet(tuplesToRemove);
+	}
 
-		TupleStepMap map = (TupleStepMap) context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-
-		for (Map.Entry<Tuple, Integer> entry : map.entrySet()) {
-			TLong s = (TLong) entry.getKey().get(0);
-			TLong p = (TLong) entry.getKey().get(1);
-			TLong o = (TLong) entry.getKey().get(2);
+	private void removeAllTuplesInSet(Set<Tuple> set) {
+		for (Tuple tuple : set) {
+			TLong s = (TLong) tuple.get(0);
+			TLong p = (TLong) tuple.get(1);
+			TLong o = (TLong) tuple.get(2);
 
 			encode(s.getValue(), p.getValue(), o.getValue());
 			boolean removed = spo.decreaseOrRemove(key);
@@ -72,7 +88,6 @@ public class RemoveDerivationsBtree extends Action {
 				notRemovedTriples++;
 			}
 		}
-
 	}
 
 	private void encode(long v1, long v2, long v3) {
@@ -82,8 +97,7 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();
@@ -91,7 +105,6 @@ public class RemoveDerivationsBtree extends Action {
 		pos.close();
 		pso.close();
 		context.incrCounter("Removed triples", removedTriples);
-		context.incrCounter("Triples that could still be derived",
-				notRemovedTriples);
+		context.incrCounter("Triples that could still be derived", notRemovedTriples);
 	}
 }
