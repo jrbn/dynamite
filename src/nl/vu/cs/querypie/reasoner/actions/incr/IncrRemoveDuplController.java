@@ -19,16 +19,13 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveDuplController extends Action {
-
-	public static final int B_FIRST_ITERATION = 0;
-
-	public static void addToChain(List<ActionConf> actions,
-			boolean firstIteration) {
-		ActionConf c = ActionFactory
-				.getActionConf(IncrRemoveDuplController.class);
+	public static void addToChain(List<ActionConf> actions, boolean firstIteration) {
+		ActionConf c = ActionFactory.getActionConf(IncrRemoveDuplController.class);
 		c.setParamBoolean(B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
 	}
+
+	public static final int B_FIRST_ITERATION = 0;
 
 	private TupleSet currentDelta;
 
@@ -38,63 +35,34 @@ public class IncrRemoveDuplController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true,
-				false);
-	}
-
-	private void executeOneForwardChainIterationAndRestart(
-			ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions, false);
-		IncrRemoveDuplController.addToChain(actions, false);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void startProcess(ActionContext context) throws Exception {
+		currentDelta = new TupleSetImpl();
+		completeDelta = (TupleStepMap) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		firstIteration = getParamBoolean(B_FIRST_ITERATION);
+	}
+
+	@Override
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			tuple.copyTo(currentTuple);
 
 			if (!completeDelta.containsKey(currentTuple)) {
 				completeDelta.put(currentTuple, 1);
 				currentDelta.add(currentTuple);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-						new TLong());
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
 			} else {
 				completeDelta.put(currentTuple, 1);
 			}
 		}
 	}
 
-	private void removeDerivationsFromBtree(ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		ActionsHelper.readFakeTuple(actions);
-		ActionConf c = ActionFactory
-				.getActionConf(RemoveDerivationsBtree.class);
-		actions.add(c);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
-	}
-
-	private void saveCurrentDelta(ActionContext context) {
-		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
-	}
-
 	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		currentDelta = new TupleSetImpl();
-		completeDelta = (TupleStepMap) context
-				.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-				new TLong());
-		firstIteration = getParamBoolean(B_FIRST_ITERATION);
-	}
-
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (firstIteration) {
 			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
@@ -108,5 +76,25 @@ public class IncrRemoveDuplController extends Action {
 				removeDerivationsFromBtree(context, actionOutput);
 			}
 		}
+	}
+
+	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		IncrRulesParallelExecution.addToChain(actions);
+		ActionsHelper.collectToNode(actions, false);
+		IncrRemoveDuplController.addToChain(actions, false);
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+	}
+
+	private void removeDerivationsFromBtree(ActionContext context, ActionOutput actionOutput) throws Exception {
+		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionsHelper.readFakeTuple(actions);
+		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
+		actions.add(c);
+		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+	}
+
+	private void saveCurrentDelta(ActionContext context) {
+		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 	}
 }
