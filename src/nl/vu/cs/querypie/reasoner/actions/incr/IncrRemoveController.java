@@ -72,7 +72,7 @@ public class IncrRemoveController extends Action {
 				List<ActionConf> actions = new ArrayList<ActionConf>();
 				List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
 				removeAllInMemoryTuplesFromBTree(context);
-				// TODO make sure that information in memory is correct
+				saveCompleteDeltaToCurrent(context);
 				ActionsHelper.readFakeTuple(actionsToBranch);
 				IncrAddController.addToChain(actionsToBranch, -1, true);
 				ActionsHelper.createBranch(actions, actionsToBranch);
@@ -100,6 +100,12 @@ public class IncrRemoveController extends Action {
 
 	private void saveCurrentDelta(ActionContext context) {
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
+	}
+
+	private void saveCompleteDeltaToCurrent(ActionContext context) {
+		TupleSet newCurrentDelta = new TupleSetImpl();
+		newCurrentDelta.addAll(completeDelta);
+		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, newCurrentDelta);
 	}
 
 }
