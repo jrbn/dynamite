@@ -99,7 +99,6 @@ public class IncrRemoveController extends Action {
 		TupleSet set = (TupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		BerkeleydbLayer db = ReasoningContext.getInstance().getKB();
 		for (Tuple t : set) {
-			System.out.println("Rimuovo " + t.get(0) + " " + t.get(1) + " " + t.get(2));
 			db.remove(t);
 		}
 	}
