@@ -18,7 +18,8 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
-	public static void addToChain(boolean forceStep, int step, List<ActionConf> actions) {
+	public static void addToChain(boolean forceStep, int step,
+			List<ActionConf> actions) {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
 		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
@@ -44,7 +45,8 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
@@ -135,7 +137,8 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();
