@@ -21,8 +21,6 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static final int S_DELTA_DIR = 0;
-	public static final int B_ADD = 1;
 
 	public static void addToChain(List<ActionConf> actions, String deltaDir,
 			boolean add) {
@@ -31,6 +29,9 @@ public class IncrRulesController extends Action {
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
 		actions.add(a);
 	}
+
+	public static final int S_DELTA_DIR = 0;
+	public static final int B_ADD = 1;
 
 	private boolean add;
 	private String deltaDir;

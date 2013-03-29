@@ -60,6 +60,17 @@ public class IncrAddController extends Action {
 	}
 
 	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		step = getParamInt(I_STEP);
+		forceStep = getParamBoolean(B_FORCE_STEP);
+		firstIteration = getParamBoolean(B_FIRST_ITERATION);
+
+		currentDelta = new TupleSetImpl();
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+				new TLong());
+	}
+
+	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
@@ -86,21 +97,6 @@ public class IncrAddController extends Action {
 		}
 	}
 
-	private void saveCurrentDelta(ActionContext context) {
-		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
-	}
-
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		step = getParamInt(I_STEP);
-		forceStep = getParamBoolean(B_FORCE_STEP);
-		firstIteration = getParamBoolean(B_FIRST_ITERATION);
-
-		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
-				new TLong());
-	}
-
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
@@ -115,6 +111,10 @@ public class IncrAddController extends Action {
 		else {
 			writeCompleteDeltaToBTree(context, actionOutput);
 		}
+	}
+
+	private void saveCurrentDelta(ActionContext context) {
+		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 	}
 
 	private void writeCompleteDeltaToBTree(ActionContext context,

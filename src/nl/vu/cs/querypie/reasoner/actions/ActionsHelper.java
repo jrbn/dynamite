@@ -84,7 +84,7 @@ public class ActionsHelper {
 			List<ActionConf> actions = new ArrayList<ActionConf>();
 			readFakeTuple(actions);
 			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId, actions, incrementalFlag);
-			actionOutput.branch((ActionConf[]) actions.toArray());
+			actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 		}
 	}
 
