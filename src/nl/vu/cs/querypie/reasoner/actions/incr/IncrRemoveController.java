@@ -13,6 +13,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
+import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
 import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
@@ -69,14 +70,22 @@ public class IncrRemoveController extends Action {
 				// current delta
 				executeOneForwardChainIterationAndRestart(context, actionOutput);
 			} else {
-				// Move to the second stage of the algorithm.
-				List<ActionConf> actions = new ArrayList<ActionConf>();
-				List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
+				// Move to the second stage of the algorithm
 				removeAllInMemoryTuplesFromBTree(context);
-				saveCompleteDeltaToCurrent(context);
-				ActionsHelper.readFakeTuple(actionsToBranch);
-				IncrAddController.addToChain(actionsToBranch, -1, true);
-				ActionsHelper.createBranch(actions, actionsToBranch);
+				clearCache(context);
+				List<ActionConf> actions = new ArrayList<ActionConf>();
+				List<ActionConf> firstBranch = new ArrayList<ActionConf>();
+				List<ActionConf> secondBranch = new ArrayList<ActionConf>();
+
+				ActionsHelper.readFakeTuple(firstBranch);
+				OneStepRulesControllerToMemory.addToChain(firstBranch);
+
+				ActionsHelper.readFakeTuple(secondBranch);
+				IncrAddController.addToChain(secondBranch, -1, true);
+
+				ActionsHelper.createBranch(firstBranch, secondBranch);
+				ActionsHelper.createBranch(actions, firstBranch);
+
 				actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
 			}
 		}
@@ -107,10 +116,11 @@ public class IncrRemoveController extends Action {
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 	}
 
-	private void saveCompleteDeltaToCurrent(ActionContext context) {
-		TupleSet newCurrentDelta = new TupleSetImpl();
-		newCurrentDelta.addAll(completeDelta);
-		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, newCurrentDelta);
+	private void clearCache(ActionContext context) {
+		TupleSet complSet = (TupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		TupleSet currSet = (TupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+		complSet.clear();
+		currSet.clear();
 	}
 
 }
