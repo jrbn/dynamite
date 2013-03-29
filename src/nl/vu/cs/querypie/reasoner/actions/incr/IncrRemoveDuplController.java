@@ -35,7 +35,7 @@ public class IncrRemoveDuplController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
 	}
 
 	@Override

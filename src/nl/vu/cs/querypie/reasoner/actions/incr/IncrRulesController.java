@@ -68,6 +68,7 @@ public class IncrRulesController extends Action {
 		List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
 		if (add) {
 			ActionsHelper.readFakeTuple(actionsToBranch);
+			// FIXME set the correct step
 			IncrAddController.addToChain(actionsToBranch, -1, true);
 			ActionsHelper.createBranch(actions, actionsToBranch);
 		} else {

@@ -34,7 +34,7 @@ public class IncrRemoveController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
 	}
 
 	@Override
@@ -42,18 +42,18 @@ public class IncrRemoveController extends Action {
 		currentDelta = new TupleSetImpl();
 		completeDelta = (TupleSetImpl) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (firstIteration) {
-			return;
-		}
-		tuple.copyTo(currentTuple);
-		completeDelta.add(currentTuple);
-		if (!completeDelta.contains(currentTuple)) {
-			currentDelta.add(currentTuple);
-			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		if (!firstIteration) {
+			tuple.copyTo(currentTuple);
+			if (!completeDelta.contains(currentTuple)) {
+				currentDelta.add(currentTuple);
+				completeDelta.add(currentTuple);
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+			}
 		}
 	}
 
