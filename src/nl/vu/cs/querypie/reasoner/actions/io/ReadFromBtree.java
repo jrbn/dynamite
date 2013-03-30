@@ -1,13 +1,12 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionController;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.actions.support.Query;
 import nl.vu.cs.ajira.data.types.SimpleData;
@@ -17,13 +16,17 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.data.types.bytearray.BDataInput;
 import nl.vu.cs.ajira.datalayer.InputQuery;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.storage.Pattern;
 
 public class ReadFromBtree extends Action {
-	public static void addToChain(Pattern pattern, List<ActionConf> actions) {
+	public static void addToChain(Pattern pattern, ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
-		Query query = new Query(new TLong(pattern.getTerm(0).getValue()), new TLong(pattern.getTerm(1).getValue()), new TLong(pattern.getTerm(2).getValue()));
+		Query query = new Query(new TLong(pattern.getTerm(0).getValue()),
+				new TLong(pattern.getTerm(1).getValue()), new TLong(pattern
+						.getTerm(2).getValue()));
 		a.setParamWritable(ReadFromBtree.TUPLE, query);
 		actions.add(a);
 	}
@@ -33,12 +36,14 @@ public class ReadFromBtree extends Action {
 
 	private boolean first;
 	private int tasks;
-	private final Query query = new Query(TupleFactory.newTuple(new TLong(), new TLong(), new TLong()));
+	private final Query query = new Query(TupleFactory.newTuple(new TLong(),
+			new TLong(), new TLong()));
 
 	public static class CustomProcessor extends ActionConf.Configurator {
 
 		@Override
-		public void setupAction(InputQuery query, Object[] params, ActionController controller, ActionContext context) {
+		public void setupAction(InputQuery query, Object[] params,
+				ActionController controller, ActionContext context) {
 			// Add the input tuple
 			Query tuple = null;
 			if (params[TUPLE] instanceof byte[]) {
@@ -86,12 +91,15 @@ public class ReadFromBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		if (first) {
 			first = false;
 			for (int i = 1; i < tasks; ++i) {
-				ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
-				c.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DEFAULT_INPUT_LAYER_ID);
+				ActionConf c = ActionFactory
+						.getActionConf(QueryInputLayer.class);
+				c.setParamInt(QueryInputLayer.I_INPUTLAYER,
+						Consts.DEFAULT_INPUT_LAYER_ID);
 
 				Tuple t = query.getTuple();
 				SimpleData[] newTuple = new SimpleData[5];
@@ -103,8 +111,9 @@ public class ReadFromBtree extends Action {
 				t.set(newTuple);
 
 				c.setParamWritable(QueryInputLayer.W_QUERY, query);
-				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY, t.getSignature());
-				actionOutput.branch(c);
+				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY,
+						t.getSignature());
+				actionOutput.branch(new ActionSequence(c));
 			}
 		}
 		actionOutput.output(tuple);

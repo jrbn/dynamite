@@ -1,22 +1,23 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 
 public class AddDerivationCount extends Action {
 	public static final int B_GROUP_STEPS = 0;
 
-	public static void addToChain(List<ActionConf> actions, boolean groupSteps) {
+	public static void addToChain(ActionSequence actions, boolean groupSteps)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
 		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
 		actions.add(c);

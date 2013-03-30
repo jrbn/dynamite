@@ -7,13 +7,15 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class ReloadSchema extends Action {
-	public static void addToChain(List<ActionConf> actions,
-			boolean incrementalFlag) {
+	public static void addToChain(ActionSequence actions,
+			boolean incrementalFlag) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
 		c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
 		actions.add(c);

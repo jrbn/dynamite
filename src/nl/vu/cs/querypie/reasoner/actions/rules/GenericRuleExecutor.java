@@ -8,10 +8,12 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.support.Utils;
@@ -20,7 +22,7 @@ import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
 	public static void addToChain(boolean check, int step,
-			List<ActionConf> actions) {
+			ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
 		c.setParamInt(GenericRuleExecutor.I_MIN_STEP_TO_INCLUDE, step);
 		c.setParamBoolean(GenericRuleExecutor.B_CHECK_VALID_INPUT, check);

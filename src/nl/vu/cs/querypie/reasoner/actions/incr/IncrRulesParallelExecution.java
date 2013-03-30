@@ -8,11 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
-import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.SetStep;
@@ -27,28 +28,35 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
-	public static void addToChain(List<ActionConf> actions) {
-		actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		actions.add(ActionFactory
+				.getActionConf(IncrRulesParallelExecution.class));
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		Set<Integer> rulesOnlySchema = new HashSet<Integer>();
 		Set<Rule> rulesSchemaGenerics = new HashSet<Rule>();
 
 		// Determine the rules that have information in delta and organize them
 		// according to their type
-		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
+		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema,
+				rulesSchemaGenerics);
 
 		// Reload schema
-		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true, true);
+		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context,
+				true, true);
 
 		// Execute all schema rules in parallel (on different branches)
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, true, actionOutput);
+		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(
+				rulesOnlySchema, true, actionOutput);
 		// Read all the delta triples and apply all the rules with a single
 		// antecedent
 		executeGenericRules(context, actionOutput);
@@ -62,15 +70,21 @@ public class IncrRulesParallelExecution extends Action {
 			int varPos = getVariablePosition(rule);
 			for (long v : possibleValues) {
 				pattern.setTerm(varPos, new Term(v));
-				executePrecomGenericRulesForPattern(pattern, context, actionOutput);
+				executePrecomGenericRulesForPattern(pattern, context,
+						actionOutput);
 			}
 		}
 	}
 
-	private void extractSchemaRulesWithInformationInDelta(ActionContext context, Set<Integer> rulesOnlySchema, Set<Rule> rulesSchemaGenerics) throws Exception {
-		TupleSet set = (TupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
-		Map<Pattern, Collection<Rule>> patterns = ReasoningContext.getInstance().getRuleset().getPrecomputedPatternSet();
-		List<Rule> allSchemaOnlyRules = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules();
+	private void extractSchemaRulesWithInformationInDelta(
+			ActionContext context, Set<Integer> rulesOnlySchema,
+			Set<Rule> rulesSchemaGenerics) throws Exception {
+		TupleSet set = (TupleSet) context
+				.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+		Map<Pattern, Collection<Rule>> patterns = ReasoningContext
+				.getInstance().getRuleset().getPrecomputedPatternSet();
+		List<Rule> allSchemaOnlyRules = ReasoningContext.getInstance()
+				.getRuleset().getAllSchemaOnlyRules();
 		List<Rule> selectedSchemaOnlyRules = new ArrayList<Rule>();
 		for (Pattern p : patterns.keySet()) {
 			// Skip if it does not include schema information
@@ -93,28 +107,31 @@ public class IncrRulesParallelExecution extends Action {
 		}
 	}
 
-	private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+	private void executeGenericRules(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		GenericRuleExecutor.addToChain(false, Integer.MIN_VALUE, actions);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
-	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+	private void executePrecomGenericRules(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		SetStep.addToChain(Integer.MAX_VALUE, actions);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, false);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
-	private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+	private void executePrecomGenericRulesForPattern(Pattern pattern,
+			ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
 		ReadFromBtree.addToChain(pattern, actions);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
 	private Pattern getQueryPattern(Rule rule) {

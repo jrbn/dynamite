@@ -1,6 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.util.List;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
@@ -8,8 +7,10 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.common.Consts;
@@ -20,8 +21,10 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class RemoveDerivationsBtree extends Action {
-	public static void addToChain(List<ActionConf> actions) {
-		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory
+				.getActionConf(RemoveDerivationsBtree.class);
 		actions.add(c);
 	}
 
@@ -44,7 +47,8 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		// Remove the content of the derivation from the btrees
 		Object obj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		Set<Tuple> tuplesToRemove = null;
@@ -97,7 +101,8 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();
@@ -105,6 +110,7 @@ public class RemoveDerivationsBtree extends Action {
 		pos.close();
 		pso.close();
 		context.incrCounter("Removed triples", removedTriples);
-		context.incrCounter("Triples that could still be derived", notRemovedTriples);
+		context.incrCounter("Triples that could still be derived",
+				notRemovedTriples);
 	}
 }

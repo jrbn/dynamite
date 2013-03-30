@@ -1,13 +1,12 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 
 /**
@@ -18,11 +17,13 @@ import nl.vu.cs.querypie.ReasoningContext;
 public class CompleteRulesController extends AbstractRulesController {
 	public static final int I_STEP = 0;
 
-	public static void addToChain(List<ActionConf> actions) {
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		addToChain(actions, 1);
 	}
 
-	public static void addToChain(List<ActionConf> actions, int step) {
+	public static void addToChain(ActionSequence actions, int step)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory
 				.getActionConf(CompleteRulesController.class);
 		c.setParamInt(CompleteRulesController.I_STEP, step);
@@ -55,7 +56,7 @@ public class CompleteRulesController extends AbstractRulesController {
 		if (!hasDerived)
 			return;
 		context.incrCounter("Iterations", 1);
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
 		if (!ReasoningContext.getInstance().getRuleset()
 				.getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, true, step, false);
@@ -66,7 +67,7 @@ public class CompleteRulesController extends AbstractRulesController {
 		}
 		ActionsHelper.collectToNode(actions);
 		CompleteRulesController.addToChain(actions, step + 3);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
 }

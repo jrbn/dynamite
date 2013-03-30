@@ -10,6 +10,7 @@ import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.TBag;
 import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
@@ -17,6 +18,7 @@ import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
@@ -26,9 +28,11 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
 public class PrecompGenericReduce extends Action {
-	public static void addToChain(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
+	public static void addToChain(ActionSequence actions, int minimumStep,
+			boolean incrementalFlag) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
-		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG,
+				incrementalFlag);
 		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		actions.add(c);
 	}
@@ -50,15 +54,18 @@ public class PrecompGenericReduce extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, false);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, false);
+		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false,
+				false);
+		conf.registerParameter(I_MINIMUM_STEP, "minimum step",
+				Integer.MIN_VALUE, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
 		minimumStep = getParamInt(I_MINIMUM_STEP);
-		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
+		rules = ReasoningContext.getInstance().getRuleset()
+				.getAllRulesWithSchemaAndGeneric();
 		counters = new int[rules.size()];
 		pos_head_precomps = new int[rules.size()][][];
 		pos_gen_precomps = new int[rules.size()][][];
@@ -71,7 +78,9 @@ public class PrecompGenericReduce extends Action {
 			pos_head_precomps[r] = rule.getSharedVariablesHead_Precomp();
 			pos_gen_precomps[r] = rule.getSharedVariablesGen_Precomp();
 			pos_gen_head[r] = rule.getSharedVariablesGen_Head();
-			precompTuples[r] = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
+			precompTuples[r] = incrementalFlag ? rule
+					.getFlaggedPrecomputedTuples() : rule
+					.getAllPrecomputedTuples();
 			if (pos_gen_precomps[r].length > 1) {
 				throw new Exception("Not supported");
 			}
@@ -92,7 +101,8 @@ public class PrecompGenericReduce extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		duplicates.clear();
 		TByteArray key = (TByteArray) tuple.get(0);
 
@@ -117,13 +127,15 @@ public class PrecompGenericReduce extends Action {
 				currentRule = rule.getValue();
 				// First copy the "key" in the output triple.
 				for (int i = 0; i < pos_gen_head[currentRule].length; ++i) {
-					outputTuples[currentRule][pos_gen_head[currentRule][i][1]].setValue(Utils.decodeLong(key.getArray(), 8 * i));
+					outputTuples[currentRule][pos_gen_head[currentRule][i][1]]
+							.setValue(Utils.decodeLong(key.getArray(), 8 * i));
 				}
 			}
 			// }
 
 			currentJoinValue = elementToJoin.getValue();
-			Collection<Row> set = precompTuples[currentRule].get(pos_gen_precomps[currentRule][0][1], currentJoinValue);
+			Collection<Row> set = precompTuples[currentRule].get(
+					pos_gen_precomps[currentRule][0][1], currentJoinValue);
 			if (set != null) {
 				for (Row row : set) {
 
@@ -134,7 +146,10 @@ public class PrecompGenericReduce extends Action {
 
 					// Get current values
 					for (int i = 0; i < pos_head_precomps[currentRule].length; ++i) {
-						outputTuples[currentRule][pos_head_precomps[currentRule][i][0]].setValue(row.getValue(pos_head_precomps[currentRule][i][1]).getValue());
+						outputTuples[currentRule][pos_head_precomps[currentRule][i][0]]
+								.setValue(row.getValue(
+										pos_head_precomps[currentRule][i][1])
+										.getValue());
 					}
 					supportTuple.set(outputTuples[currentRule]);
 					if (!duplicates.contains(supportTuple)) {
@@ -149,7 +164,8 @@ public class PrecompGenericReduce extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		pos_head_precomps = null;
 		pos_gen_precomps = null;
 		pos_gen_head = null;
@@ -157,7 +173,8 @@ public class PrecompGenericReduce extends Action {
 		outputTuples = null;
 		for (int i = 0; i < counters.length; ++i) {
 			if (counters[i] > 0) {
-				context.incrCounter("derivation-rule-" + rules.get(i).getId(), counters[i]);
+				context.incrCounter("derivation-rule-" + rules.get(i).getId(),
+						counters[i]);
 			}
 		}
 	}

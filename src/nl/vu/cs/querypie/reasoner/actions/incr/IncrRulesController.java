@@ -1,14 +1,13 @@
 package nl.vu.cs.querypie.reasoner.actions.incr;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.io.IOHelper;
 import nl.vu.cs.querypie.reasoner.common.Consts;
@@ -19,7 +18,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static void addToChain(List<ActionConf> actions, String deltaDir, boolean add) {
+	public static void addToChain(ActionSequence actions, String deltaDir,
+			boolean add) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -45,12 +45,14 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -64,8 +66,8 @@ public class IncrRulesController extends Action {
 			completeDelta.addAll(currentDelta);
 			context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
 		}
-		List<ActionConf> actions = new ArrayList<ActionConf>();
-		List<ActionConf> actionsToBranch = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
+		ActionSequence actionsToBranch = new ActionSequence();
 		if (add) {
 			ActionsHelper.readFakeTuple(actionsToBranch);
 			// FIXME set the correct step
@@ -75,6 +77,6 @@ public class IncrRulesController extends Action {
 			ActionsHelper.readFakeTuple(actions);
 			IncrRemoveController.addToChain(actions, true);
 		}
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 }

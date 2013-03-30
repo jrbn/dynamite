@@ -1,10 +1,10 @@
 package nl.vu.cs.querypie;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import nl.vu.cs.ajira.Ajira;
-import nl.vu.cs.ajira.actions.ActionConf;
+import nl.vu.cs.ajira.actions.ActionSequence;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
@@ -39,22 +39,28 @@ public class Reasoner {
 		}
 		parseArgs(args);
 
-		Ajira arch = new Ajira();
-		initAjira(args[0], arch);
-		arch.startup();
-		readRules(args[1]);
-		initGlobalContext(arch);
-		printDebug(arch);
-		launchReasoning(arch);
-		printDebug(arch);
-		closeGlobalContext(arch);
-		arch.shutdown();
+		try {
+			Ajira arch = new Ajira();
+			initAjira(args[0], arch);
+			arch.startup();
+			readRules(args[1]);
+			initGlobalContext(arch);
+			printDebug(arch);
+			launchReasoning(arch);
+			printDebug(arch);
+			closeGlobalContext(arch);
+			arch.shutdown();
+		} catch (Exception e) {
+			log.error("Error in the execution", e);
+		}
 	}
 
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
+		ReasoningContext.getInstance().setKB(
+				(BerkeleydbLayer) arch.getContext().getInputLayer(
+						Consts.DEFAULT_INPUT_LAYER_ID));
 		ReasoningContext.getInstance().init();
 	}
 
@@ -62,9 +68,10 @@ public class Reasoner {
 		ReasoningContext.getInstance().getKB().closeAll();
 	}
 
-	private static void launchReasoning(Ajira arch) {
+	private static void launchReasoning(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
 		if (deltaDir == null) {
 			ActionsHelper.readFakeTuple(actions);
 			CompleteRulesController.addToChain(actions);
@@ -119,7 +126,8 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDebug(Ajira arch) {
+	private static void printDebug(Ajira arch)
+			throws ActionNotConfiguredException {
 		if (debug) {
 			printDerivations(arch);
 		}
@@ -128,9 +136,10 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivations(Ajira arch) {
+	private static void printDerivations(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		Debugging.addToChain(actions);
 		job.setActions(actions);
@@ -144,9 +153,10 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivationsOnFile(Ajira arch) {
+	private static void printDerivationsOnFile(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		Debugging.addToChain(actions, debugFile);
 		job.setActions(actions);

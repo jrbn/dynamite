@@ -1,16 +1,15 @@
 package nl.vu.cs.querypie.reasoner.actions.incr;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.reasoner.actions.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.OneStepRulesControllerToMemory;
 import nl.vu.cs.querypie.reasoner.actions.io.RemoveDerivationsBtree;
@@ -21,7 +20,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveController extends Action {
-	public static void addToChain(List<ActionConf> actions, boolean firstIteration) {
+	public static void addToChain(ActionSequence actions, boolean firstIteration)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
 		c.setParamBoolean(B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
@@ -35,27 +35,32 @@ public class IncrRemoveController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true,
+				false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+				new TLong());
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			tuple.copyTo(currentTuple);
-			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			Object completeDeltaObj = context
+					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 			if (completeDeltaObj instanceof TupleSet) {
 				TupleSet completeDelta = (TupleSet) completeDeltaObj;
 				if (!completeDelta.contains(currentTuple)) {
 					currentDelta.add(currentTuple);
 					completeDelta.add(currentTuple);
-					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+					currentTuple = TupleFactory.newTuple(new TLong(),
+							new TLong(), new TLong());
 				}
 			} else {
 				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
@@ -63,13 +68,15 @@ public class IncrRemoveController extends Action {
 					currentDelta.add(currentTuple);
 				}
 				completeDelta.put(currentTuple, 1);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+						new TLong());
 			}
 		}
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (firstIteration) {
 			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
@@ -92,8 +99,9 @@ public class IncrRemoveController extends Action {
 	 * 
 	 * 2. Start re-derivation from remaining facts
 	 */
-	private void deleteAndReDerive(ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+	private void deleteAndReDerive(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
 		// No need for re-derivation in case of counting algorithm
 		if (ParamHandler.get().isUsingCount()) {
 			// Remove the derivations from the B-tree
@@ -101,9 +109,9 @@ public class IncrRemoveController extends Action {
 			RemoveDerivationsBtree.addToChain(actions);
 		} else {
 			ActionsHelper.collectToNode(actions);
-			List<ActionConf> firstBranch = new ArrayList<ActionConf>();
-			List<ActionConf> secondBranch = new ArrayList<ActionConf>();
-			List<ActionConf> thirdBranch = new ArrayList<ActionConf>();
+			ActionSequence firstBranch = new ActionSequence();
+			ActionSequence secondBranch = new ActionSequence();
+			ActionSequence thirdBranch = new ActionSequence();
 
 			// Remove the derivations from the B-tree
 			ActionsHelper.readFakeTuple(firstBranch);
@@ -121,18 +129,19 @@ public class IncrRemoveController extends Action {
 			ActionsHelper.createBranch(firstBranch, secondBranch);
 			ActionsHelper.createBranch(actions, firstBranch);
 		}
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
-	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+	private void executeOneForwardChainIterationAndRestart(
+			ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions, false);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		IncrRemoveController.addToChain(actions, false);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {

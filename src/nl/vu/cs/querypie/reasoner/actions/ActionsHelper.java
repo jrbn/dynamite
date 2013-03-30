@@ -1,14 +1,13 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
+import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.actions.Branch;
 import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
@@ -17,12 +16,12 @@ import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.support.Query;
-import nl.vu.cs.ajira.actions.support.WritableListActions;
 import nl.vu.cs.ajira.data.types.TBoolean;
 import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
+import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
@@ -36,114 +35,151 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class ActionsHelper {
 
-	public static void collectToNode(List<ActionConf> actions) {
+	public static void collectToNode(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		collectToNode(actions, ParamHandler.get().isUsingCount());
 	}
 
-	public static void collectToNode(List<ActionConf> actions, boolean hasAdditionalField) {
+	public static void collectToNode(ActionSequence actions,
+			boolean hasAdditionalField) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
 		if (hasAdditionalField) {
-			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
 		}
 		actions.add(c);
 	}
 
-	public static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
+	public static void createBranch(ActionSequence actions,
+			ActionSequence actionsToBranch) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(Branch.class);
-		c.setParamWritable(Branch.W_BRANCH, new WritableListActions(actionsToBranch));
+		c.setParamWritable(Branch.W_BRANCH, actionsToBranch);
 		actions.add(c);
 	}
 
-	private static void groupBy(List<ActionConf> actions) {
+	private static void groupBy(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.IA_FIELDS_TO_GROUP, (byte) 0);
-		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
-		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.GROUP_BY_NUM_THREADS);
+		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS,
+				TByteArray.class.getName(), TBoolean.class.getName(),
+				TByte.class.getName(), TLong.class.getName());
+		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE,
+				nl.vu.cs.querypie.reasoner.common.Consts.GROUP_BY_NUM_THREADS);
 		actions.add(c);
 	}
 
-	public static void mapReduce(List<ActionConf> actions, int minimumStep, boolean incrementalFlag) {
+	public static void mapReduce(ActionSequence actions, int minimumStep,
+			boolean incrementalFlag) throws ActionNotConfiguredException {
 		PrecompGenericMap.addToChain(actions, minimumStep, incrementalFlag);
 		groupBy(actions);
 		PrecompGenericReduce.addToChain(actions, minimumStep, incrementalFlag);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+	static void parallelRunPrecomputedRuleExecutorForAllRules(int step,
+			int numRules, boolean incrementalFlag, ActionOutput actionOutput)
+			throws Exception {
 		for (int ruleId = 0; ruleId < numRules; ++ruleId) {
-			List<ActionConf> actions = new ArrayList<ActionConf>();
+			ActionSequence actions = new ActionSequence();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(step, ruleId, actions, incrementalFlag);
-			actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+			runPrecomputedRuleExecutorForRule(step, ruleId, actions,
+					incrementalFlag);
+			actionOutput.branch(actions);
 		}
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+	public static void parallelRunPrecomputedRuleExecutorForRules(
+			Set<Integer> ruleIds, boolean incrementalFlag,
+			ActionOutput actionOutput) throws Exception {
 		for (Integer ruleId : ruleIds) {
-			List<ActionConf> actions = new ArrayList<ActionConf>();
+			ActionSequence actions = new ActionSequence();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId, actions, incrementalFlag);
-			actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId,
+					actions, incrementalFlag);
+			actionOutput.branch(actions);
 		}
 	}
 
-	public static void readEverythingFromBTree(List<ActionConf> actions) {
+	public static void readEverythingFromBTree(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
-		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, nl.vu.cs.querypie.reasoner.common.Consts.READ_NUM_THREADS);
-		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1), new TLong(-1), new TLong(-1)));
+		c.setParamInt(ReadFromBtree.PARALLEL_TASKS,
+				nl.vu.cs.querypie.reasoner.common.Consts.READ_NUM_THREADS);
+		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1),
+				new TLong(-1), new TLong(-1)));
 		actions.add(c);
 	}
 
-	public static void readFakeTuple(List<ActionConf> actions) {
+	public static void readFakeTuple(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
 		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
 		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 	}
 
-	public static void reconnectAfter(int reconnectAfter, List<ActionConf> actions) {
+	public static void reconnectAfter(int reconnectAfter, ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(Split.class);
 		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAfter);
 		actions.add(c);
 	}
 
-	public static void reloadPrecomputationOnRules(Collection<Rule> rules, ActionContext context, boolean incrementalFlag, boolean allRules) {
+	public static void reloadPrecomputationOnRules(Collection<Rule> rules,
+			ActionContext context, boolean incrementalFlag, boolean allRules) {
 		for (Rule r : rules) {
-			r.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag, allRules);
+			r.reloadPrecomputation(ReasoningContext.getInstance(), context,
+					incrementalFlag, allRules);
 		}
 	}
 
-	public static void removeDuplicates(List<ActionConf> actions) {
+	public static void removeDuplicates(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	public static void runPrecomputedRuleExecutorForRule(int step, int ruleId, List<ActionConf> actions, boolean incrementalFlag) {
-		ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
+	public static void runPrecomputedRuleExecutorForRule(int step, int ruleId,
+			ActionSequence actions, boolean incrementalFlag)
+			throws ActionNotConfiguredException {
+		ActionConf a = ActionFactory
+				.getActionConf(PrecomputedRuleExecutor.class);
 		a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
-		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, incrementalFlag);
+		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG,
+				incrementalFlag);
 		a.setParamInt(PrecomputedRuleExecutor.I_STEP, step);
 		actions.add(a);
 	}
 
-	static void sort(List<ActionConf> actions, boolean additionalStepCounter) {
+	static void sort(ActionSequence actions, boolean additionalStepCounter)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
+		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE,
+				nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
 		if (additionalStepCounter) {
-			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
+			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName(), TInt.class.getName());
 		} else {
-			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
+					TLong.class.getName(), TLong.class.getName(),
+					TLong.class.getName());
 		}
 		c.setParamBoolean(PartitionToNodes.B_SORT, true);
 		actions.add(c);
 	}
 
-	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step, ActionContext context, ActionOutput actionOutput, String inMemoryKey)
+	public static void writeInMemoryTuplesToBTree(boolean forceStep, int step,
+			ActionContext context, ActionOutput actionOutput, String inMemoryKey)
 			throws Exception {
-		List<ActionConf> actions = new ArrayList<ActionConf>();
+		ActionSequence actions = new ActionSequence();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
 		WriteDerivationsBtree.addToChain(forceStep, step, actions);
-		actionOutput.branch(actions.toArray(new ActionConf[actions.size()]));
+		actionOutput.branch(actions);
 	}
 }
