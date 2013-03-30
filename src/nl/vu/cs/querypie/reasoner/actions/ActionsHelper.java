@@ -52,7 +52,7 @@ public class ActionsHelper {
 
 	public static void createBranch(List<ActionConf> actions, List<ActionConf> actionsToBranch) {
 		ActionConf c = ActionFactory.getActionConf(Branch.class);
-		c.setParamWritable(Branch.BRANCH, new WritableListActions(actionsToBranch));
+		c.setParamWritable(Branch.W_BRANCH, new WritableListActions(actionsToBranch));
 		actions.add(c);
 	}
 
@@ -98,7 +98,7 @@ public class ActionsHelper {
 	public static void readFakeTuple(List<ActionConf> actions) {
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
 		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
-		a.setParamWritable(QueryInputLayer.QUERY, new Query());
+		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 	}
 

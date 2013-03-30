@@ -102,7 +102,7 @@ public class ReadFromBtree extends Action {
 				newTuple[4] = new TInt(tasks);
 				t.set(newTuple);
 
-				c.setParamWritable(QueryInputLayer.QUERY, query);
+				c.setParamWritable(QueryInputLayer.W_QUERY, query);
 				c.setParamStringArray(QueryInputLayer.SA_SIGNATURE_QUERY, t.getSignature());
 				actionOutput.branch(c);
 			}
