@@ -17,12 +17,9 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class ReadAllInMemoryTriples extends Action {
-	public static void addToChain(ActionSequence actions,
-			String inMemoryTriplesKey) throws ActionNotConfiguredException {
-		ActionConf a = ActionFactory
-				.getActionConf(ReadAllInMemoryTriples.class);
-		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY,
-				inMemoryTriplesKey);
+	public static void addToChain(ActionSequence actions, String inMemoryTriplesKey) throws ActionNotConfiguredException {
+		ActionConf a = ActionFactory.getActionConf(ReadAllInMemoryTriples.class);
+		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
 	}
 
@@ -48,13 +45,18 @@ public class ReadAllInMemoryTriples extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (inMemorySet != null) {
 			readFromSet(actionOutput);
 		} else {
 			readFromSetWithCounter(actionOutput);
 		}
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+		inMemorySet = null;
+		inMemorySetWithCounter = null;
 	}
 
 	private void readFromSet(ActionOutput actionOutput) throws Exception {
@@ -63,26 +65,17 @@ public class ReadAllInMemoryTriples extends Action {
 		}
 	}
 
-	private void readFromSetWithCounter(ActionOutput actionOutput)
-			throws Exception {
+	private void readFromSetWithCounter(ActionOutput actionOutput) throws Exception {
 		SimpleData[] supportTuple = new SimpleData[4];
 		TInt count = new TInt();
 		supportTuple[3] = count;
-		for (Map.Entry<Tuple, Integer> entry : inMemorySetWithCounter
-				.entrySet()) {
+		for (Map.Entry<Tuple, Integer> entry : inMemorySetWithCounter.entrySet()) {
 			supportTuple[0] = entry.getKey().get(0);
 			supportTuple[1] = entry.getKey().get(1);
 			supportTuple[2] = entry.getKey().get(2);
 			count.setValue(entry.getValue());
 			actionOutput.output(supportTuple);
 		}
-	}
-
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		inMemorySet = null;
-		inMemorySetWithCounter = null;
 	}
 
 }

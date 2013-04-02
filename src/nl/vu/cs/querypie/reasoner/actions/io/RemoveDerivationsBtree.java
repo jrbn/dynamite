@@ -21,10 +21,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class RemoveDerivationsBtree extends Action {
-	public static void addToChain(ActionSequence actions)
-			throws ActionNotConfiguredException {
-		ActionConf c = ActionFactory
-				.getActionConf(RemoveDerivationsBtree.class);
+	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
 		actions.add(c);
 	}
 
@@ -47,9 +45,8 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		// Remove the content of the derivation from the btrees
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+		// Remove the content of the derivation from the BTrees
 		Object obj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		Set<Tuple> tuplesToRemove = null;
 		if (obj instanceof TupleSet) {
@@ -60,6 +57,18 @@ public class RemoveDerivationsBtree extends Action {
 			throw new Exception("Unknown in memory implementation");
 		}
 		removeAllTuplesInSet(tuplesToRemove);
+	}
+
+	@Override
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+		spo.close();
+		sop.close();
+		ops.close();
+		osp.close();
+		pos.close();
+		pso.close();
+		context.incrCounter("Removed triples", removedTriples);
+		context.incrCounter("Triples that could still be derived", notRemovedTriples);
 	}
 
 	private void removeAllTuplesInSet(Set<Tuple> set) {
@@ -98,19 +107,5 @@ public class RemoveDerivationsBtree extends Action {
 		Utils.encodeLong(key, 0, v1);
 		Utils.encodeLong(key, 8, v2);
 		Utils.encodeLong(key, 16, v3);
-	}
-
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
-		spo.close();
-		sop.close();
-		ops.close();
-		osp.close();
-		pos.close();
-		pso.close();
-		context.incrCounter("Removed triples", removedTriples);
-		context.incrCounter("Triples that could still be derived",
-				notRemovedTriples);
 	}
 }

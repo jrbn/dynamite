@@ -18,8 +18,7 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
-	public static void addToChain(boolean forceStep, int step,
-			ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(boolean forceStep, int step, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
 		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
@@ -38,15 +37,33 @@ public class WriteDerivationsBtree extends Action {
 	private int step;
 	private boolean forceStep, considerCount;
 
-	private void encode(long v1, long v2, long v3) {
-		Utils.encodeLong(triple, 0, v1);
-		Utils.encodeLong(triple, 8, v2);
-		Utils.encodeLong(triple, 16, v3);
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_STEP, "step", -1, false);
+		conf.registerParameter(B_FORCE_STEP, "force step", null, true);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void startProcess(ActionContext context) throws Exception {
+		in = ReasoningContext.getInstance().getKB();
+		spo = in.openWritingSession(DBType.SPO);
+		sop = in.openWritingSession(DBType.SOP);
+		pso = in.openWritingSession(DBType.PSO);
+		pos = in.openWritingSession(DBType.POS);
+		osp = in.openWritingSession(DBType.OSP);
+		ops = in.openWritingSession(DBType.OPS);
+		newValue = false;
+		newCount = dupCount = 0;
+		considerCount = ParamHandler.get().isUsingCount();
+		forceStep = getParamBoolean(B_FORCE_STEP);
+		if (forceStep) {
+			step = getParamInt(I_STEP);
+			Utils.encodeInt(meta, 0, step);
+		}
+	}
+
+	@Override
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
@@ -65,8 +82,8 @@ public class WriteDerivationsBtree extends Action {
 		if (considerCount) {
 			TInt count = (TInt) tuple.get(3);
 			int c = count.getValue();
-
 			newTuple = spo.write(triple, meta, c, false) == WritingSession.SUCCESS;
+
 			// Add it also in the other permutations
 			encode(s.getValue(), o.getValue(), p.getValue());
 			sop.write(triple, meta, c, newTuple);
@@ -84,6 +101,8 @@ public class WriteDerivationsBtree extends Action {
 			osp.write(triple, meta, c, newTuple);
 		} else {
 			newTuple = spo.write(triple, meta) == WritingSession.SUCCESS;
+
+			// Add it also in the other permutations
 			encode(s.getValue(), o.getValue(), p.getValue());
 			sop.write(triple, meta);
 
@@ -112,33 +131,7 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_STEP, "step", -1, false);
-		conf.registerParameter(B_FORCE_STEP, "force step", null, true);
-	}
-
-	@Override
-	public void startProcess(ActionContext context) throws Exception {
-		in = ReasoningContext.getInstance().getKB();
-		spo = in.openWritingSession(DBType.SPO);
-		sop = in.openWritingSession(DBType.SOP);
-		pso = in.openWritingSession(DBType.PSO);
-		pos = in.openWritingSession(DBType.POS);
-		osp = in.openWritingSession(DBType.OSP);
-		ops = in.openWritingSession(DBType.OPS);
-		newValue = false;
-		newCount = dupCount = 0;
-		considerCount = ParamHandler.get().isUsingCount();
-		forceStep = getParamBoolean(B_FORCE_STEP);
-		if (forceStep) {
-			step = getParamInt(I_STEP);
-			Utils.encodeInt(meta, 0, step);
-		}
-	}
-
-	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();
@@ -147,6 +140,12 @@ public class WriteDerivationsBtree extends Action {
 		pso.close();
 		context.incrCounter("Derived duplicates", dupCount);
 		context.incrCounter("New Derivations", newCount);
+	}
+
+	private void encode(long v1, long v2, long v3) {
+		Utils.encodeLong(triple, 0, v1);
+		Utils.encodeLong(triple, 8, v2);
+		Utils.encodeLong(triple, 16, v3);
 	}
 
 }

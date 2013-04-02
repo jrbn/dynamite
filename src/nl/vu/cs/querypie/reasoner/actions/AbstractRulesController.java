@@ -10,9 +10,7 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
-	protected void applyRulesSchemaOnly(ActionSequence actions,
-			boolean writeToBTree, int step, boolean flaggedOnly)
-			throws ActionNotConfiguredException {
+	protected void applyRulesSchemaOnly(ActionSequence actions, boolean writeToBTree, int step, boolean flaggedOnly) throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
 		ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
 		ActionsHelper.sort(actions, false);
@@ -30,8 +28,7 @@ public abstract class AbstractRulesController extends Action {
 		ReloadSchema.addToChain(actions, false);
 	}
 
-	protected void applyRulesWithGenericPatterns(ActionSequence actions,
-			boolean writeToBTree, int step, boolean flaggedOnly)
+	protected void applyRulesWithGenericPatterns(ActionSequence actions, boolean writeToBTree, int step, boolean flaggedOnly)
 			throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
@@ -53,9 +50,8 @@ public abstract class AbstractRulesController extends Action {
 		}
 	}
 
-	protected void applyRulesWithGenericPatternsInABranch(
-			ActionSequence actions, boolean writeToBTree, int step,
-			boolean flaggedOnly) throws ActionNotConfiguredException {
+	protected void applyRulesWithGenericPatternsInABranch(ActionSequence actions, boolean writeToBTree, int step, boolean flaggedOnly)
+			throws ActionNotConfiguredException {
 		ActionSequence actions2 = new ActionSequence();
 		applyRulesWithGenericPatterns(actions2, writeToBTree, step, flaggedOnly);
 		ActionsHelper.createBranch(actions, actions2);

@@ -19,32 +19,25 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
  * It writes the newly derived rules in memory (in a cached object)
  */
 public class OneStepRulesControllerToMemory extends AbstractRulesController {
-	public static void addToChain(ActionSequence actions)
-			throws ActionNotConfiguredException {
-		ActionConf a = ActionFactory
-				.getActionConf(OneStepRulesControllerToMemory.class);
+	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
+		ActionConf a = ActionFactory.getActionConf(OneStepRulesControllerToMemory.class);
 		actions.add(a);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		cleanInMemoryContainer(context, Consts.COMPLETE_DELTA_KEY);
 		cleanInMemoryContainer(context, Consts.CURRENT_DELTA_KEY);
 		ActionSequence actions = new ActionSequence();
-		if (!ReasoningContext.getInstance().getRuleset()
-				.getAllSchemaOnlyRules().isEmpty()) {
+		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
 			applyRulesSchemaOnly(actions, false, Integer.MIN_VALUE, true);
-			applyRulesWithGenericPatternsInABranch(actions, false,
-					Integer.MIN_VALUE, true);
+			applyRulesWithGenericPatternsInABranch(actions, false, Integer.MIN_VALUE, true);
 		} else {
-			applyRulesWithGenericPatterns(actions, false, Integer.MIN_VALUE,
-					true);
+			applyRulesWithGenericPatterns(actions, false, Integer.MIN_VALUE, true);
 		}
 		ActionsHelper.collectToNode(actions);
 		actionOutput.branch(actions);
