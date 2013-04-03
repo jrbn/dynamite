@@ -13,7 +13,8 @@ import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 public abstract class AbstractRulesController extends Action {
 	protected void applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
-		ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
+		// FIXME ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
+		ParallelExecutionSchemaOnly.addToChain(Integer.MIN_VALUE, actions);
 		ActionsHelper.sort(actions, false);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions, false);
@@ -28,10 +29,12 @@ public abstract class AbstractRulesController extends Action {
 	protected void applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
-		GenericRuleExecutor.addToChain(true, step, actions);
+		// FIXME GenericRuleExecutor.addToChain(true, step, actions);
+		GenericRuleExecutor.addToChain(true, Integer.MIN_VALUE, actions);
 		SetStep.addToChain(step, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.mapReduce(actions, step - 2, false);
+		// FIXME ActionsHelper.mapReduce(actions, step - 2, false);
+		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, false);
 		SetStep.addToChain(step + 1, actions);
 		ActionsHelper.sort(actions, true);
 		if (ParamHandler.get().isUsingCount()) {
