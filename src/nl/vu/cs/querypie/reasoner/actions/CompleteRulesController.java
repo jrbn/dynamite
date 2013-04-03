@@ -8,6 +8,7 @@ import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
+import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
 
 /**
  * A rules controller that execute the complete materialization of all the
@@ -53,10 +54,10 @@ public class CompleteRulesController extends AbstractRulesController {
 		context.incrCounter("Iterations", 1);
 		ActionSequence actions = new ActionSequence();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, true, step);
-			applyRulesWithGenericPatternsInABranch(actions, true, step + 1);
+			applyRulesSchemaOnly(actions, MemoryStorage.BTREE, step);
+			applyRulesWithGenericPatternsInABranch(actions, MemoryStorage.BTREE, step + 1);
 		} else {
-			applyRulesWithGenericPatterns(actions, true, step + 1);
+			applyRulesWithGenericPatterns(actions, MemoryStorage.BTREE, step + 1);
 		}
 		ActionsHelper.collectToNode(actions);
 		CompleteRulesController.addToChain(actions, step + 3);
