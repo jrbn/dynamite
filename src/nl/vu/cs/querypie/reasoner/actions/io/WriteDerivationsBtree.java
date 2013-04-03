@@ -40,7 +40,7 @@ public class WriteDerivationsBtree extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", -1, false);
-		conf.registerParameter(B_FORCE_STEP, "force step", null, true);
+		conf.registerParameter(B_FORCE_STEP, "force_step", null, true);
 	}
 
 	@Override

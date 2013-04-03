@@ -17,15 +17,12 @@ import nl.vu.cs.querypie.ReasoningContext;
 public class CompleteRulesController extends AbstractRulesController {
 	public static final int I_STEP = 0;
 
-	public static void addToChain(ActionSequence actions)
-			throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
 		addToChain(actions, 1);
 	}
 
-	public static void addToChain(ActionSequence actions, int step)
-			throws ActionNotConfiguredException {
-		ActionConf c = ActionFactory
-				.getActionConf(CompleteRulesController.class);
+	public static void addToChain(ActionSequence actions, int step) throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
 		c.setParamInt(CompleteRulesController.I_STEP, step);
 		actions.add(c);
 	}
@@ -34,8 +31,7 @@ public class CompleteRulesController extends AbstractRulesController {
 	private int step;
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		hasDerived = true;
 	}
 
@@ -51,19 +47,16 @@ public class CompleteRulesController extends AbstractRulesController {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!hasDerived)
 			return;
 		context.incrCounter("Iterations", 1);
 		ActionSequence actions = new ActionSequence();
-		if (!ReasoningContext.getInstance().getRuleset()
-				.getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, true, step, false);
-			applyRulesWithGenericPatternsInABranch(actions, true, step + 1,
-					false);
+		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
+			applyRulesSchemaOnly(actions, true, step);
+			applyRulesWithGenericPatternsInABranch(actions, true, step + 1);
 		} else {
-			applyRulesWithGenericPatterns(actions, true, step + 1, false);
+			applyRulesWithGenericPatterns(actions, true, step + 1);
 		}
 		ActionsHelper.collectToNode(actions);
 		CompleteRulesController.addToChain(actions, step + 3);
