@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import nl.vu.cs.ajira.actions.ActionContext;
+import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
@@ -76,6 +77,12 @@ class DebuggingUtils {
 					}
 					if (i != 0)
 						result = result.concat("\t");
+					result = result.concat(stringVal);
+				}
+				for (int i = 3; i < tuple.getNElements(); ++i) {
+					int val = ((TInt) tuple.get(i)).getValue();
+					String stringVal = String.valueOf(val);
+					result = result.concat("\t");
 					result = result.concat(stringVal);
 				}
 				result = result.concat("\n");
