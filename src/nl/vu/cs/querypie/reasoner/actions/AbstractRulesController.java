@@ -54,7 +54,7 @@ public abstract class AbstractRulesController extends Action {
 	private void writeDerivations(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
 		switch (writeTo) {
 		case BTREE:
-			WriteDerivationsBtree.addToChain(true, step, actions);
+			WriteDerivationsBtree.addToChain(step, actions);
 			break;
 		case IN_MEMORY:
 			WriteInMemory.addToChain(actions, Consts.CURRENT_DELTA_KEY);

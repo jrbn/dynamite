@@ -18,15 +18,13 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
-	public static void addToChain(boolean forceStep, int step, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
-		c.setParamBoolean(WriteDerivationsBtree.B_FORCE_STEP, forceStep);
 		actions.add(c);
 	}
 
 	public static final int I_STEP = 0;
-	public static final int B_FORCE_STEP = 1;
 
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
@@ -35,12 +33,11 @@ public class WriteDerivationsBtree extends Action {
 	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
 	private int step;
-	private boolean forceStep, considerCount;
+	private boolean considerCount;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", -1, false);
-		conf.registerParameter(B_FORCE_STEP, "force_step", null, true);
 	}
 
 	@Override
@@ -55,11 +52,8 @@ public class WriteDerivationsBtree extends Action {
 		newValue = false;
 		newCount = dupCount = 0;
 		considerCount = ParamHandler.get().isUsingCount();
-		forceStep = getParamBoolean(B_FORCE_STEP);
-		if (forceStep) {
-			step = getParamInt(I_STEP);
-			Utils.encodeInt(meta, 0, step);
-		}
+		step = getParamInt(I_STEP);
+		Utils.encodeInt(meta, 0, step);
 	}
 
 	@Override
@@ -67,14 +61,6 @@ public class WriteDerivationsBtree extends Action {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
-
-		if (!forceStep) {
-			int idx = 4;
-			if (!considerCount)
-				idx--;
-			TInt step = (TInt) tuple.get(idx);
-			Utils.encodeInt(meta, 0, step.getValue());
-		}
 
 		encode(s.getValue(), p.getValue(), o.getValue());
 

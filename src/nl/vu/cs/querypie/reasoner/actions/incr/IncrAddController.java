@@ -20,27 +20,23 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 public class IncrAddController extends Action {
 	public static void addToChain(ActionSequence actions, int step, boolean firstIteration) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
-		c.setParamBoolean(IncrAddController.B_FORCE_STEP, true);
 		c.setParamInt(IncrAddController.I_STEP, step);
 		c.setParamBoolean(IncrAddController.B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
 	}
 
 	public static final int I_STEP = 0;
-	public static final int B_FORCE_STEP = 1;
-	public static final int B_FIRST_ITERATION = 2;
+	public static final int B_FIRST_ITERATION = 1;
 
 	private TupleSet currentDelta;
 	private Tuple currentTuple;
 
 	private int step;
-	private boolean forceStep;
 	private boolean firstIteration;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", 0, true);
-		conf.registerParameter(B_FORCE_STEP, "force_step", false, true);
 		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
 	}
 
@@ -58,7 +54,6 @@ public class IncrAddController extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		step = getParamInt(I_STEP);
-		forceStep = getParamBoolean(B_FORCE_STEP);
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 		currentDelta = new TupleSetImpl();
 		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
@@ -107,7 +102,7 @@ public class IncrAddController extends Action {
 	}
 
 	private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionsHelper.writeInMemoryTuplesToBTree(forceStep, step, context, actionOutput, Consts.COMPLETE_DELTA_KEY);
+		ActionsHelper.writeInMemoryTuplesToBTree(step, context, actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }
