@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.vu.cs.ajira.actions.support.FilterHiddenFiles;
+import nl.vu.cs.ajira.data.types.SimpleData;
+import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
@@ -30,10 +32,12 @@ public class IOHelper {
 			while ((line = reader.readLine()) != null) {
 				// Parse the line
 				String[] sTriple = line.split(" ");
-				TLong[] triple = { new TLong(), new TLong(), new TLong() };
-				triple[0].setValue(Long.valueOf(sTriple[0]));
-				triple[1].setValue(Long.valueOf(sTriple[1]));
-				triple[2].setValue(Long.valueOf(sTriple[2]));
+				SimpleData[] triple = { new TLong(), new TLong(), new TLong(), new TInt() };
+				((TLong) triple[0]).setValue(Long.valueOf(sTriple[0]));
+				((TLong) triple[1]).setValue(Long.valueOf(sTriple[1]));
+				((TLong) triple[2]).setValue(Long.valueOf(sTriple[2]));
+				// FIXME: which is the correct step?
+				((TInt) triple[3]).setValue(1);
 				set.add(TupleFactory.newTuple(triple));
 			}
 			reader.close();

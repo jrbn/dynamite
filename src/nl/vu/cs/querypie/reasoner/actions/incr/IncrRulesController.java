@@ -18,8 +18,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static void addToChain(ActionSequence actions, String deltaDir,
-			boolean add) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions, String deltaDir, boolean add) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -45,14 +44,12 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput)
-			throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -67,14 +64,11 @@ public class IncrRulesController extends Action {
 			context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
 		}
 		ActionSequence actions = new ActionSequence();
-		ActionSequence actionsToBranch = new ActionSequence();
+		ActionsHelper.readFakeTuple(actions);
 		if (add) {
-			ActionsHelper.readFakeTuple(actionsToBranch);
 			// FIXME set the correct step
-			IncrAddController.addToChain(actionsToBranch, -1, true);
-			ActionsHelper.createBranch(actions, actionsToBranch);
+			IncrAddController.addToChain(actions, Integer.MIN_VALUE, true);
 		} else {
-			ActionsHelper.readFakeTuple(actions);
 			IncrRemoveController.addToChain(actions, true);
 		}
 		actionOutput.branch(actions);

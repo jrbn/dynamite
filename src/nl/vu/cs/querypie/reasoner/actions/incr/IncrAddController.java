@@ -6,6 +6,7 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
+import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
@@ -56,7 +57,7 @@ public class IncrAddController extends Action {
 		step = getParamInt(I_STEP);
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 	}
 
 	@Override
@@ -69,7 +70,7 @@ public class IncrAddController extends Action {
 				if (!completeDelta.contains(currentTuple)) {
 					currentDelta.add(currentTuple);
 					completeDelta.add(currentTuple);
-					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 				}
 			} else {
 				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
@@ -77,7 +78,7 @@ public class IncrAddController extends Action {
 					currentDelta.add(currentTuple);
 				}
 				completeDelta.put(currentTuple, 1);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 			}
 		}
 	}

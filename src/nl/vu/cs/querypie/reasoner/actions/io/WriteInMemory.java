@@ -13,8 +13,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class WriteInMemory extends Action {
-	public static void addToChain(ActionSequence actions,
-			String inMemoryTriplesKey) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions, String inMemoryTriplesKey) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(WriteInMemory.class);
 		a.setParamString(WriteInMemory.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
@@ -22,15 +21,6 @@ public class WriteInMemory extends Action {
 
 	public static final int IN_MEMORY_KEY = 0;
 	private TupleSet inMemorySet;
-
-	@Override
-	public void process(Tuple tuple, ActionContext context,
-			ActionOutput actionOutput) throws Exception {
-		Tuple tupleCopy = TupleFactory.newTuple();
-		tuple.copyTo(tupleCopy);
-		inMemorySet.add(tupleCopy);
-		actionOutput.output(tuple);
-	}
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
@@ -45,5 +35,13 @@ public class WriteInMemory extends Action {
 			inMemorySet = new TupleSetImpl();
 			context.putObjectInCache(inMemoryKey, inMemorySet);
 		}
+	}
+
+	@Override
+	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+		Tuple tupleCopy = TupleFactory.newTuple();
+		tuple.copyTo(tupleCopy);
+		inMemorySet.add(tupleCopy);
+		actionOutput.output(tuple);
 	}
 }
