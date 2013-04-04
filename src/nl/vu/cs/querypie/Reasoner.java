@@ -1,5 +1,10 @@
 package nl.vu.cs.querypie;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 import nl.vu.cs.ajira.Ajira;
@@ -30,11 +35,12 @@ public class Reasoner {
 	private static boolean add;
 	private static boolean debug = false;
 	private static String debugFile = null;
+	private static String lastStepFile = null;
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove file with triples to remove] [--countingAlgorithm] [--debug] [--debugToFile file for debugging]");
+					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countingAlgorithm] [--debug] [--debugToFile <file>] [--lastStepFile <file>");
 			return;
 		}
 		parseArgs(args);
@@ -58,9 +64,7 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(
-				(BerkeleydbLayer) arch.getContext().getInputLayer(
-						Consts.DEFAULT_INPUT_LAYER_ID));
+		ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
 		ReasoningContext.getInstance().init();
 	}
 
@@ -68,14 +72,14 @@ public class Reasoner {
 		ReasoningContext.getInstance().getKB().closeAll();
 	}
 
-	private static void launchReasoning(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void launchReasoning(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		if (deltaDir == null) {
 			ActionsHelper.readFakeTuple(actions);
 			CompleteRulesController.addToChain(actions);
 		} else {
+			loadLastStepFromFile();
 			ActionsHelper.readFakeTuple(actions);
 			IncrRulesController.addToChain(actions, deltaDir, add);
 		}
@@ -89,6 +93,7 @@ public class Reasoner {
 				log.error("The job is failed!", e);
 			}
 		}
+		writeLastStepToFile();
 	}
 
 	private static void initAjira(String kbDir, Ajira arch) {
@@ -112,6 +117,8 @@ public class Reasoner {
 				debug = true;
 			} else if (args[i].equals("--debugFile")) {
 				debugFile = args[++i];
+			} else if (args[i].equals("--lastStepFile")) {
+				lastStepFile = args[++i];
 			}
 		}
 	}
@@ -126,8 +133,7 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDebug(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void printDebug(Ajira arch) throws ActionNotConfiguredException {
 		if (debug) {
 			printDerivations(arch);
 		}
@@ -136,8 +142,7 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivations(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void printDerivations(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
@@ -153,8 +158,40 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivationsOnFile(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void loadLastStepFromFile() {
+		if (lastStepFile == null) {
+			return;
+		}
+		try {
+			FileInputStream fis = new FileInputStream(new File(lastStepFile));
+			int lastStep = fis.read();
+			fis.close();
+			ParamHandler.get().setLastStep(lastStep);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void writeLastStepToFile() {
+		if (lastStepFile == null) {
+			return;
+		}
+		try {
+			FileOutputStream fos = new FileOutputStream(new File(lastStepFile));
+			int lastStep = ParamHandler.get().getLastStep();
+			fos.write(lastStep);
+			fos.close();
+			ParamHandler.get().setLastStep(lastStep);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void printDerivationsOnFile(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);

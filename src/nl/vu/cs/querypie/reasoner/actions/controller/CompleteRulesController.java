@@ -11,6 +11,7 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.common.AbstractRulesController;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
+import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 /**
  * A rules controller that execute the complete materialization of all the
@@ -54,6 +55,7 @@ public class CompleteRulesController extends AbstractRulesController {
 		if (!hasDerived) {
 			return;
 		}
+		ParamHandler.get().setLastStep(currentStep);
 		context.incrCounter("Iterations", 1);
 		ActionSequence actions = new ActionSequence();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
