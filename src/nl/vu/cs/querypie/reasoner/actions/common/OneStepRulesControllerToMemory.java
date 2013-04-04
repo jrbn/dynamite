@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.common;
 
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;

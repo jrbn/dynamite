@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions;
+package nl.vu.cs.querypie.reasoner.actions.common;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionSequence;
@@ -14,7 +14,7 @@ public abstract class AbstractRulesController extends Action {
 
 	/**
 	 * Applies all rules involving only the schema. Uses the currentStep to
-	 * filter out unrequired computation. Returns the step after the execution.
+	 * filter out unneeded computation. Returns the step after the execution.
 	 */
 	protected int applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
@@ -33,7 +33,7 @@ public abstract class AbstractRulesController extends Action {
 
 	/**
 	 * Applies all rules involving generic parts. Uses the currentStep to filter
-	 * out unrequired computation. Returns the step after the execution.
+	 * out unneeded computation. Returns the step after the execution.
 	 */
 	protected int applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
