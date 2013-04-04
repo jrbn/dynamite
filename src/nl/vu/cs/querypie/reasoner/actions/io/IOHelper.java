@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
@@ -36,8 +37,7 @@ public class IOHelper {
 				((TLong) triple[0]).setValue(Long.valueOf(sTriple[0]));
 				((TLong) triple[1]).setValue(Long.valueOf(sTriple[1]));
 				((TLong) triple[2]).setValue(Long.valueOf(sTriple[2]));
-				// FIXME: is 0 the correct value for the step?
-				((TInt) triple[3]).setValue(0);
+				((TInt) triple[3]).setValue(ParamHandler.get().getLastStep());
 				set.add(TupleFactory.newTuple(triple));
 			}
 			reader.close();

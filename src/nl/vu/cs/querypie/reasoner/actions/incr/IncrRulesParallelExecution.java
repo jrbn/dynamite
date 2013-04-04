@@ -45,7 +45,6 @@ public class IncrRulesParallelExecution extends Action {
 		// Reload schema
 		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true, true);
 		// Execute all schema rules in parallel (on different branches)
-		// FIXME: Which is the correct step?
 		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, Integer.MIN_VALUE, true, actionOutput);
 		// Read all the delta triples and apply all the rules with a single
 		// antecedent

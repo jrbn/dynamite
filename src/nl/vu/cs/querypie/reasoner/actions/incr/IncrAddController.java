@@ -76,10 +76,10 @@ public class IncrAddController extends Action {
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		// In case of new derivations, perform another iteration
 		if (firstIteration) {
-			executeAForwardChainingIterationAndRestart(context, actionOutput);
+			executeOneForwardChainingIterationAndRestart(context, actionOutput);
 		} else if (!currentDelta.isEmpty()) {
 			saveCurrentDelta(context);
-			executeAForwardChainingIterationAndRestart(context, actionOutput);
+			executeOneForwardChainingIterationAndRestart(context, actionOutput);
 		}
 		// Otherwise stop and write complete derivations on btree
 		else {
@@ -87,14 +87,14 @@ public class IncrAddController extends Action {
 		}
 	}
 
-	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeOneForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		IncrRulesParallelExecution.addToChain(actions);
 		ActionsHelper.collectToNode(actions, false);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		IncrAddController.addToChain(actions, step, false);
+		IncrAddController.addToChain(actions, step + 1, false);
 		actionOutput.branch(actions);
 	}
 

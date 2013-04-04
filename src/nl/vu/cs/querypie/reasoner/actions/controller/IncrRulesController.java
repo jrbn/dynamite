@@ -68,8 +68,7 @@ public class IncrRulesController extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		if (add) {
-			// FIXME set the correct step
-			IncrAddController.addToChain(actions, Integer.MIN_VALUE, true);
+			IncrAddController.addToChain(actions, ParamHandler.get().getLastStep(), true);
 		} else {
 			IncrRemoveController.addToChain(actions, true);
 		}
