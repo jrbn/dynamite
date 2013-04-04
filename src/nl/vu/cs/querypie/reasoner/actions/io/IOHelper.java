@@ -36,8 +36,8 @@ public class IOHelper {
 				((TLong) triple[0]).setValue(Long.valueOf(sTriple[0]));
 				((TLong) triple[1]).setValue(Long.valueOf(sTriple[1]));
 				((TLong) triple[2]).setValue(Long.valueOf(sTriple[2]));
-				// FIXME: which is the correct step?
-				((TInt) triple[3]).setValue(1);
+				// FIXME: is 0 the correct value for the step?
+				((TInt) triple[3]).setValue(0);
 				set.add(TupleFactory.newTuple(triple));
 			}
 			reader.close();

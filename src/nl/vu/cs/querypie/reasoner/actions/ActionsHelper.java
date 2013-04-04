@@ -1,6 +1,7 @@
 package nl.vu.cs.querypie.reasoner.actions;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -69,20 +70,20 @@ public class ActionsHelper {
 		PrecompGenericReduce.addToChain(actions, minimumStep, incrementalFlag);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, int numRules, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
-		for (int ruleId = 0; ruleId < numRules; ++ruleId) {
-			ActionSequence actions = new ActionSequence();
-			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(step, ruleId, actions, incrementalFlag);
-			actionOutput.branch(actions);
+	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+		Set<Integer> schemaOnlyRules = new HashSet<Integer>();
+		for (int i = 0; i < ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().size(); ++i) {
+			schemaOnlyRules.add(i);
 		}
+		parallelRunPrecomputedRuleExecutorForRules(schemaOnlyRules, step, incrementalFlag, actionOutput);
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, int step, boolean incrementalFlag, ActionOutput actionOutput)
+			throws Exception {
 		for (Integer ruleId : ruleIds) {
 			ActionSequence actions = new ActionSequence();
 			readFakeTuple(actions);
-			runPrecomputedRuleExecutorForRule(Integer.MIN_VALUE, ruleId, actions, incrementalFlag);
+			PrecomputedRuleExecutor.addToChain(step, ruleId, actions, incrementalFlag);
 			actionOutput.branch(actions);
 		}
 	}
@@ -115,15 +116,6 @@ public class ActionsHelper {
 
 	public static void removeDuplicates(ActionSequence actions) throws ActionNotConfiguredException {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
-	}
-
-	public static void runPrecomputedRuleExecutorForRule(int step, int ruleId, ActionSequence actions, boolean incrementalFlag)
-			throws ActionNotConfiguredException {
-		ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
-		a.setParamInt(PrecomputedRuleExecutor.RULE_ID, ruleId);
-		a.setParamBoolean(PrecomputedRuleExecutor.INCREMENTAL_FLAG, incrementalFlag);
-		a.setParamInt(PrecomputedRuleExecutor.I_STEP, step);
-		actions.add(a);
 	}
 
 	static void sort(ActionSequence actions, boolean additionalStepCounter) throws ActionNotConfiguredException {

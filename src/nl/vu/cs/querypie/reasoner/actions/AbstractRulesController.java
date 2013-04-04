@@ -11,50 +11,59 @@ import nl.vu.cs.querypie.reasoner.common.Consts;
 import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
-	protected void applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
+
+	/**
+	 * Applies all rules involving only the schema. Uses the currentStep to
+	 * filter out unrequired computation. Returns the step after the execution.
+	 */
+	protected int applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
-		// FIXME ParallelExecutionSchemaOnly.addToChain(step - 3, actions);
-		ParallelExecutionSchemaOnly.addToChain(Integer.MIN_VALUE, actions);
+		ParallelExecutionSchemaOnly.addToChain(currentStep - 2, actions);
 		ActionsHelper.sort(actions, false);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions, false);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		writeDerivations(actions, writeTo, step);
+		writeDerivations(actions, writeTo, currentStep);
 		ActionsHelper.collectToNode(actions);
 		ReloadSchema.addToChain(actions, false);
+		return currentStep + 1;
 	}
 
-	protected void applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
+	/**
+	 * Applies all rules involving generic parts. Uses the currentStep to filter
+	 * out unrequired computation. Returns the step after the execution.
+	 */
+	protected int applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
-		// FIXME GenericRuleExecutor.addToChain(true, step, actions);
-		GenericRuleExecutor.addToChain(true, Integer.MIN_VALUE, actions);
-		SetStep.addToChain(step, actions);
+		GenericRuleExecutor.addToChain(true, currentStep - 2, actions);
+		SetStep.addToChain(currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		// FIXME ActionsHelper.mapReduce(actions, step - 2, false);
-		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, false);
-		SetStep.addToChain(step + 1, actions);
+		ActionsHelper.mapReduce(actions, currentStep - 2, false);
+		SetStep.addToChain(currentStep, actions);
 		ActionsHelper.sort(actions, true);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions, true);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		writeDerivations(actions, writeTo, step);
+		writeDerivations(actions, writeTo, currentStep);
+		return currentStep + 1;
 	}
 
-	protected void applyRulesWithGenericPatternsInABranch(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
+	protected int applyRulesWithGenericPatternsInABranch(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionSequence actions2 = new ActionSequence();
-		applyRulesWithGenericPatterns(actions2, writeTo, step);
+		currentStep = applyRulesWithGenericPatterns(actions2, writeTo, currentStep);
 		ActionsHelper.createBranch(actions, actions2);
+		return currentStep;
 	}
 
-	private void writeDerivations(ActionSequence actions, MemoryStorage writeTo, int step) throws ActionNotConfiguredException {
+	private void writeDerivations(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		switch (writeTo) {
 		case BTREE:
-			WriteDerivationsBtree.addToChain(step, actions);
+			WriteDerivationsBtree.addToChain(currentStep, actions);
 			break;
 		case IN_MEMORY:
 			WriteInMemory.addToChain(actions, Consts.CURRENT_DELTA_KEY);

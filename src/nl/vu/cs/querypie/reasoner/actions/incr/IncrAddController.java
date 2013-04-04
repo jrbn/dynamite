@@ -38,18 +38,7 @@ public class IncrAddController extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_STEP, "step", 0, true);
-		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
-	}
-
-	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionSequence actions = new ActionSequence();
-		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions, false);
-		if (!ParamHandler.get().isUsingCount()) {
-			ActionsHelper.removeDuplicates(actions);
-		}
-		IncrAddController.addToChain(actions, step, false);
-		actionOutput.branch(actions);
+		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
 	}
 
 	@Override
@@ -96,6 +85,17 @@ public class IncrAddController extends Action {
 		else {
 			writeCompleteDeltaToBTree(context, actionOutput);
 		}
+	}
+
+	private void executeAForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
+		IncrRulesParallelExecution.addToChain(actions);
+		ActionsHelper.collectToNode(actions, false);
+		if (!ParamHandler.get().isUsingCount()) {
+			ActionsHelper.removeDuplicates(actions);
+		}
+		IncrAddController.addToChain(actions, step, false);
+		actionOutput.branch(actions);
 	}
 
 	private void saveCurrentDelta(ActionContext context) {

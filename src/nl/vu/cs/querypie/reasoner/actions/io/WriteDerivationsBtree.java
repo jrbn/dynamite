@@ -24,8 +24,6 @@ public class WriteDerivationsBtree extends Action {
 		actions.add(c);
 	}
 
-	public static final int I_STEP = 0;
-
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private boolean newValue;
@@ -34,6 +32,8 @@ public class WriteDerivationsBtree extends Action {
 	private long dupCount, newCount;
 	private int step;
 	private boolean considerCount;
+
+	public static final int I_STEP = 0;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
