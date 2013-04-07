@@ -22,7 +22,7 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class PrecompGenericMap extends Action {
-	public static void addToChain(ActionSequence actions, int minimumStep, boolean incrementalFlag) throws ActionNotConfiguredException {
+	public static void addToChain(int minimumStep, boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
 		c.setParamBoolean(PrecompGenericMap.B_INCREMENTAL_FLAG, incrementalFlag);
 		c.setParamInt(PrecompGenericMap.I_MINIMUM_STEP, minimumStep);
@@ -35,6 +35,7 @@ public class PrecompGenericMap extends Action {
 	private long[][] value_constants_to_check;
 	private Map<Long, Integer>[] acceptableValues;
 	private List<Rule> rules;
+
 	private int minimumStep;
 
 	private final TByteArray oneKey = new TByteArray(new byte[8]);
@@ -48,8 +49,8 @@ public class PrecompGenericMap extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental flag", false, false);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, false);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental flag", false, true);
+		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, true);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -57,6 +58,7 @@ public class PrecompGenericMap extends Action {
 	public void startProcess(ActionContext context) throws Exception {
 		boolean incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minimumStep = getParamInt(I_MINIMUM_STEP);
+
 		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
 		key_positions = new int[rules.size()][];
 		positions_to_check = new int[rules.size()][];

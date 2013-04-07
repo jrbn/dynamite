@@ -14,7 +14,7 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 
 public class AddDerivationCount extends Action {
-	public static void addToChain(ActionSequence actions, boolean groupSteps) throws ActionNotConfiguredException {
+	public static void addToChain(boolean groupSteps, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
 		c.setParamBoolean(AddDerivationCount.B_GROUP_STEPS, groupSteps);
 		actions.add(c);

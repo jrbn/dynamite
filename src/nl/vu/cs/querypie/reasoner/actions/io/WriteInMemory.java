@@ -13,7 +13,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
 public class WriteInMemory extends Action {
-	public static void addToChain(ActionSequence actions, String inMemoryTriplesKey) throws ActionNotConfiguredException {
+	public static void addToChain(String inMemoryTriplesKey, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(WriteInMemory.class);
 		a.setParamString(WriteInMemory.IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);

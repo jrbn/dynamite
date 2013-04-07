@@ -19,7 +19,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrAddController extends Action {
-	public static void addToChain(ActionSequence actions, int step, boolean firstIteration) throws ActionNotConfiguredException {
+	public static void addToChain(int step, boolean firstIteration, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrAddController.class);
 		c.setParamInt(IncrAddController.I_STEP, step);
 		c.setParamBoolean(IncrAddController.B_FIRST_ITERATION, firstIteration);
@@ -95,7 +95,7 @@ public class IncrAddController extends Action {
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		IncrAddController.addToChain(actions, step + 1, false);
+		IncrAddController.addToChain(step + 1, false, actions);
 		actionOutput.branch(actions);
 	}
 

@@ -16,7 +16,6 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.common.SetStep;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
@@ -94,26 +93,23 @@ public class IncrRulesParallelExecution extends Action {
 	private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
-		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
-		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, actions);
-		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
+		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
+		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, Integer.MIN_VALUE, actions);
 		actionOutput.branch(actions);
 	}
 
 	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
-		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
-		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, false);
-		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
+		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
+		ActionsHelper.mapReduce(Integer.MIN_VALUE, Integer.MIN_VALUE, false, actions);
 		actionOutput.branch(actions);
 	}
 
 	private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ReadFromBtree.addToChain(pattern, actions);
-		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
-		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
+		ActionsHelper.mapReduce(Integer.MIN_VALUE, Integer.MIN_VALUE, true, actions);
 		actionOutput.branch(actions);
 	}
 

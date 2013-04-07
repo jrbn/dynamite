@@ -21,30 +21,35 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
-	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(int minimumStep, int outputStep, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
-		c.setParamInt(GenericRuleExecutor.I_MIN_STEP_TO_INCLUDE, step);
+		c.setParamInt(GenericRuleExecutor.I_MIN_STEP, minimumStep);
+		c.setParamInt(GenericRuleExecutor.I_OUTPUT_STEP, outputStep);
 		actions.add(c);
 	}
 
-	public static final int I_MIN_STEP_TO_INCLUDE = 0;
+	public static final int I_MIN_STEP = 0;
+	public static final int I_OUTPUT_STEP = 1;
 
-	List<int[][]> positions_gen_head = new ArrayList<int[][]>();
-	List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
+	private final List<int[][]> positions_gen_head = new ArrayList<int[][]>();
+	private final List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
 	private int[][] pos_constants_to_check;
 	private long[][] value_constants_to_check;
 	int[] counters;
 	List<Rule> rules;
 	private int minimumStep;
+	private int outputStep;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_MIN_STEP_TO_INCLUDE, "minimum step to include", Integer.MIN_VALUE, false);
+		conf.registerParameter(I_MIN_STEP, "minimum step to include", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		minimumStep = getParamInt(I_MIN_STEP_TO_INCLUDE);
+		minimumStep = getParamInt(I_MIN_STEP);
+		outputStep = getParamInt(I_OUTPUT_STEP);
 		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
 		counters = new int[rules.size()];
 		pos_constants_to_check = new int[rules.size()][];
@@ -59,13 +64,14 @@ public class GenericRuleExecutor extends Action {
 			value_constants_to_check[r] = rule.getValueConstantGenericPattern();
 			// Prepares the known parts of the output triples
 			Pattern head = rule.getHead();
-			SimpleData[] outputTriple = new SimpleData[3];
+			SimpleData[] outputTriple = new SimpleData[] { new TLong(), new TLong(), new TLong(), new TInt() };
 			for (int i = 0; i < 3; i++) {
 				Term t = head.getTerm(i);
 				if (t.getName() == null) {
-					outputTriple[i] = new TLong(t.getValue());
+					((TLong) outputTriple[i]).setValue(t.getValue());
 				}
 			}
+			((TInt) outputTriple[3]).setValue(outputStep);
 			outputTriples.add(outputTriple);
 		}
 	}

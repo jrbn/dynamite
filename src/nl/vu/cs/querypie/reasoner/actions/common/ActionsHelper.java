@@ -61,10 +61,10 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void mapReduce(ActionSequence actions, int minimumStep, boolean incrementalFlag) throws ActionNotConfiguredException {
-		PrecompGenericMap.addToChain(actions, minimumStep, incrementalFlag);
+	public static void mapReduce(int minimumStep, int outputStep, boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
+		PrecompGenericMap.addToChain(minimumStep, incrementalFlag, actions);
 		groupBy(actions);
-		PrecompGenericReduce.addToChain(actions, minimumStep, incrementalFlag);
+		PrecompGenericReduce.addToChain(minimumStep, outputStep, incrementalFlag, actions);
 	}
 
 	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
@@ -115,7 +115,7 @@ public class ActionsHelper {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	static void sort(ActionSequence actions, boolean additionalStepCounter) throws ActionNotConfiguredException {
+	static void sort(boolean additionalStepCounter, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
 		if (additionalStepCounter) {
@@ -130,7 +130,7 @@ public class ActionsHelper {
 	public static void writeInMemoryTuplesToBTree(int step, ActionContext context, ActionOutput actionOutput, String inMemoryKey) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		readFakeTuple(actions);
-		ReadAllInMemoryTriples.addToChain(actions, inMemoryKey);
+		ReadAllInMemoryTriples.addToChain(inMemoryKey, actions);
 		WriteDerivationsBtree.addToChain(step, actions);
 		actionOutput.branch(actions);
 	}

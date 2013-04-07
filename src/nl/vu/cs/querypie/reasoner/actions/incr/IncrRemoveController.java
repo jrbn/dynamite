@@ -21,7 +21,7 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveController extends Action {
-	public static void addToChain(ActionSequence actions, boolean firstIteration) throws ActionNotConfiguredException {
+	public static void addToChain(boolean firstIteration, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
 		c.setParamBoolean(B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
@@ -115,7 +115,7 @@ public class IncrRemoveController extends Action {
 
 			// Continue deriving by iterating on the IncrAddController
 			ActionsHelper.readFakeTuple(thirdBranch);
-			IncrAddController.addToChain(thirdBranch, -1, true);
+			IncrAddController.addToChain(-1, true, thirdBranch);
 
 			ActionsHelper.createBranch(secondBranch, thirdBranch);
 			ActionsHelper.createBranch(firstBranch, secondBranch);
@@ -130,11 +130,11 @@ public class IncrRemoveController extends Action {
 		ActionsHelper.collectToNode(actions);
 		if (ParamHandler.get().isUsingCount()) {
 			// FIXME: is this required?
-			AddDerivationCount.addToChain(actions, false);
+			AddDerivationCount.addToChain(false, actions);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		IncrRemoveController.addToChain(actions, false);
+		IncrRemoveController.addToChain(false, actions);
 		actionOutput.branch(actions);
 	}
 

@@ -10,24 +10,24 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 
 public class ParallelExecutionSchemaOnly extends Action {
-	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(int minimumStep, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(ParallelExecutionSchemaOnly.class);
-		a.setParamInt(ParallelExecutionSchemaOnly.I_MINIMUM_STEP, step);
+		a.setParamInt(ParallelExecutionSchemaOnly.I_MINIMUM_STEP, minimumStep);
 		actions.add(a);
 	}
 
 	public static final int I_MINIMUM_STEP = 0;
 
-	private int step;
+	private int minimumStep;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_MINIMUM_STEP, "step", Integer.MIN_VALUE, false);
+		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		step = getParamInt(I_MINIMUM_STEP);
+		minimumStep = getParamInt(I_MINIMUM_STEP);
 	}
 
 	@Override
@@ -36,6 +36,6 @@ public class ParallelExecutionSchemaOnly extends Action {
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(step, false, actionOutput);
+		ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(minimumStep, false, actionOutput);
 	}
 }

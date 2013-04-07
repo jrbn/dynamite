@@ -68,9 +68,9 @@ public class IncrRulesController extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		if (add) {
-			IncrAddController.addToChain(actions, ParamHandler.get().getLastStep(), true);
+			IncrAddController.addToChain(ParamHandler.get().getLastStep(), true, actions);
 		} else {
-			IncrRemoveController.addToChain(actions, true);
+			IncrRemoveController.addToChain(true, actions);
 		}
 		actionOutput.branch(actions);
 	}

@@ -19,15 +19,15 @@ public abstract class AbstractRulesController extends Action {
 	protected int applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
 		ParallelExecutionSchemaOnly.addToChain(currentStep - 2, actions);
-		ActionsHelper.sort(actions, false);
+		ActionsHelper.sort(false, actions);
 		if (ParamHandler.get().isUsingCount()) {
-			AddDerivationCount.addToChain(actions, false);
+			AddDerivationCount.addToChain(false, actions);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		writeDerivations(actions, writeTo, currentStep);
 		ActionsHelper.collectToNode(actions);
-		ReloadSchema.addToChain(actions, false);
+		ReloadSchema.addToChain(false, actions);
 		return currentStep + 1;
 	}
 
@@ -37,15 +37,13 @@ public abstract class AbstractRulesController extends Action {
 	 */
 	protected int applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
-		ActionsHelper.reconnectAfter(3, actions);
-		GenericRuleExecutor.addToChain(currentStep - 2, actions);
-		SetStep.addToChain(currentStep, actions);
+		ActionsHelper.reconnectAfter(2, actions);
+		GenericRuleExecutor.addToChain(currentStep - 2, currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.mapReduce(actions, currentStep - 2, false);
-		SetStep.addToChain(currentStep, actions);
-		ActionsHelper.sort(actions, true);
+		ActionsHelper.mapReduce(currentStep - 2, currentStep, false, actions);
+		ActionsHelper.sort(true, actions);
 		if (ParamHandler.get().isUsingCount()) {
-			AddDerivationCount.addToChain(actions, true);
+			AddDerivationCount.addToChain(true, actions);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
@@ -66,7 +64,7 @@ public abstract class AbstractRulesController extends Action {
 			WriteDerivationsBtree.addToChain(currentStep, actions);
 			break;
 		case IN_MEMORY:
-			WriteInMemory.addToChain(actions, Consts.CURRENT_DELTA_KEY);
+			WriteInMemory.addToChain(Consts.CURRENT_DELTA_KEY, actions);
 			break;
 		}
 	}

@@ -20,10 +20,10 @@ import nl.vu.cs.querypie.reasoner.common.ParamHandler;
  */
 public class CompleteRulesController extends AbstractRulesController {
 	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
-		addToChain(actions, 1);
+		addToChain(1, actions);
 	}
 
-	public static void addToChain(ActionSequence actions, int step) throws ActionNotConfiguredException {
+	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(CompleteRulesController.class);
 		c.setParamInt(CompleteRulesController.I_CURRENT_STEP, step);
 		actions.add(c);
@@ -65,7 +65,7 @@ public class CompleteRulesController extends AbstractRulesController {
 			currentStep = applyRulesWithGenericPatterns(actions, MemoryStorage.BTREE, currentStep);
 		}
 		ActionsHelper.collectToNode(actions);
-		CompleteRulesController.addToChain(actions, currentStep);
+		CompleteRulesController.addToChain(currentStep, actions);
 		actionOutput.branch(actions);
 	}
 
