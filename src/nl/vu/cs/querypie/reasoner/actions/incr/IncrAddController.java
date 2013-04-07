@@ -91,7 +91,7 @@ public class IncrAddController extends Action {
 	private void executeOneForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		IncrRulesParallelExecution.addToChain(step, actions);
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(false, actions);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}

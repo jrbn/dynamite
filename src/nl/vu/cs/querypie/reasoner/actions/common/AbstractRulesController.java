@@ -26,7 +26,7 @@ public abstract class AbstractRulesController extends Action {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		writeDerivations(writeTo, actions);
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(ParamHandler.get().isUsingCount(), actions);
 		ReloadSchema.addToChain(false, actions);
 		return currentStep + 1;
 	}

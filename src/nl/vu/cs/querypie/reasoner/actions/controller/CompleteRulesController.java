@@ -64,7 +64,7 @@ public class CompleteRulesController extends AbstractRulesController {
 		} else {
 			currentStep = applyRulesWithGenericPatterns(actions, MemoryStorage.BTREE, currentStep);
 		}
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(ParamHandler.get().isUsingCount(), actions);
 		CompleteRulesController.addToChain(currentStep, actions);
 		actionOutput.branch(actions);
 	}

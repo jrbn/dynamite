@@ -19,7 +19,6 @@ public class AddDerivationCount extends Action {
 		actions.add(c);
 	}
 
-	private boolean first;
 	private int currentCount;
 
 	private SimpleData[] outputTuple;
@@ -36,16 +35,14 @@ public class AddDerivationCount extends Action {
 		}
 		outputTuple[3] = new TInt();
 		outputTuple[4] = new TInt();
-		first = true;
+		currentCount = 0;
 		minStep = Integer.MAX_VALUE;
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (!previousTuple.equals(tuple)) {
-			if (first) {
-				first = false;
-			} else {
+		if (!sameTriple(tuple, previousTuple)) {
+			if (currentCount > 0) {
 				generateOutput(actionOutput);
 			}
 			prepareForNewTuple(tuple);
@@ -57,20 +54,31 @@ public class AddDerivationCount extends Action {
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (!first) {
+		if (currentCount > 0) {
 			generateOutput(actionOutput);
 		}
 	}
 
 	private void prepareForNewTuple(Tuple tuple) {
 		tuple.copyTo(previousTuple);
-		currentCount = 1;
 		minStep = ((TInt) tuple.get(3)).getValue();
+		currentCount = 1;
 	}
 
 	private void generateOutput(ActionOutput actionOutput) throws Exception {
 		((TInt) outputTuple[3]).setValue(minStep);
 		((TInt) outputTuple[4]).setValue(currentCount);
 		actionOutput.output(outputTuple);
+	}
+
+	private boolean sameTriple(Tuple t1, Tuple t2) {
+		for (int i = 0; i < 3; ++i) {
+			long val1 = ((TLong) t1.get(i)).getValue();
+			long val2 = ((TLong) t2.get(i)).getValue();
+			if (val1 != val2) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

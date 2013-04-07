@@ -40,7 +40,7 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 		} else {
 			applyRulesWithGenericPatterns(actions, MemoryStorage.IN_MEMORY, Integer.MIN_VALUE);
 		}
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(false, actions);
 		actionOutput.branch(actions);
 	}
 

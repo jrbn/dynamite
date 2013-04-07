@@ -31,14 +31,13 @@ import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericReduce;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecomputedRuleExecutor;
-import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 
 public class ActionsHelper {
 
-	public static void collectToNode(ActionSequence actions) throws ActionNotConfiguredException {
+	public static void collectToNode(boolean includingCount, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		if (ParamHandler.get().isUsingCount()) {
+		if (includingCount) {
 			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName(),
 					TInt.class.getName());
 		} else {

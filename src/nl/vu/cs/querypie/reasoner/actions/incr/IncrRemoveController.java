@@ -100,7 +100,7 @@ public class IncrRemoveController extends Action {
 			ActionsHelper.readFakeTuple(actions);
 			RemoveDerivationsBtree.addToChain(actions);
 		} else {
-			ActionsHelper.collectToNode(actions);
+			ActionsHelper.collectToNode(false, actions);
 			ActionSequence firstBranch = new ActionSequence();
 			ActionSequence secondBranch = new ActionSequence();
 			ActionSequence thirdBranch = new ActionSequence();
@@ -128,8 +128,9 @@ public class IncrRemoveController extends Action {
 		ActionSequence actions = new ActionSequence();
 		// FIXME: which is the correct step for this derivation?
 		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
-		ActionsHelper.collectToNode(actions);
+		ActionsHelper.collectToNode(false, actions);
 		if (ParamHandler.get().isUsingCount()) {
+			// FIXME: is this required?
 			AddDerivationCount.addToChain(actions);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
