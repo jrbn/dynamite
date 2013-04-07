@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
+import nl.vu.cs.querypie.reasoner.actions.common.SetStep;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
@@ -94,7 +95,8 @@ public class IncrRulesParallelExecution extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
-		GenericRuleExecutor.addToChain(false, Integer.MIN_VALUE, actions);
+		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, actions);
+		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
 		actionOutput.branch(actions);
 	}
 
@@ -103,6 +105,7 @@ public class IncrRulesParallelExecution extends Action {
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(actions, Consts.CURRENT_DELTA_KEY);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, false);
+		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
 		actionOutput.branch(actions);
 	}
 
@@ -110,6 +113,7 @@ public class IncrRulesParallelExecution extends Action {
 		ActionSequence actions = new ActionSequence();
 		ReadFromBtree.addToChain(pattern, actions);
 		ActionsHelper.mapReduce(actions, Integer.MIN_VALUE, true);
+		SetStep.addToChain(Integer.MIN_VALUE, actions); // FIXME
 		actionOutput.branch(actions);
 	}
 

@@ -37,15 +37,12 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 public class ActionsHelper {
 
 	public static void collectToNode(ActionSequence actions) throws ActionNotConfiguredException {
-		collectToNode(actions, ParamHandler.get().isUsingCount());
-	}
-
-	public static void collectToNode(ActionSequence actions, boolean hasAdditionalField) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(CollectToNode.class);
-		if (hasAdditionalField) {
-			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
+		if (ParamHandler.get().isUsingCount()) {
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName(),
+					TInt.class.getName());
 		} else {
-			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
+			c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		}
 		actions.add(c);
 	}

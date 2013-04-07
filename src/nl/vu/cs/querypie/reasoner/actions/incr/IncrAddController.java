@@ -51,24 +51,25 @@ public class IncrAddController extends Action {
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (!firstIteration) {
-			tuple.copyTo(currentTuple);
-			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-			if (completeDeltaObj instanceof TupleSet) {
-				TupleSet completeDelta = (TupleSet) completeDeltaObj;
-				if (!completeDelta.contains(currentTuple)) {
-					currentDelta.add(currentTuple);
-					completeDelta.add(currentTuple);
-					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
-				}
-			} else {
-				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
-				if (!completeDelta.containsKey(tuple)) {
-					currentDelta.add(currentTuple);
-				}
-				completeDelta.put(currentTuple, 1);
+		if (firstIteration) {
+			return;
+		}
+		tuple.copyTo(currentTuple);
+		Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+		if (completeDeltaObj instanceof TupleSet) {
+			TupleSet completeDelta = (TupleSet) completeDeltaObj;
+			if (!completeDelta.contains(currentTuple)) {
+				currentDelta.add(currentTuple);
+				completeDelta.add(currentTuple);
 				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 			}
+		} else {
+			TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
+			if (!completeDelta.containsKey(tuple)) {
+				currentDelta.add(currentTuple);
+			}
+			completeDelta.put(currentTuple, 1);
+			currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 		}
 	}
 
@@ -90,7 +91,7 @@ public class IncrAddController extends Action {
 	private void executeOneForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions, false);
+		ActionsHelper.collectToNode(actions);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}

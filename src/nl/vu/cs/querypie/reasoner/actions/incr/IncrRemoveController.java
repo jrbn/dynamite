@@ -127,7 +127,7 @@ public class IncrRemoveController extends Action {
 	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		IncrRulesParallelExecution.addToChain(actions);
-		ActionsHelper.collectToNode(actions, false);
+		ActionsHelper.collectToNode(actions);
 		if (ParamHandler.get().isUsingCount()) {
 			// FIXME: is this required?
 			AddDerivationCount.addToChain(actions, false);

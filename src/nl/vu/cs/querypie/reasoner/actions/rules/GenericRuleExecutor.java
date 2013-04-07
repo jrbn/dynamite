@@ -21,15 +21,13 @@ import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 
 public class GenericRuleExecutor extends Action {
-	public static void addToChain(boolean check, int step, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GenericRuleExecutor.class);
 		c.setParamInt(GenericRuleExecutor.I_MIN_STEP_TO_INCLUDE, step);
-		c.setParamBoolean(GenericRuleExecutor.B_CHECK_VALID_INPUT, check);
 		actions.add(c);
 	}
 
-	public static final int B_CHECK_VALID_INPUT = 0;
-	public static final int I_MIN_STEP_TO_INCLUDE = 1;
+	public static final int I_MIN_STEP_TO_INCLUDE = 0;
 
 	List<int[][]> positions_gen_head = new ArrayList<int[][]>();
 	List<SimpleData[]> outputTriples = new ArrayList<SimpleData[]>();
@@ -37,18 +35,15 @@ public class GenericRuleExecutor extends Action {
 	private long[][] value_constants_to_check;
 	int[] counters;
 	List<Rule> rules;
-	private boolean checkInput;
 	private int minimumStep;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_CHECK_VALID_INPUT, "check input", false, false);
 		conf.registerParameter(I_MIN_STEP_TO_INCLUDE, "minimum step to include", Integer.MIN_VALUE, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		checkInput = getParamBoolean(B_CHECK_VALID_INPUT);
 		minimumStep = getParamInt(I_MIN_STEP_TO_INCLUDE);
 		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithOneAntecedent();
 		counters = new int[rules.size()];
@@ -77,7 +72,7 @@ public class GenericRuleExecutor extends Action {
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (checkInput && ((TInt) tuple.get(3)).getValue() < minimumStep) {
+		if (((TInt) tuple.get(3)).getValue() < minimumStep) {
 			return;
 		}
 		// Bind the variables in the output triple

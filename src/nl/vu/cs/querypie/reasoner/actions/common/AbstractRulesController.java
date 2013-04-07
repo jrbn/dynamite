@@ -38,7 +38,7 @@ public abstract class AbstractRulesController extends Action {
 	protected int applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(3, actions);
-		GenericRuleExecutor.addToChain(true, currentStep - 2, actions);
+		GenericRuleExecutor.addToChain(currentStep - 2, actions);
 		SetStep.addToChain(currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
 		ActionsHelper.mapReduce(actions, currentStep - 2, false);
