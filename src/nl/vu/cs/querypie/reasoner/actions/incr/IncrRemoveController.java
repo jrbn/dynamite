@@ -11,7 +11,6 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.common.AddDerivationCount;
 import nl.vu.cs.querypie.reasoner.actions.common.OneStepRulesControllerToMemory;
 import nl.vu.cs.querypie.reasoner.actions.io.RemoveDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.common.Consts;
@@ -129,10 +128,7 @@ public class IncrRemoveController extends Action {
 		// FIXME: which is the correct step for this derivation?
 		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
 		ActionsHelper.collectToNode(false, actions);
-		if (ParamHandler.get().isUsingCount()) {
-			// FIXME: is this required?
-			AddDerivationCount.addToChain(actions);
-		} else {
+		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		IncrRemoveController.addToChain(false, actions);
