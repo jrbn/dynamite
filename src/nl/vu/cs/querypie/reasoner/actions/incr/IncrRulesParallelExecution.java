@@ -66,6 +66,7 @@ public class IncrRulesParallelExecution extends Action {
 		executeGenericRulesOnDelta(context, actionOutput);
 		// Apply all rules that require a map and a reduce on delta triples
 		executePrecomGenericRulesOnDelta(context, actionOutput);
+		executePrecomGenericRulesOnDeltaAndSchema(context, actionOutput);
 		// If some schema is changed, re-apply the rules over the entire input
 		// which is affected
 		for (Rule rule : rulesSchemaGenerics) {
@@ -113,11 +114,23 @@ public class IncrRulesParallelExecution extends Action {
 		actionOutput.branch(actions);
 	}
 
+	// FIXME: Merge this method with executePrecomGenericRulesOnDeltaAndSchema,
+	// by refactoring the SchemaManager
 	private void executePrecomGenericRulesOnDelta(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
 		ActionsHelper.mapReduce(Integer.MIN_VALUE, outputStep, false, actions);
+		actionOutput.branch(actions);
+	}
+
+	// FIXME: Merge this method with executePrecomGenericRulesOnDelta, by
+	// refactoring the SchemaManager
+	private void executePrecomGenericRulesOnDeltaAndSchema(ActionContext context, ActionOutput actionOutput) throws Exception {
+		ActionSequence actions = new ActionSequence();
+		ActionsHelper.readFakeTuple(actions);
+		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
+		ActionsHelper.mapReduce(Integer.MIN_VALUE, outputStep, true, actions);
 		actionOutput.branch(actions);
 	}
 
