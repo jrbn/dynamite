@@ -20,6 +20,7 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class PrecompGenericMap extends Action {
 	public static void addToChain(int minimumStep, boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
@@ -91,8 +92,8 @@ public class PrecompGenericMap extends Action {
 				throw new Exception("Not implemented yet");
 			}
 
-			acceptableValues[r] = incrementalFlag ? rule.getFlaggedPrecomputedTuples().getSortedSetWithStep(shared_vars[0][1]) : rule.getAllPrecomputedTuples()
-					.getSortedSetWithStep(shared_vars[0][1]);
+			Tuples acceptableValuesTuples = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
+			acceptableValues[r] = acceptableValuesTuples.getSortedSetWithStep(shared_vars[0][1]);
 			pos_constants_to_check[r] = rule.getPositionsConstantGenericPattern();
 			value_constants_to_check[r] = rule.getValueConstantGenericPattern();
 		}

@@ -34,37 +34,6 @@ public class SchemaManager {
 		this.kb = kb;
 	}
 
-	private Tuples getFlaggedTuples(Pattern p, ActionContext context) {
-		TupleSet inMemorySet = (TupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
-		if (inMemorySet == null) {
-			log.error("Unable to retrieve in-memory tuple set from cache");
-		}
-		Set<Tuple> result = null;
-		try {
-			result = inMemorySet.getSubset(p);
-		} catch (Exception e) {
-			log.error("Error", e);
-		}
-		// Determine position of variables
-		int[] pos_vars = p.getPositionVariables();
-		List<Tuple> resultList = new ArrayList<Tuple>();
-		List<Integer> steps = new ArrayList<Integer>();
-		for (Tuple t : result) {
-			SimpleData[] data = new SimpleData[pos_vars.length];
-			for (int i = 0; i < pos_vars.length; ++i) {
-				data[i] = t.get(pos_vars[i]);
-			}
-			Tuple resultTuple = TupleFactory.newTuple(data);
-			resultList.add(resultTuple);
-			steps.add(Integer.MAX_VALUE);
-		}
-		return new Tuples(resultList, pos_vars.length, steps);
-	}
-
-	public Tuples getTuples(List<Pattern> patterns, ActionContext context) throws Exception {
-		return getTuples(patterns, context, false);
-	}
-
 	public Tuples getTuples(List<Pattern> patterns, ActionContext context, boolean flaggedOnly) throws Exception {
 		List<Map<String, Integer>> variablesPositions = retrieveVariablesFromPatterns(patterns);
 		if (!isCurrentlySupported(variablesPositions)) {
@@ -131,6 +100,33 @@ public class SchemaManager {
 
 		Tuples tuples = new Tuples(resultList, nVars, steps);
 		return tuples;
+	}
+
+	private Tuples getFlaggedTuples(Pattern p, ActionContext context) {
+		TupleSet inMemorySet = (TupleSet) context.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
+		if (inMemorySet == null) {
+			log.error("Unable to retrieve in-memory tuple set from cache");
+		}
+		Set<Tuple> result = null;
+		try {
+			result = inMemorySet.getSubset(p);
+		} catch (Exception e) {
+			log.error("Error", e);
+		}
+		// Determine position of variables
+		int[] pos_vars = p.getPositionVariables();
+		List<Tuple> resultList = new ArrayList<Tuple>();
+		List<Integer> steps = new ArrayList<Integer>();
+		for (Tuple t : result) {
+			SimpleData[] data = new SimpleData[pos_vars.length];
+			for (int i = 0; i < pos_vars.length; ++i) {
+				data[i] = t.get(pos_vars[i]);
+			}
+			Tuple resultTuple = TupleFactory.newTuple(data);
+			resultList.add(resultTuple);
+			steps.add(Integer.MAX_VALUE);
+		}
+		return new Tuples(resultList, pos_vars.length, steps);
 	}
 
 	private boolean isCurrentlySupported(List<Map<String, Integer>> variablesPositions) {

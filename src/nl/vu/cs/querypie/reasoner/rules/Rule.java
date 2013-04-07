@@ -106,7 +106,7 @@ public class Rule {
 				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, true);
 			}
 			if (all) {
-				allPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context);
+				allPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, false);
 			}
 		} catch (Exception e) {
 			log.error("Error", e);
