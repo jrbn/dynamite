@@ -57,23 +57,23 @@ public class WriteDerivationsBtree extends Action {
 		if (ParamHandler.get().isUsingCount()) {
 			TInt count = (TInt) tuple.get(4);
 			int c = count.getValue();
-			newTuple = spo.write(triple, meta, c, false) == WritingSession.SUCCESS;
+			newTuple = spo.writeWithCount(triple, meta, c, false) == WritingSession.SUCCESS;
 
 			// Add it also in the other permutations
 			encode(s.getValue(), o.getValue(), p.getValue());
-			sop.write(triple, meta, c, newTuple);
+			sop.writeWithCount(triple, meta, c, newTuple);
 
 			encode(p.getValue(), o.getValue(), s.getValue());
-			pos.write(triple, meta, c, newTuple);
+			pos.writeWithCount(triple, meta, c, newTuple);
 
 			encode(p.getValue(), s.getValue(), o.getValue());
-			pso.write(triple, meta, c, newTuple);
+			pso.writeWithCount(triple, meta, c, newTuple);
 
 			encode(o.getValue(), p.getValue(), s.getValue());
-			ops.write(triple, meta, c, newTuple);
+			ops.writeWithCount(triple, meta, c, newTuple);
 
 			encode(o.getValue(), s.getValue(), p.getValue());
-			osp.write(triple, meta, c, newTuple);
+			osp.writeWithCount(triple, meta, c, newTuple);
 		} else {
 			newTuple = spo.write(triple, meta) == WritingSession.SUCCESS;
 

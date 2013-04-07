@@ -14,6 +14,7 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.common.Consts;
+import nl.vu.cs.querypie.reasoner.common.ParamHandler;
 import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
@@ -77,23 +78,45 @@ public class RemoveDerivationsBtree extends Action {
 			TLong p = (TLong) tuple.get(1);
 			TLong o = (TLong) tuple.get(2);
 
-			encode(s.getValue(), p.getValue(), o.getValue());
-			boolean removed = spo.decreaseOrRemove(key);
+			boolean removed = false;
+			if (ParamHandler.get().isUsingCount()) {
+				encode(s.getValue(), p.getValue(), o.getValue());
+				removed = spo.decreaseOrRemove(key);
 
-			encode(s.getValue(), o.getValue(), p.getValue());
-			sop.decreaseOrRemove(key);
+				encode(s.getValue(), o.getValue(), p.getValue());
+				sop.decreaseOrRemove(key);
 
-			encode(p.getValue(), o.getValue(), s.getValue());
-			pos.decreaseOrRemove(key);
+				encode(p.getValue(), o.getValue(), s.getValue());
+				pos.decreaseOrRemove(key);
 
-			encode(p.getValue(), s.getValue(), o.getValue());
-			pso.decreaseOrRemove(key);
+				encode(p.getValue(), s.getValue(), o.getValue());
+				pso.decreaseOrRemove(key);
 
-			encode(o.getValue(), s.getValue(), p.getValue());
-			osp.decreaseOrRemove(key);
+				encode(o.getValue(), s.getValue(), p.getValue());
+				osp.decreaseOrRemove(key);
 
-			encode(o.getValue(), p.getValue(), s.getValue());
-			ops.decreaseOrRemove(key);
+				encode(o.getValue(), p.getValue(), s.getValue());
+				ops.decreaseOrRemove(key);
+			} else {
+				removed = true;
+				encode(s.getValue(), p.getValue(), o.getValue());
+				spo.remove(key);
+
+				encode(s.getValue(), o.getValue(), p.getValue());
+				sop.remove(key);
+
+				encode(p.getValue(), o.getValue(), s.getValue());
+				pos.remove(key);
+
+				encode(p.getValue(), s.getValue(), o.getValue());
+				pso.remove(key);
+
+				encode(o.getValue(), s.getValue(), p.getValue());
+				osp.remove(key);
+
+				encode(o.getValue(), p.getValue(), s.getValue());
+				ops.remove(key);
+			}
 
 			if (removed) {
 				removedTriples++;
