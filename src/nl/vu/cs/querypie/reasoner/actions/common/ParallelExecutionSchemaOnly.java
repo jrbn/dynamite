@@ -41,6 +41,6 @@ public class ParallelExecutionSchemaOnly extends Action {
 
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForAllRules(minimumStep, outputStep, false, actionOutput);
+		ActionsHelper.executeAllSchemaRulesInParallel(minimumStep, outputStep, false, actionOutput);
 	}
 }

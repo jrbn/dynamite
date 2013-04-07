@@ -59,15 +59,13 @@ public class IncrRulesParallelExecution extends Action {
 		// Determine the rules that have information in delta and organize them
 		// according to their type
 		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema, rulesSchemaGenerics);
-		// Reload schema
+		// Reload schema and execute all schema rules in parallel
 		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true, true);
-		// Execute all schema rules in parallel (on different branches)
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, Integer.MIN_VALUE, outputStep, true, actionOutput);
-		// Read all the delta triples and apply all the rules with a single
-		// antecedent
-		executeGenericRules(context, actionOutput);
-		// Execute rules that require a map and a reduce
-		executePrecomGenericRules(context, actionOutput);
+		ActionsHelper.executeSchemaRulesInParallel(rulesOnlySchema, Integer.MIN_VALUE, outputStep, true, actionOutput);
+		// Apply all rules with a single antecedent on delta triples
+		executeGenericRulesOnDelta(context, actionOutput);
+		// Apply all rules that require a map and a reduce on delta triples
+		executePrecomGenericRulesOnDelta(context, actionOutput);
 		// If some schema is changed, re-apply the rules over the entire input
 		// which is affected
 		for (Rule rule : rulesSchemaGenerics) {
@@ -107,7 +105,7 @@ public class IncrRulesParallelExecution extends Action {
 		}
 	}
 
-	private void executeGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeGenericRulesOnDelta(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
@@ -115,7 +113,7 @@ public class IncrRulesParallelExecution extends Action {
 		actionOutput.branch(actions);
 	}
 
-	private void executePrecomGenericRules(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executePrecomGenericRulesOnDelta(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);

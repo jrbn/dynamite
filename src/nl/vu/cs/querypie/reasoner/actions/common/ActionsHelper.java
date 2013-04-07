@@ -66,17 +66,16 @@ public class ActionsHelper {
 		PrecompGenericReduce.addToChain(minimumStep, outputStep, incrementalFlag, actions);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int minimumStep, int outputStep, boolean incrementalFlag, ActionOutput actionOutput)
-			throws Exception {
+	static void executeAllSchemaRulesInParallel(int minimumStep, int outputStep, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
 		Set<Integer> schemaOnlyRules = new HashSet<Integer>();
 		for (int i = 0; i < ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().size(); ++i) {
 			schemaOnlyRules.add(i);
 		}
-		parallelRunPrecomputedRuleExecutorForRules(schemaOnlyRules, minimumStep, outputStep, incrementalFlag, actionOutput);
+		executeSchemaRulesInParallel(schemaOnlyRules, minimumStep, outputStep, incrementalFlag, actionOutput);
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, int minimumStep, int outputStep, boolean incrementalFlag,
-			ActionOutput actionOutput) throws Exception {
+	public static void executeSchemaRulesInParallel(Set<Integer> ruleIds, int minimumStep, int outputStep, boolean incrementalFlag, ActionOutput actionOutput)
+			throws Exception {
 		for (Integer ruleId : ruleIds) {
 			ActionSequence actions = new ActionSequence();
 			readFakeTuple(actions);
