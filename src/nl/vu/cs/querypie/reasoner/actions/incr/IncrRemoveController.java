@@ -126,11 +126,11 @@ public class IncrRemoveController extends Action {
 
 	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
-		IncrRulesParallelExecution.addToChain(actions);
+		// FIXME: which is the correct step for this derivation?
+		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
 		ActionsHelper.collectToNode(actions);
 		if (ParamHandler.get().isUsingCount()) {
-			// FIXME: is this required?
-			AddDerivationCount.addToChain(false, actions);
+			AddDerivationCount.addToChain(actions);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}

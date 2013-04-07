@@ -67,20 +67,21 @@ public class ActionsHelper {
 		PrecompGenericReduce.addToChain(minimumStep, outputStep, incrementalFlag, actions);
 	}
 
-	static void parallelRunPrecomputedRuleExecutorForAllRules(int step, boolean incrementalFlag, ActionOutput actionOutput) throws Exception {
+	static void parallelRunPrecomputedRuleExecutorForAllRules(int minimumStep, int outputStep, boolean incrementalFlag, ActionOutput actionOutput)
+			throws Exception {
 		Set<Integer> schemaOnlyRules = new HashSet<Integer>();
 		for (int i = 0; i < ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().size(); ++i) {
 			schemaOnlyRules.add(i);
 		}
-		parallelRunPrecomputedRuleExecutorForRules(schemaOnlyRules, step, incrementalFlag, actionOutput);
+		parallelRunPrecomputedRuleExecutorForRules(schemaOnlyRules, minimumStep, outputStep, incrementalFlag, actionOutput);
 	}
 
-	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, int step, boolean incrementalFlag, ActionOutput actionOutput)
-			throws Exception {
+	public static void parallelRunPrecomputedRuleExecutorForRules(Set<Integer> ruleIds, int minimumStep, int outputStep, boolean incrementalFlag,
+			ActionOutput actionOutput) throws Exception {
 		for (Integer ruleId : ruleIds) {
 			ActionSequence actions = new ActionSequence();
 			readFakeTuple(actions);
-			PrecomputedRuleExecutor.addToChain(step, ruleId, actions, incrementalFlag);
+			PrecomputedRuleExecutor.addToChain(minimumStep, outputStep, ruleId, actions, incrementalFlag);
 			actionOutput.branch(actions);
 		}
 	}
@@ -115,23 +116,19 @@ public class ActionsHelper {
 		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 	}
 
-	static void sort(boolean additionalStepCounter, ActionSequence actions) throws ActionNotConfiguredException {
+	static void sort(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
-		if (additionalStepCounter) {
-			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
-		} else {
-			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName());
-		}
+		c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		c.setParamBoolean(PartitionToNodes.B_SORT, true);
 		actions.add(c);
 	}
 
-	public static void writeInMemoryTuplesToBTree(int step, ActionContext context, ActionOutput actionOutput, String inMemoryKey) throws Exception {
+	public static void writeInMemoryTuplesToBTree(ActionContext context, ActionOutput actionOutput, String inMemoryKey) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(inMemoryKey, actions);
-		WriteDerivationsBtree.addToChain(step, actions);
+		WriteDerivationsBtree.addToChain(actions);
 		actionOutput.branch(actions);
 	}
 }

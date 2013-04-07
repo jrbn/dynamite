@@ -90,7 +90,7 @@ public class IncrAddController extends Action {
 
 	private void executeOneForwardChainingIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
-		IncrRulesParallelExecution.addToChain(actions);
+		IncrRulesParallelExecution.addToChain(step, actions);
 		ActionsHelper.collectToNode(actions);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
@@ -104,7 +104,7 @@ public class IncrAddController extends Action {
 	}
 
 	private void writeCompleteDeltaToBTree(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionsHelper.writeInMemoryTuplesToBTree(step, context, actionOutput, Consts.COMPLETE_DELTA_KEY);
+		ActionsHelper.writeInMemoryTuplesToBTree(context, actionOutput, Consts.COMPLETE_DELTA_KEY);
 	}
 
 }

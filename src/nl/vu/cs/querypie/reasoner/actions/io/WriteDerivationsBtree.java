@@ -18,9 +18,8 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
-	public static void addToChain(int step, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
-		c.setParamInt(WriteDerivationsBtree.I_STEP, step);
 		actions.add(c);
 	}
 
@@ -30,15 +29,6 @@ public class WriteDerivationsBtree extends Action {
 	private final byte[] triple = new byte[24];
 	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
-	private int step;
-	private boolean considerCount;
-
-	public static final int I_STEP = 0;
-
-	@Override
-	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_STEP, "step", -1, false);
-	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
@@ -51,9 +41,6 @@ public class WriteDerivationsBtree extends Action {
 		ops = in.openWritingSession(DBType.OPS);
 		newValue = false;
 		newCount = dupCount = 0;
-		considerCount = ParamHandler.get().isUsingCount();
-		step = getParamInt(I_STEP);
-		Utils.encodeInt(meta, 0, step);
 	}
 
 	@Override
@@ -61,12 +48,14 @@ public class WriteDerivationsBtree extends Action {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
+		TInt step = (TInt) tuple.get(3);
 
 		encode(s.getValue(), p.getValue(), o.getValue());
+		Utils.encodeInt(meta, 0, step.getValue());
 
 		boolean newTuple = false;
-		if (considerCount) {
-			TInt count = (TInt) tuple.get(3);
+		if (ParamHandler.get().isUsingCount()) {
+			TInt count = (TInt) tuple.get(4);
 			int c = count.getValue();
 			newTuple = spo.write(triple, meta, c, false) == WritingSession.SUCCESS;
 

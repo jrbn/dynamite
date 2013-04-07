@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
+import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
@@ -27,8 +28,24 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
-	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
-		actions.add(ActionFactory.getActionConf(IncrRulesParallelExecution.class));
+	public static void addToChain(int outputStep, ActionSequence actions) throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory.getActionConf(IncrRulesParallelExecution.class);
+		c.setParamInt(I_OUTPUT_STEP, outputStep);
+		actions.add(c);
+	}
+
+	public static final int I_OUTPUT_STEP = 0;
+
+	private int outputStep;
+
+	@Override
+	public void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+	}
+
+	@Override
+	public void startProcess(ActionContext context) throws Exception {
+		outputStep = getParamInt(I_OUTPUT_STEP);
 	}
 
 	@Override
@@ -45,7 +62,7 @@ public class IncrRulesParallelExecution extends Action {
 		// Reload schema
 		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context, true, true);
 		// Execute all schema rules in parallel (on different branches)
-		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, Integer.MIN_VALUE, true, actionOutput);
+		ActionsHelper.parallelRunPrecomputedRuleExecutorForRules(rulesOnlySchema, Integer.MIN_VALUE, outputStep, true, actionOutput);
 		// Read all the delta triples and apply all the rules with a single
 		// antecedent
 		executeGenericRules(context, actionOutput);
@@ -94,7 +111,7 @@ public class IncrRulesParallelExecution extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
-		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, Integer.MIN_VALUE, actions);
+		GenericRuleExecutor.addToChain(Integer.MIN_VALUE, outputStep, actions);
 		actionOutput.branch(actions);
 	}
 
@@ -102,14 +119,14 @@ public class IncrRulesParallelExecution extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(Consts.CURRENT_DELTA_KEY, actions);
-		ActionsHelper.mapReduce(Integer.MIN_VALUE, Integer.MIN_VALUE, false, actions);
+		ActionsHelper.mapReduce(Integer.MIN_VALUE, outputStep, false, actions);
 		actionOutput.branch(actions);
 	}
 
 	private void executePrecomGenericRulesForPattern(Pattern pattern, ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		ReadFromBtree.addToChain(pattern, actions);
-		ActionsHelper.mapReduce(Integer.MIN_VALUE, Integer.MIN_VALUE, true, actions);
+		ActionsHelper.mapReduce(Integer.MIN_VALUE, outputStep, true, actions);
 		actionOutput.branch(actions);
 	}
 

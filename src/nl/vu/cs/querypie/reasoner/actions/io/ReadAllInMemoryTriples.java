@@ -11,7 +11,6 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
-import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
@@ -61,26 +60,20 @@ public class ReadAllInMemoryTriples extends Action {
 	}
 
 	private void readFromSet(ActionOutput actionOutput) throws Exception {
-		// FIXME: Is it really necessary to copy to a new tuple? Check..
-		SimpleData[] supportTuple = { new TLong(), new TLong(), new TLong(), new TInt() };
 		for (Tuple t : inMemorySet) {
-			supportTuple[0] = t.get(0);
-			supportTuple[1] = t.get(1);
-			supportTuple[2] = t.get(2);
-			supportTuple[3] = t.get(3);
-			actionOutput.output(supportTuple);
+			actionOutput.output(t);
 		}
 	}
 
 	private void readFromSetWithCounter(ActionOutput actionOutput) throws Exception {
-		// FIXME: Add step!
-		SimpleData[] supportTuple = new SimpleData[4];
+		SimpleData[] supportTuple = new SimpleData[5];
 		TInt count = new TInt();
-		supportTuple[3] = count;
+		supportTuple[4] = count;
 		for (Map.Entry<Tuple, Integer> entry : inMemorySetWithCounter.entrySet()) {
 			supportTuple[0] = entry.getKey().get(0);
 			supportTuple[1] = entry.getKey().get(1);
 			supportTuple[2] = entry.getKey().get(2);
+			supportTuple[3] = entry.getKey().get(3);
 			count.setValue(entry.getValue());
 			actionOutput.output(supportTuple);
 		}
