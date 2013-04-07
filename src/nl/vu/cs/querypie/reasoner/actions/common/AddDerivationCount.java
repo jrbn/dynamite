@@ -19,13 +19,11 @@ public class AddDerivationCount extends Action {
 		actions.add(c);
 	}
 
-	private boolean first = true;
-	private int currentCount = 0;
+	private boolean first;
+	private int currentCount;
 
 	private SimpleData[] outputTuple;
 	private Tuple previousTuple;
-	private TInt refCount;
-	private TInt refStep;
 
 	private int minStep;
 
@@ -33,37 +31,26 @@ public class AddDerivationCount extends Action {
 	public void startProcess(ActionContext context) throws Exception {
 		previousTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
 		outputTuple = new SimpleData[5];
-		outputTuple[0] = previousTuple.get(0);
-		outputTuple[1] = previousTuple.get(1);
-		outputTuple[2] = previousTuple.get(2);
-		outputTuple[4] = refStep = new TInt();
-		outputTuple[3] = refCount = new TInt();
+		for (int i = 0; i < 3; ++i) {
+			outputTuple[i] = previousTuple.get(i);
+		}
+		outputTuple[3] = new TInt();
+		outputTuple[4] = new TInt();
 		first = true;
+		minStep = Integer.MAX_VALUE;
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (first) {
-			first = false;
-			currentCount = 1;
-			minStep = Integer.MAX_VALUE;
-			tuple.copyTo(previousTuple);
-			int cv = ((TInt) tuple.get(3)).getValue();
-			if (cv < minStep) {
-				minStep = cv;
+		if (!previousTuple.equals(tuple)) {
+			if (first) {
+				first = false;
+			} else {
+				generateOutput(actionOutput);
 			}
-		} else if (!previousTuple.equals(tuple)) {
-			refCount.setValue(currentCount);
-			refStep.setValue(minStep);
-			actionOutput.output(outputTuple);
-			currentCount = 1;
-			minStep = Integer.MAX_VALUE;
-			tuple.copyTo(previousTuple);
-			int cv = ((TInt) tuple.get(3)).getValue();
-			if (cv < minStep) {
-				minStep = cv;
-			}
+			prepareForNewTuple(tuple);
 		} else {
+			minStep = Math.min(minStep, ((TInt) tuple.get(3)).getValue());
 			currentCount++;
 		}
 	}
@@ -71,9 +58,19 @@ public class AddDerivationCount extends Action {
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!first) {
-			refCount.setValue(currentCount);
-			refStep.setValue(minStep);
-			actionOutput.output(outputTuple);
+			generateOutput(actionOutput);
 		}
+	}
+
+	private void prepareForNewTuple(Tuple tuple) {
+		tuple.copyTo(previousTuple);
+		currentCount = 1;
+		minStep = ((TInt) tuple.get(3)).getValue();
+	}
+
+	private void generateOutput(ActionOutput actionOutput) throws Exception {
+		((TInt) outputTuple[3]).setValue(minStep);
+		((TInt) outputTuple[4]).setValue(currentCount);
+		actionOutput.output(outputTuple);
 	}
 }
