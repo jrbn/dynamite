@@ -37,8 +37,11 @@ class DebuggingUtils {
 		Tuple query = TupleFactory.newTuple(new TLong(-1), new TLong(-1), new TLong(-1));
 		TupleIterator it = db.getIterator(query, context);
 		Tuple tuple = TupleFactory.newTuple();
+		int count = 0;
 		try {
 			while (it.isReady() && it.nextTuple()) {
+				result = result.concat(String.valueOf(++count));
+				result = result.concat("\t");
 				it.getTuple(tuple);
 				for (int i = 0; i < 3; ++i) {
 					long val = ((TLong) tuple.get(i)).getValue();
@@ -75,8 +78,9 @@ class DebuggingUtils {
 						stringVal = "resource";
 						break;
 					}
-					if (i != 0)
+					if (i != 0) {
 						result = result.concat("\t");
+					}
 					result = result.concat(stringVal);
 				}
 				for (int i = 3; i < tuple.getNElements(); ++i) {

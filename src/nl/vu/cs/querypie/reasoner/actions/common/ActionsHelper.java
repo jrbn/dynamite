@@ -56,7 +56,7 @@ public class ActionsHelper {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
 		c.setParamByteArray(GroupBy.IA_FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
-		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.GROUP_BY_NUM_THREADS);
+		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.support.Consts.GROUP_BY_NUM_THREADS);
 		actions.add(c);
 	}
 
@@ -86,7 +86,7 @@ public class ActionsHelper {
 
 	public static void readEverythingFromBTree(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
-		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, nl.vu.cs.querypie.reasoner.common.Consts.READ_NUM_THREADS);
+		c.setParamInt(ReadFromBtree.PARALLEL_TASKS, nl.vu.cs.querypie.reasoner.support.Consts.READ_NUM_THREADS);
 		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1), new TLong(-1), new TLong(-1)));
 		actions.add(c);
 	}
@@ -116,7 +116,7 @@ public class ActionsHelper {
 
 	static void sort(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.common.Consts.SORT_NUM_THREADS);
+		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.support.Consts.SORT_NUM_THREADS);
 		c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS, TLong.class.getName(), TLong.class.getName(), TLong.class.getName(), TInt.class.getName());
 		c.setParamBoolean(PartitionToNodes.B_SORT, true);
 		actions.add(c);

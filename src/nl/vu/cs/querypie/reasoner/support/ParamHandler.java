@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.common;
+package nl.vu.cs.querypie.reasoner.support;
 
 /**
  * Singleton class containing all the configuration parameters for the

@@ -9,7 +9,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
-import nl.vu.cs.querypie.reasoner.common.Consts;
+import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 

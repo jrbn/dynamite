@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.common;
+package nl.vu.cs.querypie.reasoner.support;
 
 public class Consts {
   public static final String CURRENT_DELTA_KEY = "__CURRENT_DELTA_KEY";

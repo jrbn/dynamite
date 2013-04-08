@@ -7,8 +7,8 @@ import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteInMemory;
 import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
-import nl.vu.cs.querypie.reasoner.common.Consts;
-import nl.vu.cs.querypie.reasoner.common.ParamHandler;
+import nl.vu.cs.querypie.reasoner.support.Consts;
+import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
 

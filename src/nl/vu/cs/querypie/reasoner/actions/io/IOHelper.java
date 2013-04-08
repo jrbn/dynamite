@@ -11,7 +11,7 @@ import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TupleFactory;
-import nl.vu.cs.querypie.reasoner.common.ParamHandler;
+import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 

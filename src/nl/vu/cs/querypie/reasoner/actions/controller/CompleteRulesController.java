@@ -11,7 +11,7 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.common.AbstractRulesController;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
-import nl.vu.cs.querypie.reasoner.common.ParamHandler;
+import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 
 /**
  * A rules controller that execute the complete materialization of all the
