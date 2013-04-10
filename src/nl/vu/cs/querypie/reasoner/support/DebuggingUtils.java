@@ -46,35 +46,35 @@ class DebuggingUtils {
 				for (int i = 0; i < 3; ++i) {
 					long val = ((TLong) tuple.get(i)).getValue();
 					String stringVal = String.valueOf(val);
-					switch (stringVal) {
-					case "0":
+					if (val < 25 && val >= 0) switch ((int) val) {
+					case 0:
 						stringVal = "type";
 						break;
-					case "1":
+					case 1:
 						stringVal = "property";
 						break;
-					case "2":
+					case 2:
 						stringVal = "range";
 						break;
-					case "3":
+					case 3:
 						stringVal = "domain";
 						break;
-					case "4":
+					case 4:
 						stringVal = "subproperty";
 						break;
-					case "5":
+					case 5:
 						stringVal = "subclass";
 						break;
-					case "20":
+					case 20:
 						stringVal = "literal";
 						break;
-					case "22":
+					case 22:
 						stringVal = "datatype";
 						break;
-					case "23":
+					case 23:
 						stringVal = "class";
 						break;
-					case "24":
+					case 24:
 						stringVal = "resource";
 						break;
 					}

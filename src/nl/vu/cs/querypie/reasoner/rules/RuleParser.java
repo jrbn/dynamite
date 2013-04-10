@@ -18,7 +18,7 @@ public class RuleParser {
 
   public List<Rule> parseRules(String file) throws Exception {
     log.info("Start parsing the ruleset file");
-    List<Rule> output = new ArrayList<>();
+    List<Rule> output = new ArrayList<Rule>();
 
     BufferedReader f = new BufferedReader(new FileReader(new File(file)));
     String line = f.readLine();

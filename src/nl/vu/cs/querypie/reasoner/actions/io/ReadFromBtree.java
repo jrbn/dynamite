@@ -55,13 +55,13 @@ public class ReadFromBtree extends Action {
 
 			Tuple t = tuple.getTuple();
 
-			if ((int) params[PARALLEL_TASKS] > 1) {
+			if ((Integer) params[PARALLEL_TASKS] > 1) {
 				SimpleData[] newTuple = new SimpleData[5];
 				newTuple[0] = t.get(0);
 				newTuple[1] = t.get(1);
 				newTuple[2] = t.get(2);
 				newTuple[3] = new TInt(0);
-				newTuple[4] = new TInt((int) params[PARALLEL_TASKS]);
+				newTuple[4] = new TInt((Integer) params[PARALLEL_TASKS]);
 				t.set(newTuple);
 			} else {
 				controller.doNotAddCurrentAction();
