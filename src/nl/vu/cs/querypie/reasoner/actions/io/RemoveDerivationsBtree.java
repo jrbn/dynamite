@@ -1,5 +1,6 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
@@ -11,7 +12,6 @@ import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.reasoner.support.ParamHandler;
@@ -32,7 +32,15 @@ public class RemoveDerivationsBtree extends Action {
 	private long removedTriples;
 	private long notRemovedTriples;
 	private final byte[] key = new byte[24];
-
+	
+	private byte[] encode(long l1, long l2, long l3) {
+		int sz = in.encode(key, l1, l2, l3);
+		if (sz < key.length) {
+			return Arrays.copyOf(key, sz);
+		}
+		return key;
+	}
+	
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
@@ -80,42 +88,42 @@ public class RemoveDerivationsBtree extends Action {
 
 			boolean removed = false;
 			if (ParamHandler.get().isUsingCount()) {
-				encode(s.getValue(), p.getValue(), o.getValue());
-				removed = spo.decreaseOrRemove(key);
+				byte[] toRemove = encode(s.getValue(), p.getValue(), o.getValue());
+				removed = spo.decreaseOrRemove(toRemove);
 
-				encode(s.getValue(), o.getValue(), p.getValue());
-				sop.decreaseOrRemove(key);
+				toRemove = encode(s.getValue(), o.getValue(), p.getValue());
+				sop.decreaseOrRemove(toRemove);
 
-				encode(p.getValue(), o.getValue(), s.getValue());
-				pos.decreaseOrRemove(key);
+				toRemove = encode(p.getValue(), o.getValue(), s.getValue());
+				pos.decreaseOrRemove(toRemove);
 
-				encode(p.getValue(), s.getValue(), o.getValue());
-				pso.decreaseOrRemove(key);
+				toRemove = encode(p.getValue(), s.getValue(), o.getValue());
+				pso.decreaseOrRemove(toRemove);
 
-				encode(o.getValue(), s.getValue(), p.getValue());
-				osp.decreaseOrRemove(key);
+				toRemove = encode(o.getValue(), s.getValue(), p.getValue());
+				osp.decreaseOrRemove(toRemove);
 
-				encode(o.getValue(), p.getValue(), s.getValue());
-				ops.decreaseOrRemove(key);
+				toRemove = encode(o.getValue(), p.getValue(), s.getValue());
+				ops.decreaseOrRemove(toRemove);
 			} else {
 				removed = true;
-				encode(s.getValue(), p.getValue(), o.getValue());
-				spo.remove(key);
+				byte[] toRemove = encode(s.getValue(), p.getValue(), o.getValue());
+				spo.remove(toRemove);
 
-				encode(s.getValue(), o.getValue(), p.getValue());
-				sop.remove(key);
+				toRemove = encode(s.getValue(), o.getValue(), p.getValue());
+				sop.remove(toRemove);
 
-				encode(p.getValue(), o.getValue(), s.getValue());
-				pos.remove(key);
+				toRemove = encode(p.getValue(), o.getValue(), s.getValue());
+				pos.remove(toRemove);
 
-				encode(p.getValue(), s.getValue(), o.getValue());
-				pso.remove(key);
+				toRemove = encode(p.getValue(), s.getValue(), o.getValue());
+				pso.remove(toRemove);
 
-				encode(o.getValue(), s.getValue(), p.getValue());
-				osp.remove(key);
+				toRemove = encode(o.getValue(), s.getValue(), p.getValue());
+				osp.remove(toRemove);
 
-				encode(o.getValue(), p.getValue(), s.getValue());
-				ops.remove(key);
+				toRemove = encode(o.getValue(), p.getValue(), s.getValue());
+				ops.remove(toRemove);
 			}
 
 			if (removed) {
@@ -124,11 +132,5 @@ public class RemoveDerivationsBtree extends Action {
 				notRemovedTriples++;
 			}
 		}
-	}
-
-	private void encode(long v1, long v2, long v3) {
-		Utils.encodeLong(key, 0, v1);
-		Utils.encodeLong(key, 8, v2);
-		Utils.encodeLong(key, 16, v3);
 	}
 }
