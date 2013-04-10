@@ -13,12 +13,12 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
 import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 
 public class SchemaManager {
 	static final Logger log = LoggerFactory.getLogger(SchemaManager.class);
-	private final BerkeleydbLayer kb;
+	private final InputLayer kb;
 
-	public SchemaManager(BerkeleydbLayer kb) {
+	public SchemaManager(InputLayer kb) {
 		this.kb = kb;
 	}
 

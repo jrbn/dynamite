@@ -9,19 +9,19 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 
 class DebuggingUtils {
 
 	private static final String separator = " ---------------- \n";
 
-	static void printDerivations(BerkeleydbLayer db, ActionContext context) {
+	static void printDerivations(InputLayer db, ActionContext context) {
 		String debugString = printDerivationsToString(db, context);
 		System.out.println(debugString);
 	}
 
-	static void printDerivationsToFile(String filename, BerkeleydbLayer db, ActionContext context) {
+	static void printDerivationsToFile(String filename, InputLayer db, ActionContext context) {
 		try {
 			FileOutputStream fos = new FileOutputStream(new File(filename), true);
 			String debugString = printDerivationsToString(db, context);
@@ -32,7 +32,7 @@ class DebuggingUtils {
 		}
 	}
 
-	private static String printDerivationsToString(BerkeleydbLayer db, ActionContext context) {
+	private static String printDerivationsToString(InputLayer db, ActionContext context) {
 		String result = separator;
 		Tuple query = TupleFactory.newTuple(new TLong(-1), new TLong(-1), new TLong(-1));
 		TupleIterator it = db.getIterator(query, context);

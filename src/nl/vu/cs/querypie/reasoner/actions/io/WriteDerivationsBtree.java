@@ -32,7 +32,7 @@ public class WriteDerivationsBtree extends Action {
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		in = ReasoningContext.getInstance().getKB();
+		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
 		spo = in.openWritingSession(DBType.SPO);
 		sop = in.openWritingSession(DBType.SOP);
 		pso = in.openWritingSession(DBType.PSO);

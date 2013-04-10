@@ -148,8 +148,10 @@ public class PrecompGenericReduce extends Action {
 								.getValue());
 					}
 					supportTuple.set(outputTuples[currentRule]);
-					if (!duplicates.contains(supportTuple)) {
-						duplicates.add(supportTuple);
+					// if (! duplicates.contains(supportTuple)) {
+					// 	duplicates.add(supportTuple);
+					// The return value of add() already indicates if the set did not contain the value. --Ceriel
+					if (duplicates.add(supportTuple)) {
 						supportTuple = TupleFactory.newTuple();
 						actionOutput.output(outputTuples[currentRule]);
 						counters[currentRule]++;

@@ -23,6 +23,7 @@ import nl.vu.cs.querypie.reasoner.rules.Ruleset;
 import nl.vu.cs.querypie.reasoner.support.Debugging;
 import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public class Reasoner {
 	private static boolean debug = false;
 	private static String debugFile = null;
 	private static String lastStepFile = null;
+	private static String storage = "btree";
 
 	public static void main(String[] args) {
 		if (args.length < 2) {
@@ -64,12 +66,12 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB((BerkeleydbLayer) arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
+		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
 		ReasoningContext.getInstance().init();
 	}
 
 	private static void closeGlobalContext(Ajira arch) {
-		ReasoningContext.getInstance().getKB().closeAll();
+		ReasoningContext.getInstance().getKB().close();
 	}
 
 	private static void launchReasoning(Ajira arch) throws ActionNotConfiguredException {
@@ -98,8 +100,13 @@ public class Reasoner {
 
 	private static void initAjira(String kbDir, Ajira arch) {
 		Configuration conf = arch.getConfiguration();
-		conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
-		conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+		if (storage.equals("btree")) {
+			conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+		} else if (storage.equals("mapdb")) {
+			conf.set(Consts.STORAGE_IMPL, MapdbLayer.class.getName());
+			conf.set(MapdbLayer.DB_INPUT, kbDir);
+		}
 		conf.setInt(Consts.N_PROC_THREADS, 4);
 	}
 
@@ -119,6 +126,8 @@ public class Reasoner {
 				debugFile = args[++i];
 			} else if (args[i].equals("--lastStepFile")) {
 				lastStepFile = args[++i];
+			} else if (args[i].equals("--storage")) {
+			    storage = args[++i];
 			}
 		}
 	}

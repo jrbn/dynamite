@@ -19,16 +19,27 @@ import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.io.AppendFileWriter;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Query {
 	static final Logger log = LoggerFactory.getLogger(Query.class);
+	
+	private static String storage = "btree";
 
+	private static void parseArgs(String[] args) {
+		for (int i = 3; i < args.length; ++i) {
+			if (args[i].equals("--storage")) {
+			    storage = args[++i];
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
 		if (args.length < 3) {
-			System.out.println("Usage: Query <KB_dir> <query file> <output file>");
+			System.out.println("Usage: Query <KB_dir> <query file> <output file> [ --storage ( btree | mapdb ) ]");
 			return;
 		}
 		try {
@@ -79,8 +90,13 @@ public class Query {
 
 	private static void initAjira(String kbDir, Ajira arch) {
 		Configuration conf = arch.getConfiguration();
-		conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
-		conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+		if (storage.equals("btree")) {
+			conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+		} else if (storage.equals("mapdb")) {
+			conf.set(Consts.STORAGE_IMPL, MapdbLayer.class.getName());
+			conf.set(MapdbLayer.DB_INPUT, kbDir);
+		}
 		conf.setInt(Consts.N_PROC_THREADS, 4);
 	}
 
