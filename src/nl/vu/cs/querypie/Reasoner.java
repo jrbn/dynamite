@@ -39,6 +39,8 @@ public class Reasoner {
 	private static String lastStepFile = null;
 	private static String storage = "btree";
 
+	private static int nProcThreads = 4;
+
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
@@ -107,7 +109,7 @@ public class Reasoner {
 			conf.set(Consts.STORAGE_IMPL, MapdbLayer.class.getName());
 			conf.set(MapdbLayer.DB_INPUT, kbDir);
 		}
-		conf.setInt(Consts.N_PROC_THREADS, 4);
+		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
 	}
 
 	private static void parseArgs(String[] args) {
@@ -128,6 +130,8 @@ public class Reasoner {
 				lastStepFile = args[++i];
 			} else if (args[i].equals("--storage")) {
 			    storage = args[++i];
+			} else if (args[i].equals("--procs")) {
+				nProcThreads  = Integer.parseInt(args[++i]);
 			}
 		}
 	}
