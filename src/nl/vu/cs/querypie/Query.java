@@ -42,6 +42,7 @@ public class Query {
 			System.out.println("Usage: Query <KB_dir> <query file> <output file> [ --storage ( btree | mapdb ) ]");
 			return;
 		}
+		parseArgs(args);
 		try {
 			Ajira arch = new Ajira();
 			initAjira(args[0], arch);
