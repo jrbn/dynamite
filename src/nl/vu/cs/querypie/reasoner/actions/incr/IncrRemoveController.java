@@ -51,10 +51,9 @@ public class IncrRemoveController extends Action {
 			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 			if (completeDeltaObj instanceof TupleSet) {
 				TupleSet completeDelta = (TupleSet) completeDeltaObj;
-				if (!completeDelta.contains(currentTuple)) {
+				if (completeDelta.add(currentTuple)) {
 					currentDelta.add(currentTuple);
-					completeDelta.add(currentTuple);
-					currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+					currentTuple = TupleFactory.newTuple();
 				}
 			} else {
 				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
@@ -62,7 +61,7 @@ public class IncrRemoveController extends Action {
 					currentDelta.add(currentTuple);
 				}
 				completeDelta.put(currentTuple, 1);
-				currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+				currentTuple = TupleFactory.newTuple();
 			}
 		}
 	}

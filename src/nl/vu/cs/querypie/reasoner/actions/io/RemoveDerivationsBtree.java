@@ -1,6 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.Action;
@@ -33,12 +32,8 @@ public class RemoveDerivationsBtree extends Action {
 	private long notRemovedTriples;
 	private final byte[] key = new byte[24];
 	
-	private byte[] encode(long l1, long l2, long l3) {
-		int sz = in.encode(key, l1, l2, l3);
-		if (sz < key.length) {
-			return Arrays.copyOf(key, sz);
-		}
-		return key;
+	private int encode(long l1, long l2, long l3) {
+		return in.encode(key, l1, l2, l3);
 	}
 	
 	@Override
@@ -88,42 +83,42 @@ public class RemoveDerivationsBtree extends Action {
 
 			boolean removed = false;
 			if (ParamHandler.get().isUsingCount()) {
-				byte[] toRemove = encode(s.getValue(), p.getValue(), o.getValue());
-				removed = spo.decreaseOrRemove(toRemove);
+				int len = encode(s.getValue(), p.getValue(), o.getValue());
+				removed = spo.decreaseOrRemove(key, len);
 
-				toRemove = encode(s.getValue(), o.getValue(), p.getValue());
-				sop.decreaseOrRemove(toRemove);
+				len = encode(s.getValue(), o.getValue(), p.getValue());
+				sop.decreaseOrRemove(key, len);
 
-				toRemove = encode(p.getValue(), o.getValue(), s.getValue());
-				pos.decreaseOrRemove(toRemove);
+				len = encode(p.getValue(), o.getValue(), s.getValue());
+				pos.decreaseOrRemove(key, len);
 
-				toRemove = encode(p.getValue(), s.getValue(), o.getValue());
-				pso.decreaseOrRemove(toRemove);
+				len = encode(p.getValue(), s.getValue(), o.getValue());
+				pso.decreaseOrRemove(key, len);
 
-				toRemove = encode(o.getValue(), s.getValue(), p.getValue());
-				osp.decreaseOrRemove(toRemove);
+				len = encode(o.getValue(), s.getValue(), p.getValue());
+				osp.decreaseOrRemove(key, len);
 
-				toRemove = encode(o.getValue(), p.getValue(), s.getValue());
-				ops.decreaseOrRemove(toRemove);
+				len = encode(o.getValue(), p.getValue(), s.getValue());
+				ops.decreaseOrRemove(key, len);
 			} else {
 				removed = true;
-				byte[] toRemove = encode(s.getValue(), p.getValue(), o.getValue());
-				spo.remove(toRemove);
+				int len = encode(s.getValue(), p.getValue(), o.getValue());
+				spo.remove(key, len);
 
-				toRemove = encode(s.getValue(), o.getValue(), p.getValue());
-				sop.remove(toRemove);
+				len = encode(s.getValue(), o.getValue(), p.getValue());
+				sop.remove(key, len);
 
-				toRemove = encode(p.getValue(), o.getValue(), s.getValue());
-				pos.remove(toRemove);
+				len = encode(p.getValue(), o.getValue(), s.getValue());
+				pos.remove(key, len);
 
-				toRemove = encode(p.getValue(), s.getValue(), o.getValue());
-				pso.remove(toRemove);
+				len = encode(p.getValue(), s.getValue(), o.getValue());
+				pso.remove(key, len);
 
-				toRemove = encode(o.getValue(), s.getValue(), p.getValue());
-				osp.remove(toRemove);
+				len = encode(o.getValue(), s.getValue(), p.getValue());
+				osp.remove(key, len);
 
-				toRemove = encode(o.getValue(), p.getValue(), s.getValue());
-				ops.remove(toRemove);
+				len = encode(o.getValue(), p.getValue(), s.getValue());
+				ops.remove(key, len);
 			}
 
 			if (removed) {

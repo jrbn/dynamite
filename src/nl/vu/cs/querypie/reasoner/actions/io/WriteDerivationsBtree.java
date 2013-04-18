@@ -1,7 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.util.Arrays;
-
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
 import nl.vu.cs.ajira.actions.ActionContext;
@@ -29,7 +27,6 @@ public class WriteDerivationsBtree extends Action {
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private boolean newValue;
 	private final byte[] triple = new byte[24];
-	byte[] toWrite;
 	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
 
@@ -46,12 +43,8 @@ public class WriteDerivationsBtree extends Action {
 		newCount = dupCount = 0;
 	}
 	
-	private byte[] encode(long l1, long l2, long l3) {
-		int sz = in.encode(triple, l1, l2, l3);
-		if (sz < triple.length) {
-			return Arrays.copyOf(triple, sz);
-		}
-		return triple;
+	private int encode(long l1, long l2, long l3) {
+		return in.encode(triple, l1, l2, l3);
 	}
 
 	@Override
@@ -61,48 +54,48 @@ public class WriteDerivationsBtree extends Action {
 		TLong o = (TLong) tuple.get(2);
 		TInt step = (TInt) tuple.get(3);
 
-		byte[] toWrite = encode(s.getValue(), p.getValue(), o.getValue());
+		int keyLen = encode(s.getValue(), p.getValue(), o.getValue());
 		Utils.encodeInt(meta, 0, step.getValue());
 
 		boolean newTuple = false;
 		if (ParamHandler.get().isUsingCount()) {
 			TInt count = (TInt) tuple.get(4);
 			int c = count.getValue();
-			newTuple = spo.writeWithCount(toWrite, meta, c, false) == WritingSession.SUCCESS;
+			newTuple = spo.writeWithCount(triple, keyLen, meta, c, false) == WritingSession.SUCCESS;
 
 			// Add it also in the other permutations
-			toWrite = encode(s.getValue(), o.getValue(), p.getValue());
-			sop.writeWithCount(toWrite, meta, c, newTuple);
+			keyLen = encode(s.getValue(), o.getValue(), p.getValue());
+			sop.writeWithCount(triple, keyLen, meta, c, newTuple);
 
-			toWrite = encode(p.getValue(), o.getValue(), s.getValue());
-			pos.writeWithCount(toWrite, meta, c, newTuple);
+			keyLen = encode(p.getValue(), o.getValue(), s.getValue());
+			pos.writeWithCount(triple, keyLen, meta, c, newTuple);
 
-			toWrite = encode(p.getValue(), s.getValue(), o.getValue());
-			pso.writeWithCount(toWrite, meta, c, newTuple);
+			keyLen = encode(p.getValue(), s.getValue(), o.getValue());
+			pso.writeWithCount(triple, keyLen, meta, c, newTuple);
 
-			toWrite = encode(o.getValue(), p.getValue(), s.getValue());
-			ops.writeWithCount(toWrite, meta, c, newTuple);
+			keyLen = encode(o.getValue(), p.getValue(), s.getValue());
+			ops.writeWithCount(triple, keyLen, meta, c, newTuple);
 
-			toWrite = encode(o.getValue(), s.getValue(), p.getValue());
-			osp.writeWithCount(toWrite, meta, c, newTuple);
+			keyLen = encode(o.getValue(), s.getValue(), p.getValue());
+			osp.writeWithCount(triple, keyLen, meta, c, newTuple);
 		} else {
-			newTuple = spo.write(toWrite, meta) == WritingSession.SUCCESS;
+			newTuple = spo.write(triple, keyLen, meta) == WritingSession.SUCCESS;
 
 			// Add it also in the other permutations
-			toWrite = encode(s.getValue(), o.getValue(), p.getValue());
-			sop.write(toWrite, meta);
+			keyLen = encode(s.getValue(), o.getValue(), p.getValue());
+			sop.write(triple, keyLen, meta);
 
-			toWrite = encode(p.getValue(), o.getValue(), s.getValue());
-			pos.write(toWrite, meta);
+			keyLen = encode(p.getValue(), o.getValue(), s.getValue());
+			pos.write(triple, keyLen, meta);
 
-			toWrite = encode(p.getValue(), s.getValue(), o.getValue());
-			pso.write(toWrite, meta);
+			keyLen = encode(p.getValue(), s.getValue(), o.getValue());
+			pso.write(triple, keyLen, meta);
 
-			toWrite = encode(o.getValue(), p.getValue(), s.getValue());
-			ops.write(toWrite, meta);
+			keyLen = encode(o.getValue(), p.getValue(), s.getValue());
+			ops.write(triple, keyLen, meta);
 
-			toWrite = encode(o.getValue(), s.getValue(), p.getValue());
-			osp.write(toWrite, meta);
+			keyLen = encode(o.getValue(), s.getValue(), p.getValue());
+			osp.write(triple, keyLen, meta);
 		}
 
 		if (newTuple) {

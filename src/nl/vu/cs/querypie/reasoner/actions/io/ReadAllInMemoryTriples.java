@@ -70,10 +70,11 @@ public class ReadAllInMemoryTriples extends Action {
 		TInt count = new TInt();
 		supportTuple[4] = count;
 		for (Map.Entry<Tuple, Integer> entry : inMemorySetWithCounter.entrySet()) {
-			supportTuple[0] = entry.getKey().get(0);
-			supportTuple[1] = entry.getKey().get(1);
-			supportTuple[2] = entry.getKey().get(2);
-			supportTuple[3] = entry.getKey().get(3);
+			Tuple key = entry.getKey();
+			supportTuple[0] = key.get(0);
+			supportTuple[1] = key.get(1);
+			supportTuple[2] = key.get(2);
+			supportTuple[3] = key.get(3);
 			count.setValue(entry.getValue());
 			actionOutput.output(supportTuple);
 		}
