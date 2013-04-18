@@ -23,25 +23,32 @@ public class AddDerivationCount extends Action {
 
 	private SimpleData[] outputTuple;
 	private Tuple previousTuple;
+	private TLong tl1, tl2, tl3;
+	private TInt step, count;
 
 	private int minStep;
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		previousTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong(), new TInt());
+		tl1 = new TLong();
+		tl2 = new TLong();
+		tl3 = new TLong();
+		step = new TInt();
+		count = new TInt();
+		previousTuple = TupleFactory.newTuple(tl1, tl2, tl3);
 		outputTuple = new SimpleData[5];
 		for (int i = 0; i < 3; ++i) {
 			outputTuple[i] = previousTuple.get(i);
 		}
-		outputTuple[3] = new TInt();
-		outputTuple[4] = new TInt();
+		outputTuple[3] = step;
+		outputTuple[4] = count;
 		currentCount = 0;
 		minStep = Integer.MAX_VALUE;
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		if (!sameTriple(tuple, previousTuple)) {
+		if (!sameTriple(tuple)) {
 			if (currentCount > 0) {
 				generateOutput(actionOutput);
 			}
@@ -60,25 +67,20 @@ public class AddDerivationCount extends Action {
 	}
 
 	private void prepareForNewTuple(Tuple tuple) {
-		tuple.copyTo(previousTuple);
+		tl1.setValue(((TLong) tuple.get(0)).getValue());
+		tl2.setValue(((TLong) tuple.get(1)).getValue());
+		tl3.setValue(((TLong) tuple.get(2)).getValue());
 		minStep = ((TInt) tuple.get(3)).getValue();
 		currentCount = 1;
 	}
 
 	private void generateOutput(ActionOutput actionOutput) throws Exception {
-		((TInt) outputTuple[3]).setValue(minStep);
-		((TInt) outputTuple[4]).setValue(currentCount);
+		step.setValue(minStep);
+		count.setValue(currentCount);
 		actionOutput.output(outputTuple);
 	}
 
-	private boolean sameTriple(Tuple t1, Tuple t2) {
-		for (int i = 0; i < 3; ++i) {
-			long val1 = ((TLong) t1.get(i)).getValue();
-			long val2 = ((TLong) t2.get(i)).getValue();
-			if (val1 != val2) {
-				return false;
-			}
-		}
-		return true;
+	private boolean sameTriple(Tuple t) {
+		return t.get(0).equals(tl1) && t.get(1).equals(tl2) && t.get(2).equals(tl3);
 	}
 }
