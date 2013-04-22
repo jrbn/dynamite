@@ -9,6 +9,7 @@ import java.util.List;
 
 import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.ajira.actions.ActionSequence;
+import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
@@ -38,6 +39,7 @@ public class Reasoner {
 	private static String debugFile = null;
 	private static String lastStepFile = null;
 	private static String storage = "btree";
+	private static Class<? extends InputLayer> storageClass = BerkeleydbLayer.class;
 
 	private static int nProcThreads = 4;
 
@@ -68,7 +70,7 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(Consts.DEFAULT_INPUT_LAYER_ID));
+		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(storageClass));
 		ReasoningContext.getInstance().init();
 	}
 
@@ -103,12 +105,13 @@ public class Reasoner {
 	private static void initAjira(String kbDir, Ajira arch) {
 		Configuration conf = arch.getConfiguration();
 		if (storage.equals("btree")) {
-			conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+			storageClass = BerkeleydbLayer.class;
 			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
 		} else if (storage.equals("mapdb")) {
-			conf.set(Consts.STORAGE_IMPL, MapdbLayer.class.getName());
+			storageClass = MapdbLayer.class;
 			conf.set(MapdbLayer.DB_INPUT, kbDir);
 		}
+		InputLayer.setDefaultInputLayerClass(storageClass, conf);
 		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
 	}
 

@@ -12,6 +12,7 @@ import nl.vu.cs.ajira.actions.Project;
 import nl.vu.cs.ajira.actions.WriteToFiles;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
+import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
@@ -28,6 +29,7 @@ public class Query {
 	static final Logger log = LoggerFactory.getLogger(Query.class);
 	
 	private static String storage = "btree";
+	private static Class<? extends InputLayer> storageClass = BerkeleydbLayer.class;
 
 	private static void parseArgs(String[] args) {
 		for (int i = 3; i < args.length; ++i) {
@@ -92,12 +94,13 @@ public class Query {
 	private static void initAjira(String kbDir, Ajira arch) {
 		Configuration conf = arch.getConfiguration();
 		if (storage.equals("btree")) {
-			conf.set(Consts.STORAGE_IMPL, BerkeleydbLayer.class.getName());
+			storageClass = BerkeleydbLayer.class;
 			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
 		} else if (storage.equals("mapdb")) {
-			conf.set(Consts.STORAGE_IMPL, MapdbLayer.class.getName());
+			storageClass = MapdbLayer.class;
 			conf.set(MapdbLayer.DB_INPUT, kbDir);
 		}
+		InputLayer.setDefaultInputLayerClass(storageClass, conf);
 		conf.setInt(Consts.N_PROC_THREADS, 4);
 	}
 

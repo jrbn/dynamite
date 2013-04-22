@@ -22,8 +22,8 @@ import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TByteArray;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
+import nl.vu.cs.ajira.datalayer.dummy.DummyLayer;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
@@ -93,7 +93,7 @@ public class ActionsHelper {
 
 	public static void readFakeTuple(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(QueryInputLayer.class);
-		a.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DUMMY_INPUT_LAYER_ID);
+		a.setParamString(QueryInputLayer.S_INPUTLAYER, DummyLayer.class.getName());
 		a.setParamWritable(QueryInputLayer.W_QUERY, new Query());
 		actions.add(a);
 	}

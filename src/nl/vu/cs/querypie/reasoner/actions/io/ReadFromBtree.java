@@ -15,9 +15,9 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.data.types.bytearray.BDataInput;
+import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.InputQuery;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.querypie.storage.Pattern;
 
 public class ReadFromBtree extends Action {
@@ -51,7 +51,7 @@ public class ReadFromBtree extends Action {
 			} else {
 				tuple = (Query) params[TUPLE];
 			}
-			query.setInputLayer(Consts.DEFAULT_INPUT_LAYER_ID);
+			query.setInputLayer(InputLayer.DEFAULT_LAYER);
 
 			Tuple t = tuple.getTuple();
 
@@ -91,7 +91,7 @@ public class ReadFromBtree extends Action {
 			first = false;
 			for (int i = 1; i < tasks; ++i) {
 				ActionConf c = ActionFactory.getActionConf(QueryInputLayer.class);
-				c.setParamInt(QueryInputLayer.I_INPUTLAYER, Consts.DEFAULT_INPUT_LAYER_ID);
+				c.setParamString(QueryInputLayer.S_INPUTLAYER, "DEFAULT");
 
 				Tuple t = query.getTuple();
 				SimpleData[] newTuple = new SimpleData[5];
