@@ -76,7 +76,7 @@ public class Query {
 				// Write output to file
 				c = ActionFactory.getActionConf(WriteToFiles.class);
 				c.setParamString(WriteToFiles.S_CUSTOM_WRITER, AppendFileWriter.class.getName());
-				c.setParamString(WriteToFiles.S_OUTPUT_DIR, args[2]);
+				c.setParamString(WriteToFiles.S_PATH, args[2]);
 				as.add(c);
 
 				Job job = new Job();
