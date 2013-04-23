@@ -3,7 +3,7 @@ package nl.vu.cs.querypie.reasoner.actions.common;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
+import nl.vu.cs.querypie.reasoner.actions.io.TypeStorage;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteInMemory;
 import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
@@ -17,7 +17,7 @@ public abstract class AbstractRulesController extends Action {
 	 * filter out unneeded computation. Returns the step after the execution.
 	 */
 	protected int applyRulesSchemaOnly(ActionSequence actions,
-			MemoryStorage writeTo, int currentStep)
+			TypeStorage writeTo, int currentStep)
 			throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
 		ParallelExecutionSchemaOnly.addToChain(currentStep - 3, currentStep,
@@ -29,6 +29,16 @@ public abstract class AbstractRulesController extends Action {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		writeDerivations(writeTo, actions);
+
+		if (writeTo == TypeStorage.BTREE) {
+			// Write a copy also on files
+			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
+					actions);
+		}
+
+		// Forward only the first
+		ActionsHelper.forwardOnlyFirst(actions);
+
 		ActionsHelper.collectToNode(ParamHandler.get().isUsingCount(), actions);
 		ReloadSchema.addToChain(false, actions);
 		return currentStep + 1;
@@ -39,9 +49,11 @@ public abstract class AbstractRulesController extends Action {
 	 * out unneeded computation. Returns the step after the execution.
 	 */
 	protected int applyRulesWithGenericPatterns(ActionSequence actions,
-			MemoryStorage writeTo, int currentStep)
+			TypeStorage writeTo, int currentStep)
 			throws ActionNotConfiguredException {
-		ActionsHelper.readEverythingFromBTree(actions);
+		ActionsHelper.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
+				actions);
+
 		ActionsHelper.reconnectAfter(2, actions);
 		GenericRuleExecutor.addToChain(currentStep - 3, currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
@@ -53,12 +65,23 @@ public abstract class AbstractRulesController extends Action {
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
+
 		writeDerivations(writeTo, actions);
+
+		if (writeTo == TypeStorage.BTREE) {
+			// Write a copy also on files
+			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
+					actions);
+		}
+
+		// Forward only the first
+		ActionsHelper.forwardOnlyFirst(actions);
+
 		return currentStep + 2;
 	}
 
 	protected int applyRulesWithGenericPatternsInABranch(
-			ActionSequence actions, MemoryStorage writeTo, int currentStep)
+			ActionSequence actions, TypeStorage writeTo, int currentStep)
 			throws ActionNotConfiguredException {
 		ActionSequence actions2 = new ActionSequence();
 		currentStep = applyRulesWithGenericPatterns(actions2, writeTo,
@@ -67,7 +90,7 @@ public abstract class AbstractRulesController extends Action {
 		return currentStep;
 	}
 
-	private void writeDerivations(MemoryStorage writeTo, ActionSequence actions)
+	private void writeDerivations(TypeStorage writeTo, ActionSequence actions)
 			throws ActionNotConfiguredException {
 		switch (writeTo) {
 		case BTREE:

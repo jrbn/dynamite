@@ -8,7 +8,7 @@ import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.actions.io.MemoryStorage;
+import nl.vu.cs.querypie.reasoner.actions.io.TypeStorage;
 import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
@@ -35,10 +35,10 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 		cleanInMemoryContainer(context, Consts.CURRENT_DELTA_KEY);
 		ActionSequence actions = new ActionSequence();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, MemoryStorage.IN_MEMORY, Integer.MIN_VALUE);
-			applyRulesWithGenericPatternsInABranch(actions, MemoryStorage.IN_MEMORY, Integer.MIN_VALUE);
+			applyRulesSchemaOnly(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
+			applyRulesWithGenericPatternsInABranch(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
 		} else {
-			applyRulesWithGenericPatterns(actions, MemoryStorage.IN_MEMORY, Integer.MIN_VALUE);
+			applyRulesWithGenericPatterns(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
 		}
 		ActionsHelper.collectToNode(false, actions);
 		actionOutput.branch(actions);

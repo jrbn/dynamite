@@ -18,14 +18,14 @@ import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
 public class WriteDerivationsBtree extends Action {
-	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
 		actions.add(c);
 	}
 
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
-	private boolean newValue;
 	private final byte[] triple = new byte[24];
 	private final byte[] meta = new byte[8];
 	private long dupCount, newCount;
@@ -39,16 +39,16 @@ public class WriteDerivationsBtree extends Action {
 		pos = in.openWritingSession(DBType.POS);
 		osp = in.openWritingSession(DBType.OSP);
 		ops = in.openWritingSession(DBType.OPS);
-		newValue = false;
 		newCount = dupCount = 0;
 	}
-	
+
 	private int encode(long l1, long l2, long l3) {
 		return in.encode(triple, l1, l2, l3);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
@@ -99,10 +99,7 @@ public class WriteDerivationsBtree extends Action {
 		}
 
 		if (newTuple) {
-			if (!newValue) {
-				actionOutput.output(tuple);
-				newValue = true;
-			}
+			actionOutput.output(tuple);
 			newCount++;
 		} else {
 			dupCount++;
@@ -110,7 +107,8 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();

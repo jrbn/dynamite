@@ -46,7 +46,7 @@ public class Reasoner {
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countingAlgorithm] [--debug] [--debugToFile <file>] [--lastStepFile <file>");
+					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countingAlgorithm] [--debug] [--debugToFile <file>] [--lastStepFile <file>] [--writeCopyAt <dir>]");
 			return;
 		}
 		parseArgs(args);
@@ -70,7 +70,8 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(storageClass));
+		ReasoningContext.getInstance().setKB(
+				arch.getContext().getInputLayer(storageClass));
 		ReasoningContext.getInstance().init();
 	}
 
@@ -78,7 +79,8 @@ public class Reasoner {
 		ReasoningContext.getInstance().getKB().close();
 	}
 
-	private static void launchReasoning(Ajira arch) throws ActionNotConfiguredException {
+	private static void launchReasoning(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		if (deltaDir == null) {
@@ -132,9 +134,11 @@ public class Reasoner {
 			} else if (args[i].equals("--lastStepFile")) {
 				lastStepFile = args[++i];
 			} else if (args[i].equals("--storage")) {
-			    storage = args[++i];
+				storage = args[++i];
 			} else if (args[i].equals("--procs")) {
-				nProcThreads  = Integer.parseInt(args[++i]);
+				nProcThreads = Integer.parseInt(args[++i]);
+			} else if (args[i].equals("--writeCopyAt")) {
+				ParamHandler.get().setCopyDir(args[++i]);
 			}
 		}
 	}
@@ -149,7 +153,8 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDebug(Ajira arch) throws ActionNotConfiguredException {
+	private static void printDebug(Ajira arch)
+			throws ActionNotConfiguredException {
 		if (debug) {
 			printDerivations(arch);
 		}
@@ -158,7 +163,8 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivations(Ajira arch) throws ActionNotConfiguredException {
+	private static void printDerivations(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
@@ -207,7 +213,8 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivationsOnFile(Ajira arch) throws ActionNotConfiguredException {
+	private static void printDerivationsOnFile(Ajira arch)
+			throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
