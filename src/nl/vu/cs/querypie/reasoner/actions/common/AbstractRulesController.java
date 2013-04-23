@@ -16,9 +16,12 @@ public abstract class AbstractRulesController extends Action {
 	 * Applies all rules involving only the schema. Uses the currentStep to
 	 * filter out unneeded computation. Returns the step after the execution.
 	 */
-	protected int applyRulesSchemaOnly(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
+	protected int applyRulesSchemaOnly(ActionSequence actions,
+			MemoryStorage writeTo, int currentStep)
+			throws ActionNotConfiguredException {
 		ActionsHelper.readFakeTuple(actions);
-		ParallelExecutionSchemaOnly.addToChain(currentStep - 2, currentStep, actions);
+		ParallelExecutionSchemaOnly.addToChain(currentStep - 3, currentStep,
+				actions);
 		ActionsHelper.sort(actions);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions);
@@ -35,12 +38,15 @@ public abstract class AbstractRulesController extends Action {
 	 * Applies all rules involving generic parts. Uses the currentStep to filter
 	 * out unneeded computation. Returns the step after the execution.
 	 */
-	protected int applyRulesWithGenericPatterns(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
+	protected int applyRulesWithGenericPatterns(ActionSequence actions,
+			MemoryStorage writeTo, int currentStep)
+			throws ActionNotConfiguredException {
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionsHelper.reconnectAfter(2, actions);
-		GenericRuleExecutor.addToChain(currentStep - 2, currentStep, actions);
+		GenericRuleExecutor.addToChain(currentStep - 3, currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
-		ActionsHelper.mapReduce(currentStep - 2, currentStep, false, actions);
+		ActionsHelper.mapReduce(currentStep - 2, currentStep + 1, false,
+				actions);
 		ActionsHelper.sort(actions);
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions);
@@ -48,17 +54,21 @@ public abstract class AbstractRulesController extends Action {
 			ActionsHelper.removeDuplicates(actions);
 		}
 		writeDerivations(writeTo, actions);
-		return currentStep + 1;
+		return currentStep + 2;
 	}
 
-	protected int applyRulesWithGenericPatternsInABranch(ActionSequence actions, MemoryStorage writeTo, int currentStep) throws ActionNotConfiguredException {
+	protected int applyRulesWithGenericPatternsInABranch(
+			ActionSequence actions, MemoryStorage writeTo, int currentStep)
+			throws ActionNotConfiguredException {
 		ActionSequence actions2 = new ActionSequence();
-		currentStep = applyRulesWithGenericPatterns(actions2, writeTo, currentStep);
+		currentStep = applyRulesWithGenericPatterns(actions2, writeTo,
+				currentStep);
 		ActionsHelper.createBranch(actions, actions2);
 		return currentStep;
 	}
 
-	private void writeDerivations(MemoryStorage writeTo, ActionSequence actions) throws ActionNotConfiguredException {
+	private void writeDerivations(MemoryStorage writeTo, ActionSequence actions)
+			throws ActionNotConfiguredException {
 		switch (writeTo) {
 		case BTREE:
 			WriteDerivationsBtree.addToChain(actions);
