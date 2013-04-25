@@ -31,7 +31,7 @@ public class CompleteRulesController extends AbstractRulesController {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_CURRENT_STEP, "step", null, true);
+		conf.registerParameter(I_CURRENT_STEP, "I_CURRENT_STEP", null, true);
 	}
 
 	public static final int I_CURRENT_STEP = 0;

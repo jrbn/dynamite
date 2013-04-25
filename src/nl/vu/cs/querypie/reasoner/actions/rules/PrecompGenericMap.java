@@ -50,8 +50,8 @@ public class PrecompGenericMap extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental flag", false, true);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, true);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@SuppressWarnings("unchecked")

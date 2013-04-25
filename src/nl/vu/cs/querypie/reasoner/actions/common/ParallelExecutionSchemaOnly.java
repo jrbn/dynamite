@@ -25,8 +25,8 @@ public class ParallelExecutionSchemaOnly extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, true);
-		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@Override

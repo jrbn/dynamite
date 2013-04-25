@@ -40,7 +40,7 @@ public class IncrRulesParallelExecution extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@Override
