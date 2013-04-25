@@ -31,7 +31,6 @@ public abstract class AbstractRulesController extends Action {
 		writeDerivations(writeTo, actions);
 
 		if (writeTo == TypeStorage.BTREE) {
-			// Write a copy also on files
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
 					actions);
 		}
@@ -54,24 +53,35 @@ public abstract class AbstractRulesController extends Action {
 		ActionsHelper.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
 				actions);
 
+		ActionsHelper.filterPotentialInput(7, actions);
+
+		// Remove the rules
 		ActionsHelper.reconnectAfter(2, actions);
 		GenericRuleExecutor.addToChain(currentStep - 3, currentStep, actions);
 		ActionsHelper.reconnectAfter(4, actions);
 		ActionsHelper.mapReduce(currentStep - 2, currentStep + 1, false,
 				actions);
+
+		// Sort and maintain only the new derivations
 		ActionsHelper.sort(actions);
+
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions);
+
+			// TODO:
+
 		} else {
 			ActionsHelper.removeDuplicates(actions);
+			// TODO: Filter only the ones with step higher than current step
 		}
 
-		writeDerivations(writeTo, actions);
-
-		if (writeTo == TypeStorage.BTREE) {
-			// Write a copy also on files
+		if (writeTo == TypeStorage.IN_MEMORY) {
+			writeDerivations(writeTo, actions);
+		} else {
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
 					actions);
+
+			// TODO: Write the schema on the Btree
 		}
 
 		// Forward only the first

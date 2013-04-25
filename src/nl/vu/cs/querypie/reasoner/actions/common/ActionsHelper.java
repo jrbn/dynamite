@@ -188,4 +188,10 @@ public class ActionsHelper {
 			throws ActionNotConfiguredException {
 		actions.add(ActionFactory.getActionConf(ForwardOnlyFirst.class));
 	}
+
+	public static void filterPotentialInput(int reconnectAt,
+			ActionSequence actions) {
+		// TODO Auto-generated method stub
+
+	}
 }
