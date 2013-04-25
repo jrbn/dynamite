@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.Ajira;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
+import nl.vu.cs.ajira.mgmt.WebServer;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
@@ -115,6 +116,7 @@ public class Reasoner {
 		}
 		InputLayer.setDefaultInputLayerClass(storageClass, conf);
 		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
+		conf.setInt(WebServer.WEBSERVER_PORT, 50080);
 	}
 
 	private static void parseArgs(String[] args) {
