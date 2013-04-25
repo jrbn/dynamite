@@ -162,7 +162,8 @@ public class ActionsHelper {
 				TLong.class.getName(), TLong.class.getName(),
 				TLong.class.getName(), TInt.class.getName());
 		c.setParamBoolean(PartitionToNodes.B_SORT, true);
-		c.setParamIntArray(PartitionToNodes.IA_PARTITION_FIELDS, 0, 1, 2);
+		c.setParamByteArray(PartitionToNodes.BA_PARTITION_FIELDS, (byte) 0,
+				(byte) 1, (byte) 2);
 		actions.add(c);
 	}
 
