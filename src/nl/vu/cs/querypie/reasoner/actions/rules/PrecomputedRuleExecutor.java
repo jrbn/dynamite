@@ -22,8 +22,8 @@ public class PrecomputedRuleExecutor extends Action {
 	public static void addToChain(int minimumStep, int outputStep, int ruleId, ActionSequence actions, boolean incrementalFlag)
 			throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
-		a.setParamInt(RULE_ID, ruleId);
-		a.setParamBoolean(INCREMENTAL_FLAG, incrementalFlag);
+		a.setParamInt(I_RULE_ID, ruleId);
+		a.setParamBoolean(B_INCREMENTAL_FLAG, incrementalFlag);
 		a.setParamInt(I_MINIMUM_STEP, minimumStep);
 		a.setParamInt(I_OUTPUT_STEP, outputStep);
 		actions.add(a);
@@ -37,23 +37,23 @@ public class PrecomputedRuleExecutor extends Action {
 	private int minStep;
 	private int outputStep;
 
-	public static final int RULE_ID = 0;
-	public static final int INCREMENTAL_FLAG = 1;
+	public static final int I_RULE_ID = 0;
+	public static final int B_INCREMENTAL_FLAG = 1;
 	public static final int I_MINIMUM_STEP = 2;
 	public static final int I_OUTPUT_STEP = 3;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(RULE_ID, "rule", null, true);
-		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, true);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, true);
-		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_RULE_ID, "I_RULE_ID", null, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, true);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) {
-		int ruleId = getParamInt(RULE_ID);
-		incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		int ruleId = getParamInt(I_RULE_ID);
+		incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minStep = getParamInt(I_MINIMUM_STEP);
 		outputStep = getParamInt(I_OUTPUT_STEP);
 

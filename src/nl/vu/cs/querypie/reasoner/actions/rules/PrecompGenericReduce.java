@@ -32,7 +32,7 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 public class PrecompGenericReduce extends Action {
 	public static void addToChain(int minimumStep, int outputStep, boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
-		c.setParamBoolean(PrecompGenericReduce.INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamBoolean(PrecompGenericReduce.B_INCREMENTAL_FLAG, incrementalFlag);
 		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		c.setParamInt(PrecompGenericReduce.I_OUTPUT_STEP, outputStep);
 		actions.add(c);
@@ -52,20 +52,20 @@ public class PrecompGenericReduce extends Action {
 	private int minimumStep;
 	private int outputStep;
 
-	public static final int INCREMENTAL_FLAG = 0;
+	public static final int B_INCREMENTAL_FLAG = 0;
 	public static final int I_MINIMUM_STEP = 1;
 	public static final int I_OUTPUT_STEP = 2;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, false);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step", Integer.MIN_VALUE, false);
-		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, false);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, false);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		boolean incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minimumStep = getParamInt(I_MINIMUM_STEP);
 		outputStep = getParamInt(I_OUTPUT_STEP);
 

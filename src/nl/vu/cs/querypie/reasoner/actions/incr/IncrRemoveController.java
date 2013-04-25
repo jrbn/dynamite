@@ -34,7 +34,7 @@ public class IncrRemoveController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "B_FIRST_ITERATION", true, false);
 	}
 
 	@Override

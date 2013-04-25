@@ -24,12 +24,12 @@ public class ReadFromBtree extends Action {
 	public static void addToChain(Pattern pattern, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(ReadFromBtree.class);
 		Query query = new Query(new TLong(pattern.getTerm(0).getValue()), new TLong(pattern.getTerm(1).getValue()), new TLong(pattern.getTerm(2).getValue()));
-		a.setParamWritable(ReadFromBtree.TUPLE, query);
+		a.setParamWritable(ReadFromBtree.W_TUPLE, query);
 		actions.add(a);
 	}
 
-	public static final int TUPLE = 0;
-	public static final int PARALLEL_TASKS = 1;
+	public static final int W_TUPLE = 0;
+	public static final int I_PARALLEL_TASKS = 1;
 
 	private boolean first;
 	private int tasks;
@@ -41,27 +41,27 @@ public class ReadFromBtree extends Action {
 		public void setupAction(InputQuery query, Object[] params, ActionController controller, ActionContext context) {
 			// Add the input tuple
 			Query tuple = null;
-			if (params[TUPLE] instanceof byte[]) {
+			if (params[W_TUPLE] instanceof byte[]) {
 				tuple = new Query();
 				try {
-					tuple.readFrom(new BDataInput((byte[]) params[TUPLE]));
+					tuple.readFrom(new BDataInput((byte[]) params[W_TUPLE]));
 				} catch (Exception e) {
 					log.error("Error in reading", e);
 				}
 			} else {
-				tuple = (Query) params[TUPLE];
+				tuple = (Query) params[W_TUPLE];
 			}
 			query.setInputLayer(InputLayer.DEFAULT_LAYER);
 
 			Tuple t = tuple.getTuple();
 
-			if ((Integer) params[PARALLEL_TASKS] > 1) {
+			if ((Integer) params[I_PARALLEL_TASKS] > 1) {
 				SimpleData[] newTuple = new SimpleData[5];
 				newTuple[0] = t.get(0);
 				newTuple[1] = t.get(1);
 				newTuple[2] = t.get(2);
 				newTuple[3] = new TInt(0);
-				newTuple[4] = new TInt((Integer) params[PARALLEL_TASKS]);
+				newTuple[4] = new TInt((Integer) params[I_PARALLEL_TASKS]);
 				t.set(newTuple);
 			} else {
 				controller.doNotAddCurrentAction();
@@ -73,16 +73,16 @@ public class ReadFromBtree extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(TUPLE, "tuple", null, true);
-		conf.registerParameter(PARALLEL_TASKS, "parallel tasks", 1, false);
+		conf.registerParameter(W_TUPLE, "W_TUPLE", null, true);
+		conf.registerParameter(I_PARALLEL_TASKS, "I_PARALLEL_TASKS", 1, false);
 		conf.registerCustomConfigurator(new CustomProcessor());
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		first = true;
-		tasks = getParamInt(PARALLEL_TASKS);
-		getParamWritable(query, TUPLE);
+		tasks = getParamInt(I_PARALLEL_TASKS);
+		getParamWritable(query, W_TUPLE);
 	}
 
 	@Override

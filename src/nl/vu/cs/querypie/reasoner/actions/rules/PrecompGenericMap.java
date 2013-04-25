@@ -1,6 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions.rules;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,9 +51,9 @@ public class PrecompGenericMap extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_INCREMENTAL_FLAG, "incremental flag", false,
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false,
 				true);
-		conf.registerParameter(I_MINIMUM_STEP, "minimum step",
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP",
 				Integer.MIN_VALUE, true);
 	}
 
@@ -64,19 +63,8 @@ public class PrecompGenericMap extends Action {
 		boolean incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minimumStep = getParamInt(I_MINIMUM_STEP);
 
-		List<Rule> allRules = ReasoningContext.getInstance().getRuleset()
+		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
-
-		rules = new ArrayList<Rule>();
-		for (Rule r : allRules) {
-			Tuples acceptableValuesTuples = incrementalFlag ? r
-					.getFlaggedPrecomputedTuples() : r
-					.getAllPrecomputedTuples();
-			if (acceptableValuesTuples != null
-					&& acceptableValuesTuples.getNTuples() > 0) {
-				rules.add(r);
-			}
-		}
 
 		key_positions = new int[rules.size()][];
 		positions_to_check = new int[rules.size()][];
@@ -112,8 +100,9 @@ public class PrecompGenericMap extends Action {
 			Tuples acceptableValuesTuples = incrementalFlag ? rule
 					.getFlaggedPrecomputedTuples() : rule
 					.getAllPrecomputedTuples();
-			acceptableValues[r] = acceptableValuesTuples
-					.getSortedSetWithStep(shared_vars[0][1]);
+			if (acceptableValuesTuples != null)
+				acceptableValues[r] = acceptableValuesTuples
+						.getSortedSetWithStep(shared_vars[0][1]);
 			pos_constants_to_check[r] = rule
 					.getPositionsConstantGenericPattern();
 			value_constants_to_check[r] = rule.getValueConstantGenericPattern();
@@ -131,7 +120,8 @@ public class PrecompGenericMap extends Action {
 				continue;
 			}
 			TLong t = (TLong) tuple.get(positions_to_check[r][0]);
-			if (acceptableValues[r].containsKey(t.getValue())) {
+			if (acceptableValues[r] != null
+					&& acceptableValues[r].containsKey(t.getValue())) {
 				// Check whether the step is ok
 				int schemaStep = acceptableValues[r].get(t.getValue());
 				int currentStep = ((TInt) tuple.get(3)).getValue();
