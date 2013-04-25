@@ -32,7 +32,7 @@ public abstract class AbstractRulesController extends Action {
 
 		if (writeTo == TypeStorage.BTREE) {
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
-					actions);
+					actions, false);
 		}
 
 		// Forward only the first
@@ -50,8 +50,10 @@ public abstract class AbstractRulesController extends Action {
 	protected int applyRulesWithGenericPatterns(ActionSequence actions,
 			TypeStorage writeTo, int currentStep)
 			throws ActionNotConfiguredException {
-		ActionsHelper.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
-				actions);
+		ActionsHelper
+				.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
+						actions,
+						nl.vu.cs.querypie.storage.FileUtils.FilterCounts.class);
 
 		ActionsHelper.filterPotentialInput(7, actions);
 
@@ -67,19 +69,20 @@ public abstract class AbstractRulesController extends Action {
 
 		if (ParamHandler.get().isUsingCount()) {
 			AddDerivationCount.addToChain(actions);
-
-			// TODO:
-
+			// Write the "counts" in special files
+			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
+					actions, true);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
-			ActionsHelper.filterStep(actions, currentStep);
 		}
+
+		ActionsHelper.filterStep(actions, currentStep);
 
 		if (writeTo == TypeStorage.IN_MEMORY) {
 			writeDerivations(writeTo, actions);
 		} else {
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
-					actions);
+					actions, false);
 			ActionsHelper.writeSchemaTriplesInBtree(actions);
 		}
 

@@ -1,5 +1,6 @@
 package nl.vu.cs.querypie.reasoner.actions.common;
 
+import java.io.FilenameFilter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -116,11 +117,15 @@ public class ActionsHelper {
 	}
 
 	public static void readEverythingFromFiles(String copyDir,
-			ActionSequence actions) throws ActionNotConfiguredException {
+			ActionSequence actions, Class<? extends FilenameFilter> filter)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReadFromFiles.class);
 		c.setParamString(ReadFromFiles.S_PATH, copyDir);
 		c.setParamString(ReadFromFiles.S_CUSTOM_READER,
 				TripleFileStorage.Reader.class.getName());
+		if (filter != null) {
+			c.setParamString(ReadFromFiles.S_FILE_FILTER, filter.getName());
+		}
 		actions.add(c);
 	}
 
@@ -176,12 +181,18 @@ public class ActionsHelper {
 		actionOutput.branch(actions);
 	}
 
-	public static void writeCopyToFiles(String dir, ActionSequence actions)
-			throws ActionNotConfiguredException {
+	public static void writeCopyToFiles(String dir, ActionSequence actions,
+			boolean counts) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteToFiles.class);
 		c.setParamString(WriteToFiles.S_PATH, dir);
-		c.setParamString(WriteToFiles.S_CUSTOM_WRITER,
-				TripleFileStorage.Writer.class.getName());
+		if (!counts) {
+			c.setParamString(WriteToFiles.S_CUSTOM_WRITER,
+					TripleFileStorage.Writer.class.getName());
+		} else {
+			c.setParamString(WriteToFiles.S_CUSTOM_WRITER,
+					TripleFileStorage.WriterCount.class.getName());
+			c.setParamString(WriteToFiles.S_PREFIX_FILE, "_count");
+		}
 		actions.add(c);
 	}
 

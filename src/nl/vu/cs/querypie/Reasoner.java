@@ -47,7 +47,7 @@ public class Reasoner {
 	public static void main(String[] args) {
 		if (args.length < 2) {
 			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countingAlgorithm] [--debug] [--debugToFile <file>] [--lastStepFile <file>] [--writeCopyAt <dir>]");
+					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countDerivations] [--debug] [--debugToFile <file>] [--lastStepFile <file>] [--writeCopyAt <dir>]");
 			return;
 		}
 		parseArgs(args);
@@ -127,7 +127,7 @@ public class Reasoner {
 			} else if (args[i].equals("--add")) {
 				deltaDir = args[++i];
 				add = true;
-			} else if (args[i].equals("--countingAlgorithm")) {
+			} else if (args[i].equals("--countDerivations")) {
 				ParamHandler.get().setUsingCount(true);
 			} else if (args[i].equals("--debug")) {
 				debug = true;
