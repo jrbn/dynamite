@@ -35,8 +35,8 @@ public class IncrRulesController extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(S_DELTA_DIR, "dir of the update", null, true);
-		conf.registerParameter(B_ADD, "add or remove", true, false);
+		conf.registerParameter(S_DELTA_DIR, "S_DELTA_DIR", null, true);
+		conf.registerParameter(B_ADD, "B_ADD", true, false);
 	}
 
 	@Override

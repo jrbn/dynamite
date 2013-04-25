@@ -19,23 +19,23 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 public class ReadAllInMemoryTriples extends Action {
 	public static void addToChain(String inMemoryTriplesKey, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(ReadAllInMemoryTriples.class);
-		a.setParamString(ReadAllInMemoryTriples.IN_MEMORY_KEY, inMemoryTriplesKey);
+		a.setParamString(ReadAllInMemoryTriples.S_IN_MEMORY_KEY, inMemoryTriplesKey);
 		actions.add(a);
 	}
 
-	public static final int IN_MEMORY_KEY = 0;
+	public static final int S_IN_MEMORY_KEY = 0;
 
 	private Set<Tuple> inMemorySet = null;
 	private Map<Tuple, Integer> inMemorySetWithCounter = null;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(IN_MEMORY_KEY, "in memory key", null, true);
+		conf.registerParameter(S_IN_MEMORY_KEY, "S_IN_MEMORY_KEY", null, true);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
-		String inMemoryKey = getParamString(IN_MEMORY_KEY);
+		String inMemoryKey = getParamString(S_IN_MEMORY_KEY);
 		Object obj = context.getObjectFromCache(inMemoryKey);
 		if (obj instanceof TupleSet) {
 			inMemorySet = (TupleSet) obj;

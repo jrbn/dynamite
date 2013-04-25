@@ -16,15 +16,15 @@ import nl.vu.cs.querypie.reasoner.rules.Rule;
 public class ReloadSchema extends Action {
 	public static void addToChain(boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReloadSchema.class);
-		c.setParamBoolean(ReloadSchema.INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamBoolean(ReloadSchema.B_INCREMENTAL_FLAG, incrementalFlag);
 		actions.add(c);
 	}
 
-	public static final int INCREMENTAL_FLAG = 0;
+	public static final int B_INCREMENTAL_FLAG = 0;
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(INCREMENTAL_FLAG, "incremental_flag", false, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, true);
 	}
 
 	@Override
@@ -36,7 +36,7 @@ public class ReloadSchema extends Action {
 	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!context.isPrincipalBranch())
 			return;
-		boolean incrementalFlag = getParamBoolean(INCREMENTAL_FLAG);
+		boolean incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		List<Rule> rulesWithSchemaAndGeneric = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
 		ActionsHelper.reloadPrecomputationOnRules(rulesWithSchemaAndGeneric, context, incrementalFlag, !incrementalFlag);
 	}

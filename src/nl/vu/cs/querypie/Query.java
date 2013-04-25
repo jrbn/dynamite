@@ -60,7 +60,7 @@ public class Query {
 				// Parse the query
 				ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
 				long[] q = parseQuery(query);
-				c.setParamWritable(ReadFromBtree.TUPLE, new nl.vu.cs.ajira.actions.support.Query(new TLong(q[0]), new TLong(q[1]), new TLong(q[2])));
+				c.setParamWritable(ReadFromBtree.W_TUPLE, new nl.vu.cs.ajira.actions.support.Query(new TLong(q[0]), new TLong(q[1]), new TLong(q[2])));
 				as.add(c);
 
 				// Collect the results to one node

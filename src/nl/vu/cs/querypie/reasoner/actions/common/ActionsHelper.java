@@ -109,9 +109,9 @@ public class ActionsHelper {
 	public static void readEverythingFromBTree(ActionSequence actions)
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
-		c.setParamInt(ReadFromBtree.PARALLEL_TASKS,
+		c.setParamInt(ReadFromBtree.I_PARALLEL_TASKS,
 				nl.vu.cs.querypie.reasoner.support.Consts.READ_NUM_THREADS);
-		c.setParamWritable(ReadFromBtree.TUPLE, new Query(new TLong(-1),
+		c.setParamWritable(ReadFromBtree.W_TUPLE, new Query(new TLong(-1),
 				new TLong(-1), new TLong(-1)));
 		actions.add(c);
 	}

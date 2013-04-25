@@ -37,8 +37,8 @@ public class IncrAddController extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_STEP, "step", 0, true);
-		conf.registerParameter(B_FIRST_ITERATION, "first iteration", true, false);
+		conf.registerParameter(I_STEP, "I_STEP", 0, true);
+		conf.registerParameter(B_FIRST_ITERATION, "B_FIRST_ITERATION", true, false);
 	}
 
 	@Override
