@@ -72,7 +72,7 @@ public abstract class AbstractRulesController extends Action {
 
 		} else {
 			ActionsHelper.removeDuplicates(actions);
-			// TODO: Filter only the ones with step higher than current step
+			ActionsHelper.filterStep(actions, currentStep);
 		}
 
 		if (writeTo == TypeStorage.IN_MEMORY) {
@@ -80,8 +80,7 @@ public abstract class AbstractRulesController extends Action {
 		} else {
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
 					actions);
-
-			// TODO: Write the schema on the Btree
+			ActionsHelper.writeSchemaTriplesInBtree(actions);
 		}
 
 		// Forward only the first

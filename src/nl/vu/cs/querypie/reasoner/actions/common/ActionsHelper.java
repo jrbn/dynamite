@@ -15,7 +15,6 @@ import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.QueryInputLayer;
 import nl.vu.cs.ajira.actions.ReadFromFiles;
-import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.WriteToFiles;
 import nl.vu.cs.ajira.actions.support.Query;
@@ -151,10 +150,10 @@ public class ActionsHelper {
 
 	public static void removeDuplicates(ActionSequence actions)
 			throws ActionNotConfiguredException {
-		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+		actions.add(ActionFactory.getActionConf(TriplesRemoveDuplicates.class));
 	}
 
-	static void sort(ActionSequence actions)
+	public static void sort(ActionSequence actions)
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE,
@@ -163,6 +162,8 @@ public class ActionsHelper {
 				TLong.class.getName(), TLong.class.getName(),
 				TLong.class.getName(), TInt.class.getName());
 		c.setParamBoolean(PartitionToNodes.B_SORT, true);
+		c.setParamByteArray(PartitionToNodes.BA_PARTITION_FIELDS, (byte) 0,
+				(byte) 1, (byte) 2);
 		actions.add(c);
 	}
 
@@ -190,8 +191,28 @@ public class ActionsHelper {
 	}
 
 	public static void filterPotentialInput(int reconnectAt,
-			ActionSequence actions) {
-		// TODO Auto-generated method stub
+			ActionSequence actions) throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory.getActionConf(Split.class);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, reconnectAt);
+		actions.add(c);
+	}
 
+	public static void writeSchemaTriplesInBtree(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		ActionSequence seq = new ActionSequence();
+		seq.add(ActionFactory.getActionConf(FilterSchema.class));
+		WriteDerivationsBtree.addToChain(seq);
+
+		ActionConf c = ActionFactory.getActionConf(Split.class);
+		c.setParamWritable(Split.W_SPLIT, seq);
+		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 1);
+		actions.add(c);
+	}
+
+	public static void filterStep(ActionSequence actions, int step)
+			throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory.getActionConf(FilterStep.class);
+		c.setParamInt(FilterStep.I_STEP, step);
+		actions.add(c);
 	}
 }
