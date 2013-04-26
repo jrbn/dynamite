@@ -1,16 +1,27 @@
 package nl.vu.cs.querypie.reasoner.actions.common;
 
+import java.io.File;
+import java.io.FilenameFilter;
+
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.reasoner.actions.io.TypeStorage;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
+import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteInMemory;
 import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
 import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
+
+	public static class FilterCountFiles implements FilenameFilter {
+		@Override
+		public boolean accept(File dir, String name) {
+			return !name.startsWith("_count");
+		}
+
+	}
 
 	/**
 	 * Applies all rules involving only the schema. Uses the currentStep to
@@ -50,10 +61,8 @@ public abstract class AbstractRulesController extends Action {
 	protected int applyRulesWithGenericPatterns(ActionSequence actions,
 			TypeStorage writeTo, int currentStep)
 			throws ActionNotConfiguredException {
-		ActionsHelper
-				.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
-						actions,
-						nl.vu.cs.querypie.storage.FileUtils.FilterCounts.class);
+		ActionsHelper.readEverythingFromFiles(ParamHandler.get().getCopyDir(),
+				actions, FilterCountFiles.class);
 
 		ActionsHelper.filterPotentialInput(7, actions);
 
@@ -106,7 +115,7 @@ public abstract class AbstractRulesController extends Action {
 			throws ActionNotConfiguredException {
 		switch (writeTo) {
 		case BTREE:
-			WriteDerivationsBtree.addToChain(actions);
+			WriteDerivationsAllBtree.addToChain(actions);
 			break;
 		case IN_MEMORY:
 			WriteInMemory.addToChain(Consts.CURRENT_DELTA_KEY, actions);

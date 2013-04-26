@@ -40,6 +40,7 @@ public class Reasoner {
 	private static String debugFile = null;
 	private static String lastStepFile = null;
 	private static String storage = "btree";
+	private static boolean compressKeys = false;
 	private static Class<? extends InputLayer> storageClass = BerkeleydbLayer.class;
 
 	private static int nProcThreads = 4;
@@ -105,11 +106,18 @@ public class Reasoner {
 		writeLastStepToFile();
 	}
 
-	private static void initAjira(String kbDir, Ajira arch) {
+	private static void initAjira(String kbDir, Ajira arch) throws IOException {
+
+		// Check whether the input dir exists
+		if (!new File(kbDir).exists()) {
+			throw new IOException("Input dir " + kbDir + " does not exist!");
+		}
+
 		Configuration conf = arch.getConfiguration();
 		if (storage.equals("btree")) {
 			storageClass = BerkeleydbLayer.class;
 			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
+			conf.setBoolean(BerkeleydbLayer.COMPRESS_KEYS, compressKeys);
 		} else if (storage.equals("mapdb")) {
 			storageClass = MapdbLayer.class;
 			conf.set(MapdbLayer.DB_INPUT, kbDir);
@@ -141,6 +149,8 @@ public class Reasoner {
 				nProcThreads = Integer.parseInt(args[++i]);
 			} else if (args[i].equals("--writeCopyAt")) {
 				ParamHandler.get().setCopyDir(args[++i]);
+			} else if (args[i].equals("--compressKeys")) {
+				compressKeys = true;
 			}
 		}
 	}

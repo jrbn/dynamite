@@ -29,7 +29,7 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsBtree;
+import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericReduce;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecomputedRuleExecutor;
@@ -64,7 +64,7 @@ public class ActionsHelper {
 	private static void groupBy(ActionSequence actions)
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
-		c.setParamByteArray(GroupBy.IA_FIELDS_TO_GROUP, (byte) 0);
+		c.setParamByteArray(GroupBy.BA_FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS,
 				TByteArray.class.getName(), TBoolean.class.getName(),
 				TByte.class.getName(), TLong.class.getName());
@@ -177,7 +177,7 @@ public class ActionsHelper {
 		ActionSequence actions = new ActionSequence();
 		readFakeTuple(actions);
 		ReadAllInMemoryTriples.addToChain(inMemoryKey, actions);
-		WriteDerivationsBtree.addToChain(actions);
+		WriteDerivationsAllBtree.addToChain(actions);
 		actionOutput.branch(actions);
 	}
 
@@ -212,7 +212,7 @@ public class ActionsHelper {
 			throws ActionNotConfiguredException {
 		ActionSequence seq = new ActionSequence();
 		seq.add(ActionFactory.getActionConf(FilterSchema.class));
-		WriteDerivationsBtree.addToChain(seq);
+		WriteDerivationsAllBtree.addToChain(seq);
 
 		ActionConf c = ActionFactory.getActionConf(Split.class);
 		c.setParamWritable(Split.W_SPLIT, seq);

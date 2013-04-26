@@ -21,8 +21,10 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class RemoveDerivationsBtree extends Action {
-	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
-		ActionConf c = ActionFactory.getActionConf(RemoveDerivationsBtree.class);
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory
+				.getActionConf(RemoveDerivationsBtree.class);
 		actions.add(c);
 	}
 
@@ -31,25 +33,26 @@ public class RemoveDerivationsBtree extends Action {
 	private long removedTriples;
 	private long notRemovedTriples;
 	private final byte[] key = new byte[24];
-	
+
 	private int encode(long l1, long l2, long l3) {
 		return in.encode(key, l1, l2, l3);
 	}
-	
+
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
-		spo = in.openWritingSession(DBType.SPO);
-		sop = in.openWritingSession(DBType.SOP);
-		pso = in.openWritingSession(DBType.PSO);
-		pos = in.openWritingSession(DBType.POS);
-		osp = in.openWritingSession(DBType.OSP);
-		ops = in.openWritingSession(DBType.OPS);
+		spo = in.openWritingSession(context, DBType.SPO);
+		sop = in.openWritingSession(context, DBType.SOP);
+		pso = in.openWritingSession(context, DBType.PSO);
+		pos = in.openWritingSession(context, DBType.POS);
+		osp = in.openWritingSession(context, DBType.OSP);
+		ops = in.openWritingSession(context, DBType.OPS);
 		removedTriples = notRemovedTriples = 0;
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		// Remove the content of the derivation from the BTrees
 		Object obj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 		Set<Tuple> tuplesToRemove = null;
@@ -64,7 +67,8 @@ public class RemoveDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();
@@ -72,7 +76,8 @@ public class RemoveDerivationsBtree extends Action {
 		pos.close();
 		pso.close();
 		context.incrCounter("Removed triples", removedTriples);
-		context.incrCounter("Triples that could still be derived", notRemovedTriples);
+		context.incrCounter("Triples that could still be derived",
+				notRemovedTriples);
 	}
 
 	private void removeAllTuplesInSet(Set<Tuple> set) {

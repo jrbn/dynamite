@@ -17,10 +17,11 @@ import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
-public class WriteDerivationsBtree extends Action {
+public class WriteDerivationsAllBtree extends Action {
 	public static void addToChain(ActionSequence actions)
 			throws ActionNotConfiguredException {
-		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+		ActionConf c = ActionFactory
+				.getActionConf(WriteDerivationsAllBtree.class);
 		actions.add(c);
 	}
 
@@ -33,12 +34,12 @@ public class WriteDerivationsBtree extends Action {
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
-		spo = in.openWritingSession(DBType.SPO);
-		sop = in.openWritingSession(DBType.SOP);
-		pso = in.openWritingSession(DBType.PSO);
-		pos = in.openWritingSession(DBType.POS);
-		osp = in.openWritingSession(DBType.OSP);
-		ops = in.openWritingSession(DBType.OPS);
+		spo = in.openWritingSession(context, DBType.SPO);
+		sop = in.openWritingSession(context, DBType.SOP);
+		pso = in.openWritingSession(context, DBType.PSO);
+		pos = in.openWritingSession(context, DBType.POS);
+		osp = in.openWritingSession(context, DBType.OSP);
+		ops = in.openWritingSession(context, DBType.OPS);
 		newCount = dupCount = 0;
 	}
 
