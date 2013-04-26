@@ -93,14 +93,23 @@ public class IncrRulesParallelExecution extends Action {
 			for (Rule rule : patterns.get(p)) {
 				if (rule.getGenericBodyPatterns().isEmpty()) {
 					selectedSchemaOnlyRules.add(rule);
+					if (log.isDebugEnabled()) {
+						log.debug("Adding rule " + rule.getId() + " to selectedSchemaOnlyRules");
+					}
 				} else {
 					rulesSchemaGenerics.add(rule);
+					if (log.isDebugEnabled()) {
+						log.debug("Adding rule " + rule.getId() + " to rulesSchemaGenerics");
+					}
 				}
 			}
 		}
 		for (int i = 0; i < allSchemaOnlyRules.size(); ++i) {
 			Rule r = allSchemaOnlyRules.get(i);
 			if (selectedSchemaOnlyRules.contains(r)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Adding rule " + r.getId() + " to rulesOnlySchema");
+				}
 				rulesOnlySchema.add(i);
 			}
 		}
