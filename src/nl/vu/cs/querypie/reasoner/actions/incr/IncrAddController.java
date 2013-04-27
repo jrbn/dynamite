@@ -13,6 +13,7 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.support.Consts;
+import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
@@ -87,6 +88,7 @@ public class IncrAddController extends Action {
 			executeOneForwardChainingIterationAndRestart(context, actionOutput);
 		} else {
 			// Otherwise stop and write complete derivations on btree
+			ParamHandler.get().setLastStep(step);
 			writeCompleteDeltaToBTree(context, actionOutput);
 		}
 	}
