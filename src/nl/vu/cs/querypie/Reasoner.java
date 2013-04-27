@@ -209,6 +209,7 @@ public class Reasoner {
 	}
 
 	private static void writeLastStepToFile() {
+		System.out.println("Last step: " + ParamHandler.get().getLastStep());
 		if (lastStepFile == null) {
 			return;
 		}

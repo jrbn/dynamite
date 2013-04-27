@@ -1,8 +1,9 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,9 +16,12 @@ import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
+import org.iq80.snappy.SnappyInputStream;
+
 public class IOHelper {
 
-	public static TupleSet populateInMemorySetFromFile(String fileName) throws Exception {
+	public static TupleSet populateInMemorySetFromFile(String fileName)
+			throws Exception {
 		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
 		File fInput = new File(fileName);
@@ -28,21 +32,28 @@ public class IOHelper {
 			files.add(fInput);
 		}
 		for (File file : files) {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				// Parse the line
-				String[] sTriple = line.split(" ");
-				SimpleData[] triple = { new TLong(), new TLong(), new TLong(), new TInt() };
-				((TLong) triple[0]).setValue(Long.valueOf(sTriple[0]));
-				((TLong) triple[1]).setValue(Long.valueOf(sTriple[1]));
-				((TLong) triple[2]).setValue(Long.valueOf(sTriple[2]));
-				((TInt) triple[3]).setValue(ParamHandler.get().getLastStep());
-				set.add(TupleFactory.newTuple(triple));
+			DataInputStream is = null;
+			try {
+				is = new DataInputStream(new SnappyInputStream(
+						new FileInputStream(file)));
+				while (true) {
+					SimpleData[] triple = { new TLong(), new TLong(),
+							new TLong(), new TInt() };
+					((TLong) triple[0]).setValue(is.readLong());
+					((TLong) triple[1]).setValue(is.readLong());
+					((TLong) triple[2]).setValue(is.readLong());
+					is.readInt(); // Need to read the input
+					((TInt) triple[3]).setValue(ParamHandler.get()
+							.getLastStep());
+					set.add(TupleFactory.newTuple(triple));
+				}
+			} catch (EOFException e) {
+			} catch (Exception e) {
+			} finally {
+				if (is != null)
+					is.close();
 			}
-			reader.close();
 		}
 		return set;
 	}
-
 }

@@ -97,16 +97,19 @@ public class Rule {
 		return flaggedPrecomputedTuples;
 	}
 
-	public void reloadPrecomputation(ReasoningContext c, ActionContext context, boolean flagged, boolean all) {
+	public void reloadPrecomputation(ReasoningContext c, ActionContext context,
+			boolean flagged, boolean all) {
 		if (precomputedPatterns.isEmpty()) {
 			return;
 		}
 		try {
 			if (flagged) {
-				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, true);
+				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(
+						precomputedPatterns, context, true);
 			}
 			if (all) {
-				allPrecomputedTuples = c.getSchemaManager().getTuples(precomputedPatterns, context, false);
+				allPrecomputedTuples = c.getSchemaManager().getTuples(
+						precomputedPatterns, context, false);
 			}
 		} catch (Exception e) {
 			log.error("Error", e);
@@ -133,20 +136,24 @@ public class Rule {
 		if (!precomputedPatterns.isEmpty()) {
 			// If there are more precomputed patterns, precompute the join in
 			// memory
-			precomputedSignatures = Utils.concatenateVariables(precomputedPatterns);
+			precomputedSignatures = Utils
+					.concatenateVariables(precomputedPatterns);
 			// Calculate the positions of the precomputed patterns that appear
 			// in the head
-			pos_head_precomp = Utils.getPositionSharedVariables(head, precomputedSignatures);
+			pos_head_precomp = Utils.getPositionSharedVariables(head,
+					precomputedSignatures);
 		}
 		if (!genericPatterns.isEmpty()) {
 			// Calculate the positions of the shared variables between the head
 			// and the first generic pattern (it will be the key of the "map"
 			// phase)
-			pos_gen_head = Utils.getPositionSharedVariables(genericPatterns.get(0), head);
+			pos_gen_head = Utils.getPositionSharedVariables(
+					genericPatterns.get(0), head);
 			// Calculate the positions of the shared variables between the first
 			// generic pattern and the precomputed triples
 			if (!precomputedPatterns.isEmpty()) {
-				pos_gen_precomp = Utils.getPositionSharedVariables(genericPatterns.get(0), precomputedSignatures);
+				pos_gen_precomp = Utils.getPositionSharedVariables(
+						genericPatterns.get(0), precomputedSignatures);
 			}
 
 			int[] pc = new int[3];
