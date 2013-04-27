@@ -29,7 +29,6 @@ public class ReasoningContext {
 
 	public void init() {
 		manager = new SchemaManager(kb);
-		ruleset.init(this);
 	}
 
 	public Ruleset getRuleset() {

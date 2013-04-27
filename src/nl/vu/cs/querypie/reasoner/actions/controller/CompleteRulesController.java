@@ -61,13 +61,20 @@ public class CompleteRulesController extends AbstractRulesController {
 			ParamHandler.get().setLastStep(currentStep);
 			context.incrCounter("Iterations", 1);
 			ActionSequence actions = new ActionSequence();
+
 			if (!ReasoningContext.getInstance().getRuleset()
 					.getAllSchemaOnlyRules().isEmpty()) {
+				ReasoningContext.getInstance().getRuleset()
+						.reloadPrecomputationSchema(context, true, false);
 				currentStep = applyRulesSchemaOnly(actions, TypeStorage.BTREE,
 						currentStep);
 				currentStep = applyRulesWithGenericPatternsInABranch(actions,
 						TypeStorage.BTREE, currentStep);
 			} else {
+				ReasoningContext
+						.getInstance()
+						.getRuleset()
+						.reloadPrecomputationSchemaGeneric(context, true, false);
 				currentStep = applyRulesWithGenericPatterns(actions,
 						TypeStorage.BTREE, currentStep);
 			}
@@ -76,15 +83,6 @@ public class CompleteRulesController extends AbstractRulesController {
 			CompleteRulesController.addToChain(currentStep, actions);
 			actionOutput.branch(actions);
 		}
-		// } else {
-		// // Copy the derivations written on files into the btree
-		// ActionSequence actions = new ActionSequence();
-		// ActionsHelper.readEverythingFromFiles(ParamHandler.get()
-		// .getCopyDir(), actions);
-		// ActionsHelper.sort(actions);
-		// WriteDerivationsBtree.addToChain(actions);
-		// actionOutput.branch(actions);
-		// }
 	}
 
 }

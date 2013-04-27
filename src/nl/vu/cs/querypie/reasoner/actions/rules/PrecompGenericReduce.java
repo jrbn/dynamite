@@ -30,9 +30,12 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
 public class PrecompGenericReduce extends Action {
-	public static void addToChain(int minimumStep, int outputStep, boolean incrementalFlag, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(int minimumStep, int outputStep,
+			boolean incrementalFlag, ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericReduce.class);
-		c.setParamBoolean(PrecompGenericReduce.B_INCREMENTAL_FLAG, incrementalFlag);
+		c.setParamBoolean(PrecompGenericReduce.B_INCREMENTAL_FLAG,
+				incrementalFlag);
 		c.setParamInt(PrecompGenericReduce.I_MINIMUM_STEP, minimumStep);
 		c.setParamInt(PrecompGenericReduce.I_OUTPUT_STEP, outputStep);
 		actions.add(c);
@@ -58,9 +61,12 @@ public class PrecompGenericReduce extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, false);
-		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, false);
-		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false,
+				false);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP",
+				Integer.MIN_VALUE, false);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP",
+				Integer.MIN_VALUE, true);
 	}
 
 	@Override
@@ -69,7 +75,8 @@ public class PrecompGenericReduce extends Action {
 		minimumStep = getParamInt(I_MINIMUM_STEP);
 		outputStep = getParamInt(I_OUTPUT_STEP);
 
-		rules = ReasoningContext.getInstance().getRuleset().getAllRulesWithSchemaAndGeneric();
+		rules = ReasoningContext.getInstance().getRuleset()
+				.getAllRulesWithSchemaAndGeneric();
 		counters = new int[rules.size()];
 		pos_head_precomps = new int[rules.size()][][];
 		pos_gen_precomps = new int[rules.size()][][];
@@ -82,7 +89,9 @@ public class PrecompGenericReduce extends Action {
 			pos_head_precomps[r] = rule.getSharedVariablesHead_Precomp();
 			pos_gen_precomps[r] = rule.getSharedVariablesGen_Precomp();
 			pos_gen_head[r] = rule.getSharedVariablesGen_Head();
-			precompTuples[r] = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
+			precompTuples[r] = incrementalFlag ? rule
+					.getFlaggedPrecomputedTuples(context) : rule
+					.getAllPrecomputedTuples(context);
 			if (pos_gen_precomps[r].length > 1) {
 				throw new Exception("Not supported");
 			}
@@ -90,7 +99,8 @@ public class PrecompGenericReduce extends Action {
 			// Fill the outputTriple with the constants that come from the head
 			// of the rule
 			Pattern head = rule.getHead();
-			outputTuples[r] = new SimpleData[] { new TLong(), new TLong(), new TLong(), new TInt() };
+			outputTuples[r] = new SimpleData[] { new TLong(), new TLong(),
+					new TLong(), new TInt() };
 			for (int i = 0; i < 3; ++i) {
 				Term t = head.getTerm(i);
 				if (t.getName() == null) {
@@ -104,7 +114,8 @@ public class PrecompGenericReduce extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		duplicates.clear();
 		TByteArray key = (TByteArray) tuple.get(0);
 
@@ -129,13 +140,15 @@ public class PrecompGenericReduce extends Action {
 				currentRule = rule.getValue();
 				// First copy the "key" in the output triple.
 				for (int i = 0; i < pos_gen_head[currentRule].length; ++i) {
-					((TLong) outputTuples[currentRule][pos_gen_head[currentRule][i][1]]).setValue(Utils.decodeLong(key.getArray(), 8 * i));
+					((TLong) outputTuples[currentRule][pos_gen_head[currentRule][i][1]])
+							.setValue(Utils.decodeLong(key.getArray(), 8 * i));
 				}
 			}
 			// }
 
 			currentJoinValue = elementToJoin.getValue();
-			Collection<Row> set = precompTuples[currentRule].get(pos_gen_precomps[currentRule][0][1], currentJoinValue);
+			Collection<Row> set = precompTuples[currentRule].get(
+					pos_gen_precomps[currentRule][0][1], currentJoinValue);
 			if (set != null) {
 				for (Row row : set) {
 					// Only if the step is ok
@@ -144,13 +157,16 @@ public class PrecompGenericReduce extends Action {
 					}
 					// Get current values
 					for (int i = 0; i < pos_head_precomps[currentRule].length; ++i) {
-						((TLong) outputTuples[currentRule][pos_head_precomps[currentRule][i][0]]).setValue(row.getValue(pos_head_precomps[currentRule][i][1])
-								.getValue());
+						((TLong) outputTuples[currentRule][pos_head_precomps[currentRule][i][0]])
+								.setValue(row.getValue(
+										pos_head_precomps[currentRule][i][1])
+										.getValue());
 					}
 					supportTuple.set(outputTuples[currentRule]);
 					// if (! duplicates.contains(supportTuple)) {
-					// 	duplicates.add(supportTuple);
-					// The return value of add() already indicates if the set did not contain the value. --Ceriel
+					// duplicates.add(supportTuple);
+					// The return value of add() already indicates if the set
+					// did not contain the value. --Ceriel
 					if (duplicates.add(supportTuple)) {
 						supportTuple = TupleFactory.newTuple();
 						actionOutput.output(outputTuples[currentRule]);
@@ -162,7 +178,8 @@ public class PrecompGenericReduce extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		pos_head_precomps = null;
 		pos_gen_precomps = null;
 		pos_gen_head = null;
@@ -170,7 +187,8 @@ public class PrecompGenericReduce extends Action {
 		outputTuples = null;
 		for (int i = 0; i < counters.length; ++i) {
 			if (counters[i] > 0) {
-				context.incrCounter("derivation-rule-" + rules.get(i).getId(), counters[i]);
+				context.incrCounter("derivation-rule-" + rules.get(i).getId(),
+						counters[i]);
 			}
 		}
 	}

@@ -1,7 +1,6 @@
 package nl.vu.cs.querypie.reasoner.actions.common;
 
 import java.io.FilenameFilter;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,7 +32,6 @@ import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericReduce;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecomputedRuleExecutor;
-import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.TripleFileStorage;
 
 public class ActionsHelper {
@@ -145,14 +143,6 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void reloadPrecomputationOnRules(Collection<Rule> rules,
-			ActionContext context, boolean incrementalFlag, boolean allRules) {
-		for (Rule r : rules) {
-			r.reloadPrecomputation(ReasoningContext.getInstance(), context,
-					incrementalFlag, allRules);
-		}
-	}
-
 	public static void removeDuplicates(ActionSequence actions)
 			throws ActionNotConfiguredException {
 		actions.add(ActionFactory.getActionConf(TriplesRemoveDuplicates.class));
@@ -225,5 +215,10 @@ public class ActionsHelper {
 		ActionConf c = ActionFactory.getActionConf(FilterStep.class);
 		c.setParamInt(FilterStep.I_STEP, step);
 		actions.add(c);
+	}
+
+	public static void reloadPrecomputationForSchemaGenericRules(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		actions.add(ActionFactory.getActionConf(ReloadPrecompSchemaGenericRules.class));
 	}
 }

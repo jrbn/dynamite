@@ -49,8 +49,12 @@ public abstract class AbstractRulesController extends Action {
 		// Forward only the first
 		ActionsHelper.forwardOnlyFirst(actions);
 
+		// Get results on one node
 		ActionsHelper.collectToNode(ParamHandler.get().isUsingCount(), actions);
-		ReloadSchema.addToChain(false, actions);
+
+		// Invalidate precomputation
+		ActionsHelper.reloadPrecomputationForSchemaGenericRules(actions);
+
 		return currentStep + 1;
 	}
 

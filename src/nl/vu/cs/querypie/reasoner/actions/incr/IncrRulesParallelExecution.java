@@ -65,26 +65,36 @@ public class IncrRulesParallelExecution extends Action {
 		// according to their type
 		extractSchemaRulesWithInformationInDelta(context, rulesOnlySchema,
 				rulesSchemaGenerics);
-		// Reload schema and execute all schema rules in parallel
-		ActionsHelper.reloadPrecomputationOnRules(rulesSchemaGenerics, context,
-				true, true);
-		ActionsHelper.executeSchemaRulesInParallel(rulesOnlySchema,
-				Integer.MIN_VALUE, outputStep, true, actionOutput);
+
+		if (rulesOnlySchema.size() > 0) {
+			ReasoningContext.getInstance().getRuleset()
+					.reloadPrecomputationSchema(context, false, true);
+			ActionsHelper.executeSchemaRulesInParallel(rulesOnlySchema,
+					Integer.MIN_VALUE, outputStep, true, actionOutput);
+		}
+
 		// Apply all rules with a single antecedent on delta triples
 		executeGenericRulesOnDelta(context, actionOutput);
+
 		// Apply all rules that require a map and a reduce on delta triples
+		ReasoningContext.getInstance().getRuleset()
+				.reloadPrecomputationSchemaGeneric(context, true, true);
 		executePrecomGenericRulesOnDelta(context, actionOutput);
-		executePrecomGenericRulesOnDeltaAndSchema(context, actionOutput);
-		// If some schema is changed, re-apply the rules over the entire input
-		// which is affected
-		for (Rule rule : rulesSchemaGenerics) {
-			Pattern pattern = getQueryPattern(rule);
-			Collection<Long> possibleValues = getValuesMatchingTheSchema(rule);
-			int varPos = getVariablePosition(rule);
-			for (long v : possibleValues) {
-				pattern.setTerm(varPos, new Term(v));
-				executePrecomGenericRulesForPattern(pattern, context,
-						actionOutput);
+
+		if (rulesSchemaGenerics.size() > 0) {
+			executePrecomGenericRulesOnDeltaAndSchema(context, actionOutput);
+			// If some schema is changed, re-apply the rules over the entire
+			// input which is affected
+			for (Rule rule : rulesSchemaGenerics) {
+				Pattern pattern = getQueryPattern(rule);
+				Collection<Long> possibleValues = getValuesMatchingTheSchema(
+						context, rule);
+				int varPos = getVariablePosition(rule);
+				for (long v : possibleValues) {
+					pattern.setTerm(varPos, new Term(v));
+					executePrecomGenericRulesForPattern(pattern, context,
+							actionOutput);
+				}
 			}
 		}
 	}
@@ -177,9 +187,10 @@ public class IncrRulesParallelExecution extends Action {
 		return pattern;
 	}
 
-	private Collection<Long> getValuesMatchingTheSchema(Rule rule) {
+	private Collection<Long> getValuesMatchingTheSchema(ActionContext context,
+			Rule rule) {
 		int[][] shared_pos = rule.getSharedVariablesGen_Precomp();
-		Tuples tuples = rule.getFlaggedPrecomputedTuples();
+		Tuples tuples = rule.getFlaggedPrecomputedTuples(context);
 		return tuples.getSortedSet(shared_pos[0][1]);
 	}
 

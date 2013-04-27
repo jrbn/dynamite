@@ -25,27 +25,28 @@ public class Rule {
 	private final List<Pattern> genericPatterns;
 
 	// Contains the set of precomputed triples
+	private boolean invalidAllPrecomputedSet = true;
 	private Tuples allPrecomputedTuples = null;
+	private boolean invalidFlaggedPrecomputedSet = true;
 	private Tuples flaggedPrecomputedTuples = null;
-	private Collection<String> precomputedSignatures = null;
 
 	// Positions shared variables in the first generic pattern that are used in
 	// the head
-	private int[][] pos_gen_head = null;
+	private final int[][] pos_gen_head;
 
 	// Positions shared variables of the precomputed patters that appear in the
 	// head of the rule
-	private int[][] pos_head_precomp = null;
+	private final int[][] pos_head_precomp;
 
 	// Positions of the shared variables between the first generic pattern and
 	// the precomputed triples. This is used to filter generic triples that will
 	// not produce any derivation
-	private int[][] pos_gen_precomp = null;
+	private final int[][] pos_gen_precomp;
 
 	// Positions of the constants in the generic pattern (used for matching
 	// later on)
-	private int[] constant_positions = null;
-	private long[] constant_values = null;
+	private final int[] constant_positions;
+	private final long[] constant_values;
 
 	public Rule(int id, Pattern head, Pattern[] body) {
 		this.id = id;
@@ -58,6 +59,54 @@ public class Rule {
 			} else {
 				genericPatterns.add(p);
 			}
+		}
+
+		Collection<String> precomputedSignatures = null;
+		if (!precomputedPatterns.isEmpty()) {
+			// If there are more precomputed patterns, precompute the join in
+			// memory
+			precomputedSignatures = Utils
+					.concatenateVariables(precomputedPatterns);
+			// Calculate the positions of the precomputed patterns that appear
+			// in the head
+			pos_head_precomp = Utils.getPositionSharedVariables(head,
+					precomputedSignatures);
+		} else {
+			pos_head_precomp = null;
+		}
+
+		if (!genericPatterns.isEmpty()) {
+			// Calculate the positions of the shared variables between the head
+			// and the first generic pattern (it will be the key of the "map"
+			// phase)
+			pos_gen_head = Utils.getPositionSharedVariables(
+					genericPatterns.get(0), head);
+			// Calculate the positions of the shared variables between the first
+			// generic pattern and the precomputed triples
+			if (!precomputedPatterns.isEmpty()) {
+				pos_gen_precomp = Utils.getPositionSharedVariables(
+						genericPatterns.get(0), precomputedSignatures);
+			} else {
+				pos_gen_precomp = null;
+			}
+
+			int[] pc = new int[3];
+			int count = 0;
+			long[] vc = new long[3];
+			for (int i = 0; i < 3; ++i) {
+				Term t = genericPatterns.get(0).getTerm(i);
+				if (t.getName() == null) {
+					pc[count] = i;
+					vc[count++] = t.getValue();
+				}
+			}
+			constant_positions = Arrays.copyOf(pc, count);
+			constant_values = Arrays.copyOf(vc, count);
+		} else {
+			pos_gen_head = null;
+			pos_gen_precomp = null;
+			constant_positions = null;
+			constant_values = null;
 		}
 	}
 
@@ -89,31 +138,41 @@ public class Rule {
 		return pos_head_precomp;
 	}
 
-	public Tuples getAllPrecomputedTuples() {
+	public Tuples getAllPrecomputedTuples(ActionContext context) {
+		if (invalidAllPrecomputedSet && precomputedPatterns != null
+				&& precomputedPatterns.size() > 0) {
+			try {
+				ReasoningContext c = ReasoningContext.getInstance();
+				allPrecomputedTuples = c.getSchemaManager().getTuples(
+						precomputedPatterns, context, false);
+			} catch (Exception e) {
+				log.error("Failed reloading", e);
+			}
+			invalidAllPrecomputedSet = false;
+		}
+
 		return allPrecomputedTuples;
 	}
 
-	public Tuples getFlaggedPrecomputedTuples() {
+	public Tuples getFlaggedPrecomputedTuples(ActionContext context) {
+		if (invalidFlaggedPrecomputedSet && precomputedPatterns != null
+				&& precomputedPatterns.size() > 0) {
+			try {
+				ReasoningContext c = ReasoningContext.getInstance();
+				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(
+						precomputedPatterns, context, true);
+			} catch (Exception e) {
+				log.error("Failed reloading", e);
+			}
+			invalidFlaggedPrecomputedSet = false;
+		}
+
 		return flaggedPrecomputedTuples;
 	}
 
-	public void reloadPrecomputation(ReasoningContext c, ActionContext context,
-			boolean flagged, boolean all) {
-		if (precomputedPatterns.isEmpty()) {
-			return;
-		}
-		try {
-			if (flagged) {
-				flaggedPrecomputedTuples = c.getSchemaManager().getTuples(
-						precomputedPatterns, context, true);
-			}
-			if (all) {
-				allPrecomputedTuples = c.getSchemaManager().getTuples(
-						precomputedPatterns, context, false);
-			}
-		} catch (Exception e) {
-			log.error("Error", e);
-		}
+	public void invalidatePrecomputation() {
+		invalidAllPrecomputedSet = true;
+		invalidFlaggedPrecomputedSet = true;
 	}
 
 	@Override
@@ -130,45 +189,6 @@ public class Rule {
 
 	public boolean isGenericOnly() {
 		return precomputedPatterns.isEmpty();
-	}
-
-	public void init(ReasoningContext c) {
-		if (!precomputedPatterns.isEmpty()) {
-			// If there are more precomputed patterns, precompute the join in
-			// memory
-			precomputedSignatures = Utils
-					.concatenateVariables(precomputedPatterns);
-			// Calculate the positions of the precomputed patterns that appear
-			// in the head
-			pos_head_precomp = Utils.getPositionSharedVariables(head,
-					precomputedSignatures);
-		}
-		if (!genericPatterns.isEmpty()) {
-			// Calculate the positions of the shared variables between the head
-			// and the first generic pattern (it will be the key of the "map"
-			// phase)
-			pos_gen_head = Utils.getPositionSharedVariables(
-					genericPatterns.get(0), head);
-			// Calculate the positions of the shared variables between the first
-			// generic pattern and the precomputed triples
-			if (!precomputedPatterns.isEmpty()) {
-				pos_gen_precomp = Utils.getPositionSharedVariables(
-						genericPatterns.get(0), precomputedSignatures);
-			}
-
-			int[] pc = new int[3];
-			int count = 0;
-			long[] vc = new long[3];
-			for (int i = 0; i < 3; ++i) {
-				Term t = genericPatterns.get(0).getTerm(i);
-				if (t.getName() == null) {
-					pc[count] = i;
-					vc[count++] = t.getValue();
-				}
-			}
-			constant_positions = Arrays.copyOf(pc, count);
-			constant_values = Arrays.copyOf(vc, count);
-		}
 	}
 
 	public int[] getPositionsConstantGenericPattern() {

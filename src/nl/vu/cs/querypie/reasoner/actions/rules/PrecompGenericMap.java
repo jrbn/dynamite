@@ -98,8 +98,8 @@ public class PrecompGenericMap extends Action {
 			}
 
 			Tuples acceptableValuesTuples = incrementalFlag ? rule
-					.getFlaggedPrecomputedTuples() : rule
-					.getAllPrecomputedTuples();
+					.getFlaggedPrecomputedTuples(context) : rule
+					.getAllPrecomputedTuples(context);
 			if (acceptableValuesTuples != null)
 				acceptableValues[r] = acceptableValuesTuples
 						.getSortedSetWithStep(shared_vars[0][1]);

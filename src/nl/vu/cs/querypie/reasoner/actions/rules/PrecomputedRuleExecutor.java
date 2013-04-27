@@ -19,9 +19,11 @@ import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
 public class PrecomputedRuleExecutor extends Action {
-	public static void addToChain(int minimumStep, int outputStep, int ruleId, ActionSequence actions, boolean incrementalFlag)
+	public static void addToChain(int minimumStep, int outputStep, int ruleId,
+			ActionSequence actions, boolean incrementalFlag)
 			throws ActionNotConfiguredException {
-		ActionConf a = ActionFactory.getActionConf(PrecomputedRuleExecutor.class);
+		ActionConf a = ActionFactory
+				.getActionConf(PrecomputedRuleExecutor.class);
 		a.setParamInt(I_RULE_ID, ruleId);
 		a.setParamBoolean(B_INCREMENTAL_FLAG, incrementalFlag);
 		a.setParamInt(I_MINIMUM_STEP, minimumStep);
@@ -45,9 +47,12 @@ public class PrecomputedRuleExecutor extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(I_RULE_ID, "I_RULE_ID", null, true);
-		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false, true);
-		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP", Integer.MIN_VALUE, true);
-		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
+		conf.registerParameter(B_INCREMENTAL_FLAG, "B_INCREMENTAL_FLAG", false,
+				true);
+		conf.registerParameter(I_MINIMUM_STEP, "I_MINIMUM_STEP",
+				Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP",
+				Integer.MIN_VALUE, true);
 	}
 
 	@Override
@@ -56,17 +61,20 @@ public class PrecomputedRuleExecutor extends Action {
 		incrementalFlag = getParamBoolean(B_INCREMENTAL_FLAG);
 		minStep = getParamInt(I_MINIMUM_STEP);
 		outputStep = getParamInt(I_OUTPUT_STEP);
-
-		rule = ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().get(ruleId);
-		rule.reloadPrecomputation(ReasoningContext.getInstance(), context, incrementalFlag, !incrementalFlag);
+		rule = ReasoningContext.getInstance().getRuleset()
+				.getAllSchemaOnlyRules().get(ruleId);
 		pos_head_precomp = rule.getSharedVariablesHead_Precomp();
 		counter = 0;
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
-		Tuples tuples = incrementalFlag ? rule.getFlaggedPrecomputedTuples() : rule.getAllPrecomputedTuples();
-		SimpleData[] outputTriple = { new TLong(), new TLong(), new TLong(), new TInt() };
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+		Tuples tuples = incrementalFlag ? rule
+				.getFlaggedPrecomputedTuples(context) : rule
+				.getAllPrecomputedTuples(context);
+		SimpleData[] outputTriple = { new TLong(), new TLong(), new TLong(),
+				new TInt() };
 
 		// Fill the output with the constants in the head
 		Pattern head = rule.getHead();
@@ -84,7 +92,8 @@ public class PrecomputedRuleExecutor extends Action {
 				continue;
 			}
 			for (int j = 0; j < pos_head_precomp.length; ++j) {
-				((TLong) outputTriple[pos_head_precomp[j][0]]).setValue(r.getValue(pos_head_precomp[j][1]).getValue());
+				((TLong) outputTriple[pos_head_precomp[j][0]]).setValue(r
+						.getValue(pos_head_precomp[j][1]).getValue());
 			}
 			actionOutput.output(outputTriple);
 			counter++;
@@ -92,7 +101,8 @@ public class PrecomputedRuleExecutor extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		context.incrCounter("derivation-rule-" + rule.getId(), counter);
 	}
 
