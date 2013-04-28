@@ -113,7 +113,7 @@ public class SchemaManager {
 		TupleSet inMemorySet = (TupleSet) context
 				.getObjectFromCache(Consts.CURRENT_DELTA_KEY);
 		if (inMemorySet == null) {
-			log.error("Unable to retrieve in-memory tuple set from cache");
+			return null;
 		}
 		Set<Tuple> result = null;
 		try {
