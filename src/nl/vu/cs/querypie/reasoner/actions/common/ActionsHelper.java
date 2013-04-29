@@ -54,7 +54,7 @@ public class ActionsHelper {
 
 	private static void groupBy(ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(GroupBy.class);
-		c.setParamByteArray(GroupBy.IA_FIELDS_TO_GROUP, (byte) 0);
+		c.setParamByteArray(GroupBy.BA_FIELDS_TO_GROUP, (byte) 0);
 		c.setParamStringArray(GroupBy.SA_TUPLE_FIELDS, TByteArray.class.getName(), TBoolean.class.getName(), TByte.class.getName(), TLong.class.getName());
 		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE, nl.vu.cs.querypie.reasoner.support.Consts.GROUP_BY_NUM_THREADS);
 		actions.add(c);

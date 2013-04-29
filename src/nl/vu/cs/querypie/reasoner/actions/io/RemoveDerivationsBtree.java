@@ -31,20 +31,20 @@ public class RemoveDerivationsBtree extends Action {
 	private long removedTriples;
 	private long notRemovedTriples;
 	private final byte[] key = new byte[24];
-	
+
 	private int encode(long l1, long l2, long l3) {
 		return in.encode(key, l1, l2, l3);
 	}
-	
+
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
-		spo = in.openWritingSession(DBType.SPO);
-		sop = in.openWritingSession(DBType.SOP);
-		pso = in.openWritingSession(DBType.PSO);
-		pos = in.openWritingSession(DBType.POS);
-		osp = in.openWritingSession(DBType.OSP);
-		ops = in.openWritingSession(DBType.OPS);
+		spo = in.openWritingSession(context, DBType.SPO);
+		sop = in.openWritingSession(context, DBType.SOP);
+		pso = in.openWritingSession(context, DBType.PSO);
+		pos = in.openWritingSession(context, DBType.POS);
+		osp = in.openWritingSession(context, DBType.OSP);
+		ops = in.openWritingSession(context, DBType.OPS);
 		removedTriples = notRemovedTriples = 0;
 	}
 
