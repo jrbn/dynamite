@@ -20,7 +20,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static void addToChain(ActionSequence actions, String deltaDir, boolean add) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions, String deltaDir,
+			boolean add) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -46,12 +47,14 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
@@ -68,7 +71,8 @@ public class IncrRulesController extends Action {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		if (add) {
-			IncrAddController.addToChain(ParamHandler.get().getLastStep(), true, actions);
+			IncrAddController.addToChain(ParamHandler.get().getLastStep(),
+					true, actions);
 		} else {
 			IncrRemoveController.addToChain(true, actions);
 		}

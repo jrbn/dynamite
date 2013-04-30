@@ -20,7 +20,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveController extends Action {
-	public static void addToChain(boolean firstIteration, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(boolean firstIteration, ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
 		c.setParamBoolean(B_FIRST_ITERATION, firstIteration);
 		actions.add(c);
@@ -34,21 +35,25 @@ public class IncrRemoveController extends Action {
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "B_FIRST_ITERATION", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "B_FIRST_ITERATION", true,
+				false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+				new TLong());
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			tuple.copyTo(currentTuple);
-			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			Object completeDeltaObj = context
+					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 			if (completeDeltaObj instanceof TupleSet) {
 				TupleSet completeDelta = (TupleSet) completeDeltaObj;
 				if (completeDelta.add(currentTuple)) {
@@ -67,7 +72,8 @@ public class IncrRemoveController extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (firstIteration) {
 			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
@@ -90,7 +96,8 @@ public class IncrRemoveController extends Action {
 	 * 
 	 * 2. Start re-derivation from remaining facts
 	 */
-	private void deleteAndReDerive(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void deleteAndReDerive(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		// No need for re-derivation in case of counting algorithm
 		if (ParamHandler.get().isUsingCount()) {
@@ -122,7 +129,8 @@ public class IncrRemoveController extends Action {
 		actionOutput.branch(actions);
 	}
 
-	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeOneForwardChainIterationAndRestart(
+			ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		// FIXME: which is the correct step for this derivation?
 		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
