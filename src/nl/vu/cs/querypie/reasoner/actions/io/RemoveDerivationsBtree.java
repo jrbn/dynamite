@@ -19,7 +19,14 @@ import nl.vu.cs.querypie.storage.WritingSession;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class RemoveDerivationsBtree extends Action {
+
+	protected static final Logger log = LoggerFactory
+			.getLogger(RemoveDerivationsBtree.class);
+
 	public static void addToChain(ActionSequence actions)
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory

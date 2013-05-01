@@ -29,7 +29,14 @@ import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PrecompGenericReduce extends Action {
+
+	protected static final Logger log = LoggerFactory
+			.getLogger(PrecompGenericReduce.class);
+
 	public static void addToChain(int minimumStep, int outputStep,
 			boolean incrementalFlag, ActionSequence actions)
 			throws ActionNotConfiguredException {

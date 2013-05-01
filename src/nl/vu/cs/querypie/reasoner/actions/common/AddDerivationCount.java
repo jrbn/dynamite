@@ -13,8 +13,16 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class AddDerivationCount extends Action {
-	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
+
+	protected static final Logger log = LoggerFactory
+			.getLogger(AddDerivationCount.class);
+
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
 		actions.add(c);
 	}
@@ -47,7 +55,12 @@ public class AddDerivationCount extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
+
+		log.debug("Input: " + tuple.get(0) + " " + tuple.get(1) + " "
+				+ tuple.get(2) + " - " + tuple.get(3));
+
 		if (!sameTriple(tuple)) {
 			if (currentCount > 0) {
 				generateOutput(actionOutput);
@@ -60,7 +73,8 @@ public class AddDerivationCount extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (currentCount > 0) {
 			generateOutput(actionOutput);
 		}
@@ -76,11 +90,12 @@ public class AddDerivationCount extends Action {
 
 	private void generateOutput(ActionOutput actionOutput) throws Exception {
 		step.setValue(minStep);
-		count.setValue(currentCount);
+		count.setValue(currentCount);		
 		actionOutput.output(outputTuple);
 	}
 
 	private boolean sameTriple(Tuple t) {
-		return t.get(0).equals(tl1) && t.get(1).equals(tl2) && t.get(2).equals(tl3);
+		return t.get(0).equals(tl1) && t.get(1).equals(tl2)
+				&& t.get(2).equals(tl3);
 	}
 }
