@@ -18,13 +18,21 @@ import org.slf4j.LoggerFactory;
 
 public class AddDerivationCount extends Action {
 
+	public static final int I_MIN_STEP = 0;
+
 	protected static final Logger log = LoggerFactory
 			.getLogger(AddDerivationCount.class);
 
-	public static void addToChain(ActionSequence actions)
+	public static void addToChain(ActionSequence actions, int currentStep)
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(AddDerivationCount.class);
+		c.setParamInt(I_MIN_STEP, currentStep);
 		actions.add(c);
+	}
+
+	@Override
+	protected void registerActionParameters(ActionConf conf) {
+		conf.registerParameter(I_MIN_STEP, "step", null, true);
 	}
 
 	private int currentCount;
@@ -35,6 +43,7 @@ public class AddDerivationCount extends Action {
 	private TInt step, count;
 
 	private int minStep;
+	private int stepToCount;
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
@@ -52,23 +61,22 @@ public class AddDerivationCount extends Action {
 		outputTuple[4] = count;
 		currentCount = 0;
 		minStep = Integer.MAX_VALUE;
+		stepToCount = getParamInt(I_MIN_STEP);
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-
-		log.debug("Input: " + tuple.get(0) + " " + tuple.get(1) + " "
-				+ tuple.get(2) + " - " + tuple.get(3));
-
 		if (!sameTriple(tuple)) {
 			if (currentCount > 0) {
 				generateOutput(actionOutput);
 			}
 			prepareForNewTuple(tuple);
 		} else {
-			minStep = Math.min(minStep, ((TInt) tuple.get(3)).getValue());
-			currentCount++;
+			int step = ((TInt) tuple.get(3)).getValue();
+			minStep = Math.min(minStep, step);
+			if (step >= stepToCount)
+				currentCount++;
 		}
 	}
 
@@ -85,12 +93,16 @@ public class AddDerivationCount extends Action {
 		tl2.setValue(((TLong) tuple.get(1)).getValue());
 		tl3.setValue(((TLong) tuple.get(2)).getValue());
 		minStep = ((TInt) tuple.get(3)).getValue();
-		currentCount = 1;
+		if (minStep >= stepToCount) {
+			currentCount = 1;
+		} else {
+			currentCount = 0;
+		}
 	}
 
 	private void generateOutput(ActionOutput actionOutput) throws Exception {
 		step.setValue(minStep);
-		count.setValue(currentCount);		
+		count.setValue(currentCount);
 		actionOutput.output(outputTuple);
 	}
 

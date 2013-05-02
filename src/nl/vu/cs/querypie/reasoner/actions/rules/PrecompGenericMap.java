@@ -22,7 +22,14 @@ import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PrecompGenericMap extends Action {
+
+	protected static final Logger log = LoggerFactory
+			.getLogger(PrecompGenericMap.class);
+
 	public static void addToChain(int minimumStep, boolean incrementalFlag,
 			ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PrecompGenericMap.class);
@@ -112,6 +119,9 @@ public class PrecompGenericMap extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
+		if (log.isDebugEnabled()) {
+			log.debug("INPUT: " + tuple);
+		}
 		for (int r = 0; r < rules.size(); r++) {
 			// Does the input match with the generic pattern?
 			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(
@@ -125,7 +135,14 @@ public class PrecompGenericMap extends Action {
 				// Check whether the step is ok
 				int schemaStep = acceptableValues[r].get(t.getValue());
 				int currentStep = ((TInt) tuple.get(3)).getValue();
+
 				if (currentStep < minimumStep && schemaStep < minimumStep) {
+					if (log.isDebugEnabled()) {
+						log.debug("The input triple " + tuple
+								+ " is not eligeble for rule=" + r + ". JP="
+								+ t.getIdDatatype() + " CS=" + currentStep
+								+ " SS=" + schemaStep + " MS=" + minimumStep);
+					}
 					continue;
 				}
 				ruleID.setValue(r);
@@ -143,6 +160,18 @@ public class PrecompGenericMap extends Action {
 					outputTuple.set(twoKeys, valid, ruleID,
 							tuple.get(positions_to_check[r][0]));
 				}
+
+				if (log.isDebugEnabled()) {
+					TByteArray key = (TByteArray) outputTuple.get(0);
+					log.debug("The input triple " + tuple
+							+ " has outputed the following tuple "
+							+ Utils.decodeLong(key.getArray(), 0) + "("
+							+ key.getArray().length + ") " + valid + " - "
+							+ ruleID + " - " + outputTuple.get(3)
+							+ ". Minstep=" + minimumStep + " schemaStep="
+							+ schemaStep);
+				}
+
 				actionOutput.output(outputTuple);
 			}
 		}

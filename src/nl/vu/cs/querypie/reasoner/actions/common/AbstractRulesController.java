@@ -35,7 +35,7 @@ public abstract class AbstractRulesController extends Action {
 				actions);
 		ActionsHelper.sort(actions);
 		if (ParamHandler.get().isUsingCount()) {
-			AddDerivationCount.addToChain(actions);
+			AddDerivationCount.addToChain(actions, currentStep);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
@@ -81,15 +81,15 @@ public abstract class AbstractRulesController extends Action {
 		ActionsHelper.sort(actions);
 
 		if (ParamHandler.get().isUsingCount()) {
-			ActionsHelper.filterStep(actions, currentStep);
-			AddDerivationCount.addToChain(actions);
+			AddDerivationCount.addToChain(actions, currentStep);
 			// Write the "counts" in special files
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
 					actions, true);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
-			ActionsHelper.filterStep(actions, currentStep);
 		}
+
+		ActionsHelper.filterStep(actions, currentStep);
 
 		if (writeTo == TypeStorage.IN_MEMORY) {
 			writeDerivations(writeTo, actions);

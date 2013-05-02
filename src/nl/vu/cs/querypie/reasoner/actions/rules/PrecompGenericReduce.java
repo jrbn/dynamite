@@ -138,11 +138,6 @@ public class PrecompGenericReduce extends Action {
 			TByte rule = (TByte) t.get(1);
 			TLong elementToJoin = (TLong) t.get(2);
 
-			// if (rule.getValue() == currentRule
-			// && currentJoinValue == elementToJoin.getValue()) {
-			// continue;
-			// } else {
-
 			if (currentRule != rule.getValue()) {
 				currentRule = rule.getValue();
 				// First copy the "key" in the output triple.
@@ -151,13 +146,26 @@ public class PrecompGenericReduce extends Action {
 							.setValue(Utils.decodeLong(key.getArray(), 8 * i));
 				}
 			}
-			// }
 
 			currentJoinValue = elementToJoin.getValue();
 			Collection<Row> set = precompTuples[currentRule].get(
 					pos_gen_precomps[currentRule][0][1], currentJoinValue);
 			if (set != null) {
 				for (Row row : set) {
+					if (log.isDebugEnabled()) {
+						long k = Utils.decodeLong(key.getArray(), 0);
+						log.debug("Rule " + currentRule
+								+ " can derive the triple "
+								+ outputTuples[currentRule][0] + " "
+								+ outputTuples[currentRule][1] + " "
+								+ outputTuples[currentRule][2] + " JP="
+								+ elementToJoin.getValue() + " SS="
+								+ set.size() + " currentStep=" + row.getStep()
+								+ " minStep=" + minimumStep + " valid="
+								+ valid.getValue() + " key=" + k + " kl="
+								+ key.getArray().length);
+					}
+
 					// Only if the step is ok
 					if (!valid.getValue() && row.getStep() < minimumStep) {
 						continue;
@@ -170,14 +178,20 @@ public class PrecompGenericReduce extends Action {
 										.getValue());
 					}
 					supportTuple.set(outputTuples[currentRule]);
-					// if (! duplicates.contains(supportTuple)) {
-					// duplicates.add(supportTuple);
-					// The return value of add() already indicates if the set
-					// did not contain the value. --Ceriel
+
 					if (duplicates.add(supportTuple)) {
 						supportTuple = TupleFactory.newTuple();
 						actionOutput.output(outputTuples[currentRule]);
 						counters[currentRule]++;
+
+						if (log.isDebugEnabled()) {
+							log.debug("Rule " + currentRule
+									+ " has derived the triple "
+									+ outputTuples[currentRule][0] + " "
+									+ outputTuples[currentRule][1] + " "
+									+ outputTuples[currentRule][2] + " JP="
+									+ elementToJoin.getValue());
+						}
 					}
 				}
 			}
