@@ -24,7 +24,7 @@ import org.iq80.snappy.SnappyInputStream;
 
 public class IOHelper {
 
-	public static TupleSet populateInMemorySetFromFile(String fileName)
+	public static TupleSet populateInMemorySetFromFile(String fileName, boolean sub)
 			throws Exception {
 		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
@@ -52,11 +52,13 @@ public class IOHelper {
 					((TLong) triple[1]).setValue(is.readLong());
 					((TLong) triple[2]).setValue(is.readLong());
 					is.readInt(); // Discard the step
-					if (ParamHandler.get().isUsingCount()) {
-						// input.decreaseOrRemove(t, 1);
-						// Not now.
-					} else {
-						input.remove(t); // Remove the original tuple
+					if (sub) {
+						if (ParamHandler.get().isUsingCount()) {
+							// input.decreaseOrRemove(t, 1);
+							// Not now.
+						} else {
+							input.remove(t); // Remove the original tuple
+						}
 					}
 
 					set.add(t);

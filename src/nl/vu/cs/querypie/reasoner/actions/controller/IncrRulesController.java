@@ -55,7 +55,7 @@ public class IncrRulesController extends Action {
 	@Override
 	public void stopProcess(ActionContext context, ActionOutput actionOutput)
 			throws Exception {
-		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir);
+		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir, ! add);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		if (ParamHandler.get().isUsingCount()) {
 			TupleStepMap completeDelta = new TupleStepMapImpl();
