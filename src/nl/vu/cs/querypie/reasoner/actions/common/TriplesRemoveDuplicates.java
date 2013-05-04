@@ -19,6 +19,7 @@ public class TriplesRemoveDuplicates extends Action {
 	@Override
 	public void process(Tuple inputTuple, ActionContext context,
 			ActionOutput output) throws Exception {
+
 		if (first) {
 			inputTuple.copyTo(tuple);
 			output.output(inputTuple);

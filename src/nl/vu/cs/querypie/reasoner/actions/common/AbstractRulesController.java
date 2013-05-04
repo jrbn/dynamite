@@ -39,8 +39,8 @@ public abstract class AbstractRulesController extends Action {
 		} else {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		writeDerivations(writeTo, actions);
 
+		writeDerivations(writeTo, actions);
 		if (writeTo == TypeStorage.BTREE) {
 			ActionsHelper.writeCopyToFiles(ParamHandler.get().getCopyDir(),
 					actions, false);

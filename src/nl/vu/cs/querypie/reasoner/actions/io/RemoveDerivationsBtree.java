@@ -1,5 +1,6 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import nl.vu.cs.ajira.actions.Action;
@@ -60,7 +61,7 @@ public class RemoveDerivationsBtree extends Action {
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
 		Object obj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-		removeAllTuplesInSet(obj);
+		removeAllTuplesInSet(context, obj);
 	}
 
 	@Override
@@ -77,21 +78,27 @@ public class RemoveDerivationsBtree extends Action {
 				notRemovedTriples);
 	}
 
-	private void removeAllTuplesInSet(Object set) {
+	private void removeAllTuplesInSet(ActionContext context, Object set) {
 
 		if (set instanceof TupleSet) {
+
+			Map<Tuple, Integer> tmpSteps = new HashMap<Tuple, Integer>();
+
 			for (Tuple tuple : (TupleSet) set) {
 				long s = ((TLong) tuple.get(0)).getValue();
 				long p = ((TLong) tuple.get(1)).getValue();
 				long o = ((TLong) tuple.get(2)).getValue();
-				
+
 				if (log.isDebugEnabled()) {
 					log.debug("Possibly removing " + s + " " + p + " " + o);
 				}
 
 				int len = encode(s, p, o);
-				if (spo.removeIfStepNonZero(key, len)) {
+				int originalStep = 0;
+				if ((originalStep = spo.removeIfStepNonZero(key, len)) == 0) {
 					removedTriples++;
+				} else {
+					tmpSteps.put(tuple, originalStep);
 				}
 
 				len = encode(s, o, p);
@@ -109,6 +116,8 @@ public class RemoveDerivationsBtree extends Action {
 				len = encode(o, p, s);
 				ops.removeIfStepNonZero(key, len);
 			}
+
+			context.putObjectInCache(Consts.TMP_REMOVALS, tmpSteps);
 		} else {
 			for (Map.Entry<Tuple, Integer> entry : ((TupleStepMap) set)
 					.entrySet()) {
@@ -119,8 +128,7 @@ public class RemoveDerivationsBtree extends Action {
 				long o = ((TLong) tuple.get(2)).getValue();
 
 				int len = encode(s, p, o);
-				boolean removed = spo.decreaseOrRemove(key, len,
-						value);
+				boolean removed = spo.decreaseOrRemove(key, len, value);
 
 				len = encode(s, o, p);
 				sop.decreaseOrRemove(key, len, value);
