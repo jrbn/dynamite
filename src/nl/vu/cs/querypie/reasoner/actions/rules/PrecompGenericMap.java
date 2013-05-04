@@ -139,7 +139,7 @@ public class PrecompGenericMap extends Action {
 				if (currentStep < minimumStep && schemaStep < minimumStep) {
 					if (log.isDebugEnabled()) {
 						log.debug("The input triple " + tuple
-								+ " is not eligeble for rule=" + r + ". JP="
+								+ " is not eligible for rule=" + r + ". JP="
 								+ t.getIdDatatype() + " CS=" + currentStep
 								+ " SS=" + schemaStep + " MS=" + minimumStep);
 					}
