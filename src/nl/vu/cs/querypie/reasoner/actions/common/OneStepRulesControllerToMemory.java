@@ -35,10 +35,11 @@ public class OneStepRulesControllerToMemory extends AbstractRulesController {
 		cleanInMemoryContainer(context, Consts.CURRENT_DELTA_KEY);
 		ActionSequence actions = new ActionSequence();
 		if (!ReasoningContext.getInstance().getRuleset().getAllSchemaOnlyRules().isEmpty()) {
-			applyRulesSchemaOnly(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
-			applyRulesWithGenericPatternsInABranch(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
+			// Add 10 to Integer.MIN_VALUE to avoid wrap-around in integer arithmetic.
+			applyRulesSchemaOnly(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE + 10);
+			applyRulesWithGenericPatternsInABranch(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE + 10);
 		} else {
-			applyRulesWithGenericPatterns(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE);
+			applyRulesWithGenericPatterns(actions, TypeStorage.IN_MEMORY, Integer.MIN_VALUE + 10);
 		}
 		ActionsHelper.collectToNode(false, actions);
 		actionOutput.branch(actions);
