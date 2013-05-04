@@ -28,7 +28,7 @@ public class WriteDerivationsAllBtree extends Action {
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private final byte[] triple = new byte[24];
-	private final byte[] meta = new byte[8];
+	private byte[] meta;
 	private long dupCount, newCount;
 
 	@Override
@@ -41,6 +41,12 @@ public class WriteDerivationsAllBtree extends Action {
 		osp = in.openWritingSession(context, DBType.OSP);
 		ops = in.openWritingSession(context, DBType.OPS);
 		newCount = dupCount = 0;
+		if (ParamHandler.get().isUsingCount()) {
+			meta = new byte[8];
+		} else {
+			meta = new byte[4];
+		}
+
 	}
 
 	private int encode(long l1, long l2, long l3) {

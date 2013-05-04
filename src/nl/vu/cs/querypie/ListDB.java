@@ -77,7 +77,7 @@ public class ListDB {
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionConf c = ActionFactory.getActionConf(WriteToFiles.class);
-		c.setParamString(WriteToFiles.S_PATH, "/home/ceriel/Desktop");
+		c.setParamString(WriteToFiles.S_PATH, "/Users/jacopo/Desktop");
 		actions.add(c);
 		job.setActions(actions);
 

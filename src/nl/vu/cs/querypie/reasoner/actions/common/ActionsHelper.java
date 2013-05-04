@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import nl.vu.cs.ajira.actions.ActionConf;
-import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
@@ -26,7 +25,6 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.datalayer.dummy.DummyLayer;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
@@ -162,15 +160,6 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void writeInMemoryTuplesToBTree(ActionContext context,
-			ActionOutput actionOutput, String inMemoryKey) throws Exception {
-		ActionSequence actions = new ActionSequence();
-		readFakeTuple(actions);
-		ReadAllInMemoryTriples.addToChain(inMemoryKey, actions);
-		WriteDerivationsAllBtree.addToChain(actions);
-		actionOutput.branch(actions);
-	}
-
 	public static void writeCopyToFiles(String dir, ActionSequence actions,
 			boolean counts) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(WriteToFiles.class);
@@ -217,8 +206,9 @@ public class ActionsHelper {
 		actions.add(c);
 	}
 
-	public static void reloadPrecomputationForSchemaGenericRules(ActionSequence actions)
-			throws ActionNotConfiguredException {
-		actions.add(ActionFactory.getActionConf(ReloadPrecompSchemaGenericRules.class));
+	public static void reloadPrecomputationForSchemaGenericRules(
+			ActionSequence actions) throws ActionNotConfiguredException {
+		actions.add(ActionFactory
+				.getActionConf(ReloadPrecompSchemaGenericRules.class));
 	}
 }

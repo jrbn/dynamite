@@ -119,9 +119,7 @@ public class PrecompGenericMap extends Action {
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		if (log.isDebugEnabled()) {
-			log.debug("INPUT: " + tuple);
-		}
+
 		for (int r = 0; r < rules.size(); r++) {
 			// Does the input match with the generic pattern?
 			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(

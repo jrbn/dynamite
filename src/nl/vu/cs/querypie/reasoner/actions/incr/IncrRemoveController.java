@@ -100,31 +100,29 @@ public class IncrRemoveController extends Action {
 			ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
 		// No need for re-derivation in case of counting algorithm
-		if (ParamHandler.get().isUsingCount()) {
-			// Remove the derivations from the B-tree
-			ActionsHelper.readFakeTuple(actions);
-			RemoveDerivationsBtree.addToChain(actions);
-		} else {
-			ActionsHelper.collectToNode(false, actions);
-			ActionSequence firstBranch = new ActionSequence();
-			ActionSequence secondBranch = new ActionSequence();
-			ActionSequence thirdBranch = new ActionSequence();
 
-			// Remove the derivations from the B-tree
-			ActionsHelper.readFakeTuple(firstBranch);
-			RemoveDerivationsBtree.addToChain(firstBranch);
+		ActionsHelper.readFakeTuple(actions);
+		RemoveDerivationsBtree.addToChain(actions);
 
-			// Start one step derivation and write results in memory
-			ActionsHelper.readFakeTuple(secondBranch);
-			OneStepRulesControllerToMemory.addToChain(secondBranch);
+		if (!ParamHandler.get().isUsingCount()) {
 
-			// Continue deriving by iterating on the IncrAddController
-			ActionsHelper.readFakeTuple(thirdBranch);
-			IncrAddController.addToChain(-1, true, thirdBranch);
+			// Re-derive what is possible to derive
+			ActionSequence branch = new ActionSequence();
+			ActionsHelper.readFakeTuple(branch);
+			int step = ParamHandler.get().getLastStep() + 1;
+			OneStepRulesControllerToMemory.addToChain(branch, step);
 
-			ActionsHelper.createBranch(secondBranch, thirdBranch);
-			ActionsHelper.createBranch(firstBranch, secondBranch);
-			ActionsHelper.createBranch(actions, firstBranch);
+			// The previous action will actually read the entire input. First
+			// filter out all the duplicates
+			ActionsHelper.sort(branch);
+			ActionsHelper.removeDuplicates(branch);
+			ActionsHelper.filterStep(branch, step);
+
+			// Collect all the new derivation in one location
+			ActionsHelper.collectToNode(false, branch);
+			ActionsHelper.writeSchemaTriplesInBtree(actions);
+			IncrAddController.addToChain(step + 1, false, branch);
+			ActionsHelper.createBranch(actions, branch);
 		}
 		actionOutput.branch(actions);
 	}
@@ -132,7 +130,6 @@ public class IncrRemoveController extends Action {
 	private void executeOneForwardChainIterationAndRestart(
 			ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
-		// FIXME: which is the correct step for this derivation?
 		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
 		ActionsHelper.collectToNode(false, actions);
 		if (!ParamHandler.get().isUsingCount()) {
