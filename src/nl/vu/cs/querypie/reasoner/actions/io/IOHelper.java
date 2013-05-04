@@ -58,6 +58,12 @@ public class IOHelper {
 					// input.remove(t); // Remove the original tuple
 					// }
 
+					if (((TLong) triple[0]).getValue() == 85088
+							&& ((TLong) triple[1]).getValue() == 0
+							&& ((TLong) triple[2]).getValue() == 85058) {
+						System.out.println("Found");
+					}
+
 					set.add(t);
 				}
 			} catch (EOFException e) {
