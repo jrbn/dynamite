@@ -81,56 +81,61 @@ public class RemoveDerivationsBtree extends Action {
 
 		if (set instanceof TupleSet) {
 			for (Tuple tuple : (TupleSet) set) {
-				TLong s = (TLong) tuple.get(0);
-				TLong p = (TLong) tuple.get(1);
-				TLong o = (TLong) tuple.get(2);
+				long s = ((TLong) tuple.get(0)).getValue();
+				long p = ((TLong) tuple.get(1)).getValue();
+				long o = ((TLong) tuple.get(2)).getValue();
+				
+				if (log.isDebugEnabled()) {
+					log.debug("Possibly removing " + s + " " + p + " " + o);
+				}
 
-				int len = encode(s.getValue(), p.getValue(), o.getValue());
-				spo.remove(key, len);
+				int len = encode(s, p, o);
+				if (spo.removeIfStepNonZero(key, len)) {
+					removedTriples++;
+				}
 
-				len = encode(s.getValue(), o.getValue(), p.getValue());
-				sop.remove(key, len);
+				len = encode(s, o, p);
+				sop.removeIfStepNonZero(key, len);
 
-				len = encode(p.getValue(), o.getValue(), s.getValue());
-				pos.remove(key, len);
+				len = encode(p, o, s);
+				pos.removeIfStepNonZero(key, len);
 
-				len = encode(p.getValue(), s.getValue(), o.getValue());
-				pso.remove(key, len);
+				len = encode(p, s, o);
+				pso.removeIfStepNonZero(key, len);
 
-				len = encode(o.getValue(), s.getValue(), p.getValue());
-				osp.remove(key, len);
+				len = encode(o, s, p);
+				osp.removeIfStepNonZero(key, len);
 
-				len = encode(o.getValue(), p.getValue(), s.getValue());
-				ops.remove(key, len);
-
-				removedTriples++;
+				len = encode(o, p, s);
+				ops.removeIfStepNonZero(key, len);
 			}
 		} else {
 			for (Map.Entry<Tuple, Integer> entry : ((TupleStepMap) set)
 					.entrySet()) {
 				Tuple tuple = entry.getKey();
-				TLong s = (TLong) tuple.get(0);
-				TLong p = (TLong) tuple.get(1);
-				TLong o = (TLong) tuple.get(2);
+				int value = entry.getValue();
+				long s = ((TLong) tuple.get(0)).getValue();
+				long p = ((TLong) tuple.get(1)).getValue();
+				long o = ((TLong) tuple.get(2)).getValue();
 
-				int len = encode(s.getValue(), p.getValue(), o.getValue());
+				int len = encode(s, p, o);
 				boolean removed = spo.decreaseOrRemove(key, len,
-						entry.getValue());
+						value);
 
-				len = encode(s.getValue(), o.getValue(), p.getValue());
-				sop.decreaseOrRemove(key, len, entry.getValue());
+				len = encode(s, o, p);
+				sop.decreaseOrRemove(key, len, value);
 
-				len = encode(p.getValue(), o.getValue(), s.getValue());
-				pos.decreaseOrRemove(key, len, entry.getValue());
+				len = encode(p, o, s);
+				pos.decreaseOrRemove(key, len, value);
 
-				len = encode(p.getValue(), s.getValue(), o.getValue());
-				pso.decreaseOrRemove(key, len, entry.getValue());
+				len = encode(p, s, o);
+				pso.decreaseOrRemove(key, len, value);
 
-				len = encode(o.getValue(), s.getValue(), p.getValue());
-				osp.decreaseOrRemove(key, len, entry.getValue());
+				len = encode(o, s, p);
+				osp.decreaseOrRemove(key, len, value);
 
-				len = encode(o.getValue(), p.getValue(), s.getValue());
-				ops.decreaseOrRemove(key, len, entry.getValue());
+				len = encode(o, p, s);
+				ops.decreaseOrRemove(key, len, value);
 
 				if (removed) {
 					removedTriples++;

@@ -14,7 +14,9 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
+import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 
@@ -22,7 +24,7 @@ import org.iq80.snappy.SnappyInputStream;
 
 public class IOHelper {
 
-	public static TupleSet populateInMemorySetFromFile(String fileName)
+	public static TupleSet populateInMemorySetFromFile(String fileName, boolean sub)
 			throws Exception {
 		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
@@ -34,9 +36,7 @@ public class IOHelper {
 			files.add(fInput);
 		}
 
-		// BTreeInterface input = (BTreeInterface)
-		// ReasoningContext.getInstance()
-		// .getKB();
+		BTreeInterface input = (BTreeInterface)	ReasoningContext.getInstance().getKB();
 		for (File file : files) {
 			DataInputStream is = null;
 			try {
@@ -52,11 +52,14 @@ public class IOHelper {
 					((TLong) triple[1]).setValue(is.readLong());
 					((TLong) triple[2]).setValue(is.readLong());
 					is.readInt(); // Discard the step
-					// if (ParamHandler.get().isUsingCount()) {
-					// input.decreaseOrRemove(t, 1);
-					// } else {
-					// input.remove(t); // Remove the original tuple
-					// }
+					if (sub) {
+						if (ParamHandler.get().isUsingCount()) {
+							// input.decreaseOrRemove(t, 1);
+							// Not now.
+						} else {
+							input.remove(t); // Remove the original tuple
+						}
+					}
 
 					if (((TLong) triple[0]).getValue() == 85088
 							&& ((TLong) triple[1]).getValue() == 0

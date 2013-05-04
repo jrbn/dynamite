@@ -87,9 +87,8 @@ public abstract class AbstractRulesController extends Action {
 					actions, true);
 		} else {
 			ActionsHelper.removeDuplicates(actions);
+			ActionsHelper.filterStep(actions, currentStep);
 		}
-
-		ActionsHelper.filterStep(actions, currentStep);
 
 		if (writeTo == TypeStorage.IN_MEMORY) {
 			writeDerivations(writeTo, actions);
