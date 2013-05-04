@@ -97,7 +97,8 @@ public class RemoveDerivationsBtree extends Action {
 				int originalStep = 0;
 				if ((originalStep = spo.removeIfStepNonZero(key, len)) == 0) {
 					removedTriples++;
-				} else {
+				} else if (originalStep != -1) {
+					tuple.set(tuple.get(0), tuple.get(1), tuple.get(2));
 					tmpSteps.put(tuple, originalStep);
 				}
 

@@ -15,25 +15,31 @@ public class ReplaceSteps extends Action {
 
 	private Map<Tuple, Integer> tmp;
 	private final TInt newStep = new TInt();
-	private final Tuple supportTuple = TupleFactory.newTuple(new SimpleData[4]);
+
+	private final SimpleData[] supportKey = new SimpleData[3];
+	private final Tuple tSupportKey = TupleFactory.newTuple(supportKey);
+	private final SimpleData[] supportTuple = new SimpleData[4];
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		tmp = (Map<Tuple, Integer>) context
 				.getObjectFromCache(Consts.TMP_REMOVALS);
-		supportTuple.set(newStep, 3);
+		supportTuple[3] = newStep;
 	}
 
 	@Override
 	public void process(Tuple tuple, ActionContext context,
 			ActionOutput actionOutput) throws Exception {
-		supportTuple.set(tuple.get(0), 0);
-		supportTuple.set(tuple.get(1), 1);
-		supportTuple.set(tuple.get(2), 2);
-		if (tmp.containsKey(supportTuple)) {
+		supportKey[0] = tuple.get(0);
+		supportKey[1] = tuple.get(1);
+		supportKey[2] = tuple.get(2);
+		if (tmp.containsKey(tSupportKey)) {
 			Integer s = tmp.get(supportTuple);
 			newStep.setValue(s);
+			supportTuple[0] = supportKey[0];
+			supportTuple[1] = supportKey[1];
+			supportTuple[2] = supportKey[2];
 			actionOutput.output(supportTuple);
 		} else {
 			actionOutput.output(tuple);
