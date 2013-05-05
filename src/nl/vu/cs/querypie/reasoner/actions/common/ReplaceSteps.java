@@ -34,8 +34,8 @@ public class ReplaceSteps extends Action {
 		supportKey[0] = tuple.get(0);
 		supportKey[1] = tuple.get(1);
 		supportKey[2] = tuple.get(2);
-		if (tmp.containsKey(tSupportKey)) {
-			Integer s = tmp.get(supportTuple);
+		Integer s = tmp.get(tSupportKey);
+		if (s != null) {
 			newStep.setValue(s);
 			supportTuple[0] = supportKey[0];
 			supportTuple[1] = supportKey[1];
@@ -45,5 +45,4 @@ public class ReplaceSteps extends Action {
 			actionOutput.output(tuple);
 		}
 	}
-
 }

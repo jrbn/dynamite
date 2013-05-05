@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.support.Consts;
@@ -98,8 +99,9 @@ public class RemoveDerivationsBtree extends Action {
 				if ((originalStep = spo.removeIfStepNonZero(key, len)) == 0) {
 					removedTriples++;
 				} else if (originalStep != -1) {
-					tuple.set(tuple.get(0), tuple.get(1), tuple.get(2));
-					tmpSteps.put(tuple, originalStep);
+					Tuple t = TupleFactory.newTuple();
+					t.set(tuple.get(0), tuple.get(1), tuple.get(2));
+					tmpSteps.put(t, originalStep);
 				}
 
 				len = encode(s, o, p);
