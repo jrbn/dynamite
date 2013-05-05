@@ -38,9 +38,9 @@ public class ListDB {
 	private static int nProcThreads = 4;
 
 	public static void main(String[] args) {
-		if (args.length < 2) {
+		if (args.length < 3) {
 			System.out
-					.println("Usage: Reasoner <KB_dir> <ruleset> [--remove|--add <diff_file>] [--countDerivations] [--debug] [--debugToFile <file>] [--lastStepFile <file>] [--writeCopyAt <dir>]");
+					.println("Usage: ListDB <KB_dir> <ruleset> <destination-dir> [ options ]");
 			return;
 		}
 		parseArgs(args);
@@ -51,7 +51,7 @@ public class ListDB {
 			arch.startup();
 			readRules(args[1]);
 			initGlobalContext(arch);
-			launchLister(arch);
+			launchLister(arch, args[2]);
 			closeGlobalContext(arch);
 			arch.shutdown();
 		} catch (Exception e) {
@@ -71,13 +71,13 @@ public class ListDB {
 		ReasoningContext.getInstance().getKB().close();
 	}
 
-	private static void launchLister(Ajira arch)
+	private static void launchLister(Ajira arch, String dest)
 			throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readEverythingFromBTree(actions);
 		ActionConf c = ActionFactory.getActionConf(WriteToFiles.class);
-		c.setParamString(WriteToFiles.S_PATH, "/Users/jacopo/Desktop");
+		c.setParamString(WriteToFiles.S_PATH, dest);
 		actions.add(c);
 		job.setActions(actions);
 
