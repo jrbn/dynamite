@@ -53,6 +53,7 @@ public class IncrRemoveController extends Action {
 	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
 			TupleSet completeDelta = (TupleSet) context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
+			tuple.copyTo(currentTuple);
 			if (!countingAlgo) {
 				if (completeDelta.add(currentTuple)) {
 					currentDelta.add(currentTuple);
