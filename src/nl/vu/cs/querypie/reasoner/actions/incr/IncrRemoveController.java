@@ -60,14 +60,26 @@ public class IncrRemoveController extends Action {
 					currentTuple = TupleFactory.newTuple();
 				}
 			} else {
+				if (log.isDebugEnabled()) {
+					log.debug("Processing tuple " + tuple);
+				}
 				if (!completeDelta.contains(tuple)) {
+					if (log.isDebugEnabled()) {
+						log.debug("Not in completeDelta");
+					}
+					if (log.isDebugEnabled()) {
+						log.debug("Current count is " + ReasoningContext.getInstance().getDBHandler().getCount(context, currentTuple));
+					}
 					if (ReasoningContext.getInstance().getDBHandler().decreaseAndRemoveTriple(context, currentTuple, 1 /* FIXME */)) {
+						if (log.isDebugEnabled()) {
+							log.debug("Removed from database!");
+						}
 						currentDelta.add(currentTuple);
 						completeDelta.add(currentTuple);
+						currentTuple = TupleFactory.newTuple();
 					}
 				}
 			}
-			currentTuple = TupleFactory.newTuple();
 		}
 	}
 

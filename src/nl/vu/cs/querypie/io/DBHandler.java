@@ -3,6 +3,7 @@ package nl.vu.cs.querypie.io;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
@@ -44,6 +45,19 @@ public class DBHandler {
 		osp.close();
 		pos.close();
 		pso.close();
+	}
+	
+	public int getCount(ActionContext context, Tuple tuple) {
+		open(context);
+		long s = ((TLong) tuple.get(0)).getValue();
+		long p = ((TLong) tuple.get(1)).getValue();
+		long o = ((TLong) tuple.get(2)).getValue();
+		int len = encode(s, p, o);
+		byte[] value = spo.get(key, len);
+		if (value != null && value.length == 8) {
+			return Utils.decodeInt(value, 4);
+		}
+		return 0;
 	}
 
 	/**
