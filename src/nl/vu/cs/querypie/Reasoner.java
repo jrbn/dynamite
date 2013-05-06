@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.io.DBHandler;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.controller.CompleteRulesController;
 import nl.vu.cs.querypie.reasoner.actions.controller.IncrRulesController;
@@ -72,17 +73,17 @@ public class Reasoner {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(
-				arch.getContext().getInputLayer(storageClass));
+		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(storageClass));
+		ReasoningContext.getInstance().setDBHandler(new DBHandler());
 		ReasoningContext.getInstance().init();
 	}
 
 	private static void closeGlobalContext(Ajira arch) {
 		ReasoningContext.getInstance().getKB().close();
+		ReasoningContext.getInstance().getDBHandler().close();
 	}
 
-	private static void launchReasoning(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void launchReasoning(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		if (deltaDir == null) {
@@ -165,8 +166,7 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDebug(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void printDebug(Ajira arch) throws ActionNotConfiguredException {
 		if (debug) {
 			printDerivations(arch);
 		}
@@ -175,8 +175,7 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivations(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void printDerivations(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
@@ -226,8 +225,7 @@ public class Reasoner {
 		}
 	}
 
-	private static void printDerivationsOnFile(Ajira arch)
-			throws ActionNotConfiguredException {
+	private static void printDerivationsOnFile(Ajira arch) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);

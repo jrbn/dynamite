@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.querypie.io.DBHandler;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
 import nl.vu.cs.querypie.reasoner.rules.RuleParser;
@@ -39,8 +40,7 @@ public class ListDB {
 
 	public static void main(String[] args) {
 		if (args.length < 3) {
-			System.out
-					.println("Usage: ListDB <KB_dir> <ruleset> <destination-dir> [ options ]");
+			System.out.println("Usage: ListDB <KB_dir> <ruleset> <destination-dir> [ options ]");
 			return;
 		}
 		parseArgs(args);
@@ -62,17 +62,17 @@ public class ListDB {
 	private static void initGlobalContext(Ajira arch) {
 		Ruleset set = new Ruleset(rules);
 		ReasoningContext.getInstance().setRuleset(set);
-		ReasoningContext.getInstance().setKB(
-				arch.getContext().getInputLayer(storageClass));
+		ReasoningContext.getInstance().setKB(arch.getContext().getInputLayer(storageClass));
+		ReasoningContext.getInstance().setDBHandler(new DBHandler());
 		ReasoningContext.getInstance().init();
 	}
 
 	private static void closeGlobalContext(Ajira arch) {
 		ReasoningContext.getInstance().getKB().close();
+		ReasoningContext.getInstance().getDBHandler().close();
 	}
 
-	private static void launchLister(Ajira arch, String dest)
-			throws ActionNotConfiguredException {
+	private static void launchLister(Ajira arch, String dest) throws ActionNotConfiguredException {
 		Job job = new Job();
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readEverythingFromBTree(actions);
