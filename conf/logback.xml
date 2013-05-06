@@ -20,7 +20,7 @@
     </root>
     
     <logger name="nl.vu.cs.querypie">
-		<level value="warn" />
+		<level value="debug" />
 	</logger>
 
 </configuration>

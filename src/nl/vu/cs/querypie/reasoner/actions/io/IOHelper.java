@@ -24,8 +24,8 @@ import org.iq80.snappy.SnappyInputStream;
 
 public class IOHelper {
 
-	public static TupleSet populateInMemorySetFromFile(String fileName, boolean sub)
-			throws Exception {
+	public static TupleSet populateInMemorySetFromFile(String fileName,
+			boolean sub) throws Exception {
 		TupleSet set = new TupleSetImpl();
 		List<File> files = new ArrayList<File>();
 		File fInput = new File(fileName);
@@ -36,7 +36,8 @@ public class IOHelper {
 			files.add(fInput);
 		}
 
-		BTreeInterface input = (BTreeInterface)	ReasoningContext.getInstance().getKB();
+		BTreeInterface input = (BTreeInterface) ReasoningContext.getInstance()
+				.getKB();
 		for (File file : files) {
 			DataInputStream is = null;
 			try {
@@ -59,12 +60,6 @@ public class IOHelper {
 						} else {
 							input.remove(t); // Remove the original tuple
 						}
-					}
-
-					if (((TLong) triple[0]).getValue() == 85088
-							&& ((TLong) triple[1]).getValue() == 0
-							&& ((TLong) triple[2]).getValue() == 85058) {
-						System.out.println("Found");
 					}
 
 					set.add(t);
