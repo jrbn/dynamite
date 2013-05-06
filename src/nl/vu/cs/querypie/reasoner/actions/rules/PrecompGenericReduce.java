@@ -24,6 +24,7 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
@@ -61,6 +62,7 @@ public class PrecompGenericReduce extends Action {
 
 	private int minimumStep;
 	private int outputStep;
+	private boolean isUsingCount;
 
 	public static final int B_INCREMENTAL_FLAG = 0;
 	public static final int I_MINIMUM_STEP = 1;
@@ -84,6 +86,7 @@ public class PrecompGenericReduce extends Action {
 
 		rules = ReasoningContext.getInstance().getRuleset()
 				.getAllRulesWithSchemaAndGeneric();
+		isUsingCount = ParamHandler.get().isUsingCount();
 		counters = new int[rules.size()];
 		pos_head_precomps = new int[rules.size()][][];
 		pos_gen_precomps = new int[rules.size()][][];
@@ -179,7 +182,7 @@ public class PrecompGenericReduce extends Action {
 					}
 					supportTuple.set(outputTuples[currentRule]);
 
-					if (duplicates.add(supportTuple)) {
+					if (isUsingCount || duplicates.add(supportTuple)) {
 						supportTuple = TupleFactory.newTuple();
 						actionOutput.output(outputTuples[currentRule]);
 						counters[currentRule]++;
@@ -212,5 +215,6 @@ public class PrecompGenericReduce extends Action {
 						counters[i]);
 			}
 		}
+		duplicates.clear();
 	}
 }
