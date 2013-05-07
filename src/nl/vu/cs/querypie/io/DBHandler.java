@@ -16,12 +16,14 @@ public class DBHandler {
 	private WritingSession spo, sop, pos, pso, osp, ops;
 	private final byte[] key = new byte[24];
 	private boolean open;
+	private int count;
 
 	public DBHandler() {
 		open = false;
 	}
 
-	public void open(ActionContext context) {
+	public synchronized void open(ActionContext context) throws Exception {
+		count++;
 		if (open) {
 			return;
 		}
@@ -35,8 +37,12 @@ public class DBHandler {
 		open = true;
 	}
 
-	public void close() {
+	public synchronized void close() {;
 		if (!open) {
+			return;
+		}
+		count--;
+		if (count > 0) {
 			return;
 		}
 		spo.close();
@@ -45,9 +51,10 @@ public class DBHandler {
 		osp.close();
 		pos.close();
 		pso.close();
+		open = false;
 	}
 	
-	public int getCount(ActionContext context, Tuple tuple) {
+	public int getCount(ActionContext context, Tuple tuple) throws Exception {
 		open(context);
 		long s = ((TLong) tuple.get(0)).getValue();
 		long p = ((TLong) tuple.get(1)).getValue();
@@ -67,8 +74,9 @@ public class DBHandler {
 	 * @param tuple
 	 *            the tuple to remove
 	 * @return true iff the triple is removed from the DB
+	 * @throws Exception 
 	 */
-	public boolean decreaseAndRemoveTriple(ActionContext context, Tuple tuple, int count) {
+	public boolean decreaseAndRemoveTriple(ActionContext context, Tuple tuple, int count) throws Exception {
 		open(context);
 		long s = ((TLong) tuple.get(0)).getValue();
 		long p = ((TLong) tuple.get(1)).getValue();
