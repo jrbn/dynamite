@@ -21,7 +21,8 @@ import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMapImpl;
 
 public class IncrRulesController extends Action {
-	public static void addToChain(ActionSequence actions, String deltaDir, boolean add) throws ActionNotConfiguredException {
+	public static void addToChain(ActionSequence actions, String deltaDir,
+			boolean add) throws ActionNotConfiguredException {
 		ActionConf a = ActionFactory.getActionConf(IncrRulesController.class);
 		a.setParamString(IncrRulesController.S_DELTA_DIR, deltaDir);
 		a.setParamBoolean(IncrRulesController.B_ADD, add);
@@ -47,31 +48,43 @@ public class IncrRulesController extends Action {
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		poputateInMemoryStructures(context);
 		ActionSequence actions = new ActionSequence();
 		ActionsHelper.readFakeTuple(actions);
 		if (add) {
-			IncrAddController.addToChain(ParamHandler.get().getLastStep(), true, actions);
+			IncrAddController.addToChain(ParamHandler.get().getLastStep(),
+					true, actions);
 		} else {
-			IncrRemoveController.addToChain(true, ParamHandler.get().isUsingCount(), actions);
+			IncrRemoveController.addToChain(true, ParamHandler.get()
+					.isUsingCount(), actions);
 		}
 		actionOutput.branch(actions);
 	}
 
-	private void poputateInMemoryStructures(ActionContext context) throws Exception {
-		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir, !add);
+	private void poputateInMemoryStructures(ActionContext context)
+			throws Exception {
+		TupleSet currentDelta = IOHelper.populateInMemorySetFromFile(deltaDir,
+				!add);
 		context.putObjectInCache(Consts.CURRENT_DELTA_KEY, currentDelta);
 		// Non counting algorithm
 		if (!ParamHandler.get().isUsingCount()) {
 			TupleSet completeDelta = new TupleSetImpl();
 			completeDelta.addAll(currentDelta);
 			context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
+
+			// Remove all the tuples from the database
+			for (Tuple tuple : currentDelta) {
+				ReasoningContext.getInstance().getDBHandler()
+						.remove(context, tuple);
+			}
 		}
 		// Counting algorithm
 		else {
@@ -81,22 +94,24 @@ public class IncrRulesController extends Action {
 				for (Tuple t : currentDelta) {
 					completeDelta.put(t, 1);
 				}
-				context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
+				context.putObjectInCache(Consts.COMPLETE_DELTA_KEY,
+						completeDelta);
 			}
 			// Remove
 			else {
 				TupleSet removedTuples = new TupleSetImpl();
 				for (Tuple tuple : currentDelta) {
-					if (ReasoningContext.getInstance().getDBHandler().decreaseAndRemoveTriple(context, tuple, 1)) {
+					if (ReasoningContext.getInstance().getDBHandler()
+							.decreaseAndRemoveTriple(context, tuple, 1)) {
 						removedTuples.add(tuple);
 					}
 				}
 				currentDelta.retainAll(removedTuples);
 				TupleSet completeDelta = new TupleSetImpl();
 				completeDelta.addAll(currentDelta);
-				context.putObjectInCache(Consts.COMPLETE_DELTA_KEY, completeDelta);
+				context.putObjectInCache(Consts.COMPLETE_DELTA_KEY,
+						completeDelta);
 			}
 		}
 	}
-
 }

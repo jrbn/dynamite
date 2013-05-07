@@ -37,7 +37,8 @@ public class DBHandler {
 		open = true;
 	}
 
-	public synchronized void close() {;
+	public synchronized void close() {
+		;
 		if (!open) {
 			return;
 		}
@@ -53,7 +54,7 @@ public class DBHandler {
 		pso.close();
 		open = false;
 	}
-	
+
 	public int getCount(ActionContext context, Tuple tuple) throws Exception {
 		open(context);
 		long s = ((TLong) tuple.get(0)).getValue();
@@ -74,9 +75,10 @@ public class DBHandler {
 	 * @param tuple
 	 *            the tuple to remove
 	 * @return true iff the triple is removed from the DB
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public boolean decreaseAndRemoveTriple(ActionContext context, Tuple tuple, int count) throws Exception {
+	public boolean decreaseAndRemoveTriple(ActionContext context, Tuple tuple,
+			int count) throws Exception {
 		open(context);
 		long s = ((TLong) tuple.get(0)).getValue();
 		long p = ((TLong) tuple.get(1)).getValue();
@@ -101,6 +103,33 @@ public class DBHandler {
 		ops.decreaseOrRemove(key, len, count);
 
 		return removed;
+	}
+
+	public boolean remove(ActionContext context, Tuple tuple) throws Exception {
+		open(context);
+		long s = ((TLong) tuple.get(0)).getValue();
+		long p = ((TLong) tuple.get(1)).getValue();
+		long o = ((TLong) tuple.get(2)).getValue();
+
+		int len = encode(s, p, o);
+		spo.remove(key, len);
+
+		len = encode(s, o, p);
+		sop.remove(key, len);
+
+		len = encode(p, o, s);
+		pos.remove(key, len);
+
+		len = encode(p, s, o);
+		pso.remove(key, len);
+
+		len = encode(o, s, p);
+		osp.remove(key, len);
+
+		len = encode(o, p, s);
+		ops.remove(key, len);
+
+		return true;
 	}
 
 	private int encode(long l1, long l2, long l3) {
