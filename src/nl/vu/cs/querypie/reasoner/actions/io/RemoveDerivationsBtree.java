@@ -96,7 +96,7 @@ public class RemoveDerivationsBtree extends Action {
 
 				int len = encode(s, p, o);
 				int originalStep = 0;
-				if ((originalStep = spo.removeIfStepNonZero(key, len)) == 0) {
+				if ((originalStep = spo.remove(key, len)) == 0) {
 					removedTriples++;
 				} else if (originalStep != -1) {
 					Tuple t = TupleFactory.newTuple();
@@ -105,19 +105,19 @@ public class RemoveDerivationsBtree extends Action {
 				}
 
 				len = encode(s, o, p);
-				sop.removeIfStepNonZero(key, len);
+				sop.remove(key, len);
 
 				len = encode(p, o, s);
-				pos.removeIfStepNonZero(key, len);
+				pos.remove(key, len);
 
 				len = encode(p, s, o);
-				pso.removeIfStepNonZero(key, len);
+				pso.remove(key, len);
 
 				len = encode(o, s, p);
-				osp.removeIfStepNonZero(key, len);
+				osp.remove(key, len);
 
 				len = encode(o, p, s);
-				ops.removeIfStepNonZero(key, len);
+				ops.remove(key, len);
 			}
 
 			context.putObjectInCache(Consts.TMP_REMOVALS, tmpSteps);
