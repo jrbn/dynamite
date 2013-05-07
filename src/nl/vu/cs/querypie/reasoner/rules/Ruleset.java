@@ -55,7 +55,17 @@ public class Ruleset {
 					} else {
 						col = output.get(signature);
 					}
-					col.add(r);
+
+					boolean found = false;
+					for (Rule r2 : col) {
+						if (r.getId() == r2.getId()) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						col.add(r);
+					}
 				}
 			}
 		}

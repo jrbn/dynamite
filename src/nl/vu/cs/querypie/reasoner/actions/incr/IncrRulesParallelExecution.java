@@ -183,7 +183,14 @@ public class IncrRulesParallelExecution extends Action {
 
 	private Pattern getQueryPattern(Rule rule) {
 		Pattern pattern = new Pattern();
-		rule.getGenericBodyPatterns().get(0).copyTo(pattern);
+		Pattern p = rule.getGenericBodyPatterns().get(0);
+
+		p.copyTo(pattern);
+		// Replace all variables with -1
+		for (int pos : p.getPositionVariables()) {
+			pattern.setTerm(pos, new Term(-1));
+		}
+
 		return pattern;
 	}
 

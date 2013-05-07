@@ -146,8 +146,6 @@ public class IncrRemoveController extends Action {
 		// Collect all the new derivation in one location
 		ActionsHelper.collectToNode(false, branch);
 
-		// ActionsHelper.writeSchemaTriplesInBtree(branch);
-
 		IncrAddController.addToChain(step + 1, false, branch);
 		ActionsHelper.createBranch(actions, branch);
 		actionOutput.branch(actions);
