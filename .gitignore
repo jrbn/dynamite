@@ -2,6 +2,7 @@
 .classpath
 .project
 .DS_Store
+logback.xml
 /querypie-reasoning-0.1.jar
 /bin
 /.settings

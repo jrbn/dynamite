@@ -11,8 +11,8 @@
 	<property name="JAR_REMOTE_DIR" value="" />
 	<property name="SCP_PRIVATE_KEY" value="" />
 	<property name="SCP_PASSPHRASE" value="" />
-	<property name="AJIRA_DIR" value="" />
-	<property name="QUERYPIE_STORAGE_DIR" value="" />
+	<property name="AJIRA_DIR" value="/home/jurbani/ajira" />
+	<property name="QUERYPIE_STORAGE_DIR" value="/home/jurbani/inc_reasoner/querypie-storage/" />
 	<property name="PORT" value="22" />
 
 	<target name="clean">
@@ -28,6 +28,18 @@
 			<classpath>
 				<fileset dir="${LIB_PATH}">
 					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${AJIRA_DIR}/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${QUERYPIE_STORAGE_DIR}/lib">
+					<include name="**/*.jar" />
+				</fileset>
+				<fileset dir="${QUERYPIE_STORAGE_DIR}">
+					<include name="*.jar" />
+				</fileset>
+				<fileset dir="${AJIRA_DIR}">
+					<include name="*.jar" />
 				</fileset>
 			</classpath>
 		</javac>
