@@ -60,7 +60,7 @@ public class Query {
 				// Parse the query
 				ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
 				long[] q = parseQuery(query);
-				c.setParamWritable(ReadFromBtree.TUPLE, new nl.vu.cs.ajira.actions.support.Query(new TLong(q[0]), new TLong(q[1]), new TLong(q[2])));
+				c.setParamWritable(ReadFromBtree.W_TUPLE, new nl.vu.cs.ajira.actions.support.Query(new TLong(q[0]), new TLong(q[1]), new TLong(q[2])));
 				as.add(c);
 
 				// Collect the results to one node
@@ -76,7 +76,7 @@ public class Query {
 				// Write output to file
 				c = ActionFactory.getActionConf(WriteToFiles.class);
 				c.setParamString(WriteToFiles.S_CUSTOM_WRITER, AppendFileWriter.class.getName());
-				c.setParamString(WriteToFiles.S_OUTPUT_DIR, args[2]);
+				c.setParamString(WriteToFiles.S_PATH, args[2]);
 				as.add(c);
 
 				Job job = new Job();

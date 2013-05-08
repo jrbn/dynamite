@@ -17,38 +17,45 @@ import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;
 
-public class WriteDerivationsBtree extends Action {
-	public static void addToChain(ActionSequence actions) throws ActionNotConfiguredException {
-		ActionConf c = ActionFactory.getActionConf(WriteDerivationsBtree.class);
+public class WriteDerivationsAllBtree extends Action {
+	public static void addToChain(ActionSequence actions)
+			throws ActionNotConfiguredException {
+		ActionConf c = ActionFactory
+				.getActionConf(WriteDerivationsAllBtree.class);
 		actions.add(c);
 	}
 
 	private BTreeInterface in;
 	private WritingSession spo, sop, pos, pso, osp, ops;
-	private boolean newValue;
 	private final byte[] triple = new byte[24];
-	private final byte[] meta = new byte[8];
+	private byte[] meta;
 	private long dupCount, newCount;
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		in = (BTreeInterface) ReasoningContext.getInstance().getKB();
-		spo = in.openWritingSession(DBType.SPO);
-		sop = in.openWritingSession(DBType.SOP);
-		pso = in.openWritingSession(DBType.PSO);
-		pos = in.openWritingSession(DBType.POS);
-		osp = in.openWritingSession(DBType.OSP);
-		ops = in.openWritingSession(DBType.OPS);
-		newValue = false;
+		spo = in.openWritingSession(context, DBType.SPO);
+		sop = in.openWritingSession(context, DBType.SOP);
+		pso = in.openWritingSession(context, DBType.PSO);
+		pos = in.openWritingSession(context, DBType.POS);
+		osp = in.openWritingSession(context, DBType.OSP);
+		ops = in.openWritingSession(context, DBType.OPS);
 		newCount = dupCount = 0;
+		if (ParamHandler.get().isUsingCount()) {
+			meta = new byte[8];
+		} else {
+			meta = new byte[4];
+		}
+
 	}
-	
+
 	private int encode(long l1, long l2, long l3) {
 		return in.encode(triple, l1, l2, l3);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		TLong s = (TLong) tuple.get(0);
 		TLong p = (TLong) tuple.get(1);
 		TLong o = (TLong) tuple.get(2);
@@ -99,10 +106,7 @@ public class WriteDerivationsBtree extends Action {
 		}
 
 		if (newTuple) {
-			if (!newValue) {
-				actionOutput.output(tuple);
-				newValue = true;
-			}
+			actionOutput.output(tuple);
 			newCount++;
 		} else {
 			dupCount++;
@@ -110,7 +114,8 @@ public class WriteDerivationsBtree extends Action {
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		spo.close();
 		sop.close();
 		ops.close();

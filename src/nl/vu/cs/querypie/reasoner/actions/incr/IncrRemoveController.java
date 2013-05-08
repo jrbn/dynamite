@@ -10,6 +10,7 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
+import nl.vu.cs.querypie.ReasoningContext;
 import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
 import nl.vu.cs.querypie.reasoner.actions.common.OneStepRulesControllerToMemory;
 import nl.vu.cs.querypie.reasoner.actions.io.RemoveDerivationsBtree;
@@ -17,57 +18,85 @@ import nl.vu.cs.querypie.reasoner.support.Consts;
 import nl.vu.cs.querypie.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
-import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
 
 public class IncrRemoveController extends Action {
-	public static void addToChain(boolean firstIteration, ActionSequence actions) throws ActionNotConfiguredException {
+	public static void addToChain(boolean firstIteration, boolean countingAlgo,
+			ActionSequence actions) throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(IncrRemoveController.class);
 		c.setParamBoolean(B_FIRST_ITERATION, firstIteration);
+		c.setParamBoolean(B_IS_COUNTING, countingAlgo);
 		actions.add(c);
 	}
 
 	public static final int B_FIRST_ITERATION = 0;
+	public static final int B_IS_COUNTING = 1;
 
 	private boolean firstIteration;
+	private boolean countingAlgo;
+
 	private TupleSet currentDelta;
 	private Tuple currentTuple;
 
 	@Override
 	protected void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(B_FIRST_ITERATION, "first_iteration", true, false);
+		conf.registerParameter(B_FIRST_ITERATION, "First iteration", true,
+				false);
+		conf.registerParameter(B_IS_COUNTING, "Is counting", true, false);
 	}
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
 		currentDelta = new TupleSetImpl();
-		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(), new TLong());
+		currentTuple = TupleFactory.newTuple(new TLong(), new TLong(),
+				new TLong());
 		firstIteration = getParamBoolean(B_FIRST_ITERATION);
+		countingAlgo = getParamBoolean(B_IS_COUNTING);
 	}
 
 	@Override
-	public void process(Tuple tuple, ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void process(Tuple tuple, ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		if (!firstIteration) {
+			TupleSet completeDelta = (TupleSet) context
+					.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
 			tuple.copyTo(currentTuple);
-			Object completeDeltaObj = context.getObjectFromCache(Consts.COMPLETE_DELTA_KEY);
-			if (completeDeltaObj instanceof TupleSet) {
-				TupleSet completeDelta = (TupleSet) completeDeltaObj;
+			if (!countingAlgo) {
 				if (completeDelta.add(currentTuple)) {
 					currentDelta.add(currentTuple);
 					currentTuple = TupleFactory.newTuple();
 				}
 			} else {
-				TupleStepMap completeDelta = (TupleStepMap) completeDeltaObj;
-				if (!completeDelta.containsKey(tuple)) {
-					currentDelta.add(currentTuple);
+				if (log.isDebugEnabled()) {
+					log.debug("Processing tuple " + tuple);
 				}
-				completeDelta.put(currentTuple, 1);
-				currentTuple = TupleFactory.newTuple();
+				if (!completeDelta.contains(tuple)) {
+					if (log.isDebugEnabled()) {
+						log.debug("Not in completeDelta");
+					}
+					if (log.isDebugEnabled()) {
+						log.debug("Current count is "
+								+ ReasoningContext.getInstance().getDBHandler()
+										.getCount(context, currentTuple));
+					}
+					if (ReasoningContext
+							.getInstance()
+							.getDBHandler()
+							.decreaseAndRemoveTriple(context, currentTuple, 1 /* FIXME */)) {
+						if (log.isDebugEnabled()) {
+							log.debug("Removed from database!");
+						}
+						currentDelta.add(currentTuple);
+						completeDelta.add(currentTuple);
+						currentTuple = TupleFactory.newTuple();
+					}
+				}
 			}
 		}
 	}
 
 	@Override
-	public void stopProcess(ActionContext context, ActionOutput actionOutput) throws Exception {
+	public void stopProcess(ActionContext context, ActionOutput actionOutput)
+			throws Exception {
 		if (firstIteration) {
 			executeOneForwardChainIterationAndRestart(context, actionOutput);
 		} else {
@@ -90,47 +119,47 @@ public class IncrRemoveController extends Action {
 	 * 
 	 * 2. Start re-derivation from remaining facts
 	 */
-	private void deleteAndReDerive(ActionContext context, ActionOutput actionOutput) throws Exception {
-		ActionSequence actions = new ActionSequence();
+	private void deleteAndReDerive(ActionContext context,
+			ActionOutput actionOutput) throws Exception {
 		// No need for re-derivation in case of counting algorithm
 		if (ParamHandler.get().isUsingCount()) {
-			// Remove the derivations from the B-tree
-			ActionsHelper.readFakeTuple(actions);
-			RemoveDerivationsBtree.addToChain(actions);
-		} else {
-			ActionsHelper.collectToNode(false, actions);
-			ActionSequence firstBranch = new ActionSequence();
-			ActionSequence secondBranch = new ActionSequence();
-			ActionSequence thirdBranch = new ActionSequence();
-
-			// Remove the derivations from the B-tree
-			ActionsHelper.readFakeTuple(firstBranch);
-			RemoveDerivationsBtree.addToChain(firstBranch);
-
-			// Start one step derivation and write results in memory
-			ActionsHelper.readFakeTuple(secondBranch);
-			OneStepRulesControllerToMemory.addToChain(secondBranch);
-
-			// Continue deriving by iterating on the IncrAddController
-			ActionsHelper.readFakeTuple(thirdBranch);
-			IncrAddController.addToChain(-1, true, thirdBranch);
-
-			ActionsHelper.createBranch(secondBranch, thirdBranch);
-			ActionsHelper.createBranch(firstBranch, secondBranch);
-			ActionsHelper.createBranch(actions, firstBranch);
+			return;
 		}
+
+		ActionSequence actions = new ActionSequence();
+
+		ActionsHelper.readFakeTuple(actions);
+		RemoveDerivationsBtree.addToChain(actions);
+
+		// Re-derive what is possible to derive
+		ActionSequence branch = new ActionSequence();
+		ActionsHelper.readFakeTuple(branch);
+		int step = ParamHandler.get().getLastStep() + 1;
+		OneStepRulesControllerToMemory.addToChain(branch, step);
+
+		// The previous action will actually read the entire input. First
+		// filter out all the duplicates
+		ActionsHelper.sort(branch);
+		ActionsHelper.removeDuplicates(branch);
+		ActionsHelper.filterStep(branch, step);
+
+		// Collect all the new derivation in one location
+		ActionsHelper.collectToNode(false, branch);
+
+		IncrAddController.addToChain(step + 1, false, branch);
+		ActionsHelper.createBranch(actions, branch);
 		actionOutput.branch(actions);
 	}
 
-	private void executeOneForwardChainIterationAndRestart(ActionContext context, ActionOutput actionOutput) throws Exception {
+	private void executeOneForwardChainIterationAndRestart(
+			ActionContext context, ActionOutput actionOutput) throws Exception {
 		ActionSequence actions = new ActionSequence();
-		// FIXME: which is the correct step for this derivation?
 		IncrRulesParallelExecution.addToChain(Integer.MIN_VALUE, actions);
 		ActionsHelper.collectToNode(false, actions);
 		if (!ParamHandler.get().isUsingCount()) {
 			ActionsHelper.removeDuplicates(actions);
 		}
-		IncrRemoveController.addToChain(false, actions);
+		IncrRemoveController.addToChain(false, countingAlgo, actions);
 		actionOutput.branch(actions);
 	}
 

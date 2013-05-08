@@ -1,6 +1,7 @@
 package nl.vu.cs.querypie;
 
 import nl.vu.cs.ajira.datalayer.InputLayer;
+import nl.vu.cs.querypie.io.DBHandler;
 import nl.vu.cs.querypie.reasoner.rules.Ruleset;
 import nl.vu.cs.querypie.schema.SchemaManager;
 
@@ -11,6 +12,7 @@ public class ReasoningContext {
 	private Ruleset ruleset;
 	private InputLayer kb;
 	private SchemaManager manager;
+	private DBHandler dbHandler;
 
 	private ReasoningContext() {
 	}
@@ -23,13 +25,16 @@ public class ReasoningContext {
 		this.kb = kb;
 	}
 
+	public void setDBHandler(DBHandler dbHandler) {
+		this.dbHandler = dbHandler;
+	}
+
 	public InputLayer getKB() {
 		return kb;
 	}
 
 	public void init() {
 		manager = new SchemaManager(kb);
-		ruleset.init(this);
 	}
 
 	public Ruleset getRuleset() {
@@ -40,7 +45,12 @@ public class ReasoningContext {
 		return manager;
 	}
 
+	public DBHandler getDBHandler() {
+		return dbHandler;
+	}
+
 	public static ReasoningContext getInstance() {
 		return context;
 	}
+
 }

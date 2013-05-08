@@ -1,5 +1,5 @@
 package nl.vu.cs.querypie.reasoner.actions.io;
 
-public enum MemoryStorage {
-	BTREE, IN_MEMORY
+public enum TypeStorage {
+	BTREE, IN_MEMORY;
 }

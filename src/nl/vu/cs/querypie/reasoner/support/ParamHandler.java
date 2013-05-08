@@ -8,6 +8,7 @@ public class ParamHandler {
 	private static final ParamHandler instance = new ParamHandler();
 	private boolean usingCount;
 	private int lastStep;
+	private String copyDir;
 
 	public static ParamHandler get() {
 		return instance;
@@ -32,6 +33,14 @@ public class ParamHandler {
 
 	public void setLastStep(int lastStep) {
 		this.lastStep = lastStep;
+	}
+
+	public String getCopyDir() {
+		return copyDir;
+	}
+
+	public void setCopyDir(String dir) {
+		copyDir = dir;
 	}
 
 }

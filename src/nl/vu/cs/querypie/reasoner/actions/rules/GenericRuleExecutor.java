@@ -42,8 +42,8 @@ public class GenericRuleExecutor extends Action {
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_MIN_STEP, "minimum step to include", Integer.MIN_VALUE, true);
-		conf.registerParameter(I_OUTPUT_STEP, "step for the (output) produced tuples", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_MIN_STEP, "I_MIN_STEP", Integer.MIN_VALUE, true);
+		conf.registerParameter(I_OUTPUT_STEP, "I_OUTPUT_STEP", Integer.MIN_VALUE, true);
 	}
 
 	@Override
