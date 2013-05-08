@@ -58,8 +58,10 @@ public class SchemaManager {
 						p2.getVariables(), allTuples2);
 				Tuples result2 = joinSets(p1.getVariables(), allTuples1,
 						p2.getVariables(), flaggedTuples2);
+				Tuples result3 = joinSets(p1.getVariables(), flaggedTuples1,
+						p2.getVariables(), flaggedTuples2);
 				// Merge the two
-				return result1.merge(result2);
+				return result1.merge(result2).merge(result3);
 			} else {
 				return joinSets(p1.getVariables(), allTuples1,
 						p2.getVariables(), allTuples2);
