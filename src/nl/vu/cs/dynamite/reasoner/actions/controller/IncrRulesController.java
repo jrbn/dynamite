@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.controller;
+package nl.vu.cs.dynamite.reasoner.actions.controller;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -8,13 +8,13 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.incr.IncrAddController;
-import nl.vu.cs.querypie.reasoner.actions.incr.IncrRemoveController;
-import nl.vu.cs.querypie.reasoner.actions.io.IOHelper;
-import nl.vu.cs.querypie.reasoner.support.Consts;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.actions.common.ActionsHelper;
+import nl.vu.cs.dynamite.reasoner.actions.incr.IncrAddController;
+import nl.vu.cs.dynamite.reasoner.actions.incr.IncrRemoveController;
+import nl.vu.cs.dynamite.reasoner.actions.io.IOHelper;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;

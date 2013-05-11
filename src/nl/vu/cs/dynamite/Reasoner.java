@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie;
+package nl.vu.cs.dynamite;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,15 +16,15 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
-import nl.vu.cs.querypie.io.DBHandler;
-import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.controller.CompleteRulesController;
-import nl.vu.cs.querypie.reasoner.actions.controller.IncrRulesController;
-import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.rules.RuleParser;
-import nl.vu.cs.querypie.reasoner.rules.Ruleset;
-import nl.vu.cs.querypie.reasoner.support.Debugging;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.io.DBHandler;
+import nl.vu.cs.dynamite.reasoner.actions.common.ActionsHelper;
+import nl.vu.cs.dynamite.reasoner.actions.controller.CompleteRulesController;
+import nl.vu.cs.dynamite.reasoner.actions.controller.IncrRulesController;
+import nl.vu.cs.dynamite.reasoner.rules.Rule;
+import nl.vu.cs.dynamite.reasoner.rules.RuleParser;
+import nl.vu.cs.dynamite.reasoner.rules.Ruleset;
+import nl.vu.cs.dynamite.reasoner.support.Debugging;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
 

@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.support;
+package nl.vu.cs.dynamite.reasoner.support;
 
 public class Consts {
 	public static final String CURRENT_DELTA_KEY = "__CURRENT_DELTA_KEY";

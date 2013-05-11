@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.io;
+package nl.vu.cs.dynamite.io;
 
 import java.io.BufferedOutputStream;
 import java.io.File;

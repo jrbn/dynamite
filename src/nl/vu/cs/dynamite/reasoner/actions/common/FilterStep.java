@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.common;
+package nl.vu.cs.dynamite.reasoner.actions.common;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;

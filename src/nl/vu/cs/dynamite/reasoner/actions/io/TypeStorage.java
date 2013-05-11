@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.io;
+package nl.vu.cs.dynamite.reasoner.actions.io;
 
 public enum TypeStorage {
 	BTREE, IN_MEMORY;

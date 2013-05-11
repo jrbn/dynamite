@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.support;
+package nl.vu.cs.dynamite.reasoner.support;
 
 /**
  * Singleton class containing all the configuration parameters for the

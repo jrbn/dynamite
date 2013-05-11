@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.io;
+package nl.vu.cs.dynamite.reasoner.actions.io;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -11,8 +11,8 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.DBType;
 import nl.vu.cs.querypie.storage.WritingSession;

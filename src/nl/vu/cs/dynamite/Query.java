@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie;
+package nl.vu.cs.dynamite;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -17,8 +17,8 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
-import nl.vu.cs.querypie.io.AppendFileWriter;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
+import nl.vu.cs.dynamite.io.AppendFileWriter;
+import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
 import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
 

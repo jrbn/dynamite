@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.rules;
+package nl.vu.cs.dynamite.reasoner.actions.rules;
 
 import java.util.List;
 import java.util.Map;
@@ -18,8 +18,8 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.rules.Rule;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;
 
 import org.slf4j.Logger;
@@ -122,7 +122,7 @@ public class PrecompGenericMap extends Action {
 
 		for (int r = 0; r < rules.size(); r++) {
 			// Does the input match with the generic pattern?
-			if (!nl.vu.cs.querypie.reasoner.support.Utils.tupleMatchConstants(
+			if (!nl.vu.cs.dynamite.reasoner.support.Utils.tupleMatchConstants(
 					tuple, pos_constants_to_check[r],
 					value_constants_to_check[r])) {
 				continue;

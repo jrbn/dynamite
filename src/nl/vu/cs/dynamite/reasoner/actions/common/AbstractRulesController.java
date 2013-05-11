@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.common;
+package nl.vu.cs.dynamite.reasoner.actions.common;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -6,12 +6,12 @@ import java.io.FilenameFilter;
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.reasoner.actions.io.TypeStorage;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteInMemory;
-import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
-import nl.vu.cs.querypie.reasoner.support.Consts;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.reasoner.actions.io.TypeStorage;
+import nl.vu.cs.dynamite.reasoner.actions.io.WriteDerivationsAllBtree;
+import nl.vu.cs.dynamite.reasoner.actions.io.WriteInMemory;
+import nl.vu.cs.dynamite.reasoner.actions.rules.GenericRuleExecutor;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 
 public abstract class AbstractRulesController extends Action {
 

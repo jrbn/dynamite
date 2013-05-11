@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.rules;
+package nl.vu.cs.dynamite.reasoner.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;

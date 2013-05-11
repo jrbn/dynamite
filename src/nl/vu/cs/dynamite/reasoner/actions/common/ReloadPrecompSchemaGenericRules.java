@@ -1,10 +1,10 @@
-package nl.vu.cs.querypie.reasoner.actions.common;
+package nl.vu.cs.dynamite.reasoner.actions.common;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.data.types.Tuple;
-import nl.vu.cs.querypie.ReasoningContext;
+import nl.vu.cs.dynamite.ReasoningContext;
 
 public class ReloadPrecompSchemaGenericRules extends Action {
 

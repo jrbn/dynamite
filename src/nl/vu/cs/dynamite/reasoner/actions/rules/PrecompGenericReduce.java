@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.rules;
+package nl.vu.cs.dynamite.reasoner.actions.rules;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,9 +22,9 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.rules.Rule;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;

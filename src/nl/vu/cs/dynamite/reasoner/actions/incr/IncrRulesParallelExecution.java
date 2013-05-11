@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.incr;
+package nl.vu.cs.dynamite.reasoner.actions.incr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,13 +15,13 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
-import nl.vu.cs.querypie.reasoner.actions.rules.GenericRuleExecutor;
-import nl.vu.cs.querypie.reasoner.rules.Rule;
-import nl.vu.cs.querypie.reasoner.support.Consts;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.actions.common.ActionsHelper;
+import nl.vu.cs.dynamite.reasoner.actions.io.ReadAllInMemoryTriples;
+import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
+import nl.vu.cs.dynamite.reasoner.actions.rules.GenericRuleExecutor;
+import nl.vu.cs.dynamite.reasoner.rules.Rule;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;

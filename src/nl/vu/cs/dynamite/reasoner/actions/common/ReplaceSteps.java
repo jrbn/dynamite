@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.common;
+package nl.vu.cs.dynamite.reasoner.actions.common;
 
 import java.util.Map;
 
@@ -9,7 +9,7 @@ import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
-import nl.vu.cs.querypie.reasoner.support.Consts;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
 
 public class ReplaceSteps extends Action {
 

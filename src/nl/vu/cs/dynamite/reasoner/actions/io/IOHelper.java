@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.io;
+package nl.vu.cs.dynamite.reasoner.actions.io;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
@@ -14,8 +14,8 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.BTreeInterface;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;

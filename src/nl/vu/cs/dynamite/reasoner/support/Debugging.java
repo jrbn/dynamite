@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.support;
+package nl.vu.cs.dynamite.reasoner.support;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -8,7 +8,7 @@ import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.ReasoningContext;
+import nl.vu.cs.dynamite.ReasoningContext;
 
 public class Debugging extends Action {
 	public static void addToChain(ActionSequence actions)

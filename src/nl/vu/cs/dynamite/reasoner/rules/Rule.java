@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.rules;
+package nl.vu.cs.dynamite.reasoner.rules;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,8 +6,8 @@ import java.util.Collection;
 import java.util.List;
 
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.support.Utils;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.Tuples;

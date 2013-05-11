@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.common;
+package nl.vu.cs.dynamite.reasoner.actions.common;
 
 import java.io.FilenameFilter;
 import java.util.HashSet;
@@ -24,12 +24,12 @@ import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.datalayer.dummy.DummyLayer;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.ReasoningContext;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadFromBtree;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
-import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericMap;
-import nl.vu.cs.querypie.reasoner.actions.rules.PrecompGenericReduce;
-import nl.vu.cs.querypie.reasoner.actions.rules.PrecomputedRuleExecutor;
+import nl.vu.cs.dynamite.ReasoningContext;
+import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
+import nl.vu.cs.dynamite.reasoner.actions.io.WriteDerivationsAllBtree;
+import nl.vu.cs.dynamite.reasoner.actions.rules.PrecompGenericMap;
+import nl.vu.cs.dynamite.reasoner.actions.rules.PrecompGenericReduce;
+import nl.vu.cs.dynamite.reasoner.actions.rules.PrecomputedRuleExecutor;
 import nl.vu.cs.querypie.storage.TripleFileStorage;
 
 public class ActionsHelper {
@@ -65,7 +65,7 @@ public class ActionsHelper {
 				TByteArray.class.getName(), TBoolean.class.getName(),
 				TByte.class.getName(), TLong.class.getName());
 		c.setParamInt(GroupBy.I_NPARTITIONS_PER_NODE,
-				nl.vu.cs.querypie.reasoner.support.Consts.GROUP_BY_NUM_THREADS);
+				nl.vu.cs.dynamite.reasoner.support.Consts.GROUP_BY_NUM_THREADS);
 		actions.add(c);
 	}
 
@@ -106,7 +106,7 @@ public class ActionsHelper {
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(ReadFromBtree.class);
 		c.setParamInt(ReadFromBtree.I_PARALLEL_TASKS,
-				nl.vu.cs.querypie.reasoner.support.Consts.READ_NUM_THREADS);
+				nl.vu.cs.dynamite.reasoner.support.Consts.READ_NUM_THREADS);
 		c.setParamWritable(ReadFromBtree.W_TUPLE, new Query(new TLong(-1),
 				new TLong(-1), new TLong(-1)));
 		actions.add(c);
@@ -150,7 +150,7 @@ public class ActionsHelper {
 			throws ActionNotConfiguredException {
 		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
 		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE,
-				nl.vu.cs.querypie.reasoner.support.Consts.SORT_NUM_THREADS);
+				nl.vu.cs.dynamite.reasoner.support.Consts.SORT_NUM_THREADS);
 		c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
 				TLong.class.getName(), TLong.class.getName(),
 				TLong.class.getName(), TInt.class.getName());

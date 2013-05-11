@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.schema;
+package nl.vu.cs.dynamite.schema;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,8 +15,8 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.querypie.reasoner.support.Consts;
-import nl.vu.cs.querypie.reasoner.support.Utils;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
+import nl.vu.cs.dynamite.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 import nl.vu.cs.querypie.storage.Term;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;

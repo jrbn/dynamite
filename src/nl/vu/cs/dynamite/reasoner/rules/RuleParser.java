@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.rules;
+package nl.vu.cs.dynamite.reasoner.rules;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -6,7 +6,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import nl.vu.cs.querypie.reasoner.support.Utils;
+import nl.vu.cs.dynamite.reasoner.support.Utils;
 import nl.vu.cs.querypie.storage.Pattern;
 
 import org.slf4j.Logger;

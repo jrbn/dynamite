@@ -1,4 +1,4 @@
-package nl.vu.cs.querypie.reasoner.actions.incr;
+package nl.vu.cs.dynamite.reasoner.actions.incr;
 
 import nl.vu.cs.ajira.actions.Action;
 import nl.vu.cs.ajira.actions.ActionConf;
@@ -11,12 +11,12 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.reasoner.actions.common.ActionsHelper;
-import nl.vu.cs.querypie.reasoner.actions.common.ReplaceSteps;
-import nl.vu.cs.querypie.reasoner.actions.io.ReadAllInMemoryTriples;
-import nl.vu.cs.querypie.reasoner.actions.io.WriteDerivationsAllBtree;
-import nl.vu.cs.querypie.reasoner.support.Consts;
-import nl.vu.cs.querypie.reasoner.support.ParamHandler;
+import nl.vu.cs.dynamite.reasoner.actions.common.ActionsHelper;
+import nl.vu.cs.dynamite.reasoner.actions.common.ReplaceSteps;
+import nl.vu.cs.dynamite.reasoner.actions.io.ReadAllInMemoryTriples;
+import nl.vu.cs.dynamite.reasoner.actions.io.WriteDerivationsAllBtree;
+import nl.vu.cs.dynamite.reasoner.support.Consts;
+import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
 import nl.vu.cs.querypie.storage.inmemory.TupleSet;
 import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
 import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;

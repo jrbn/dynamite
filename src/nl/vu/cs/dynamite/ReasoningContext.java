@@ -1,9 +1,9 @@
-package nl.vu.cs.querypie;
+package nl.vu.cs.dynamite;
 
 import nl.vu.cs.ajira.datalayer.InputLayer;
-import nl.vu.cs.querypie.io.DBHandler;
-import nl.vu.cs.querypie.reasoner.rules.Ruleset;
-import nl.vu.cs.querypie.schema.SchemaManager;
+import nl.vu.cs.dynamite.io.DBHandler;
+import nl.vu.cs.dynamite.reasoner.rules.Ruleset;
+import nl.vu.cs.dynamite.schema.SchemaManager;
 
 public class ReasoningContext {
 
