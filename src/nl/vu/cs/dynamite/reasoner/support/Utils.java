@@ -6,8 +6,8 @@ import java.util.List;
 
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -17,11 +17,11 @@ import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
 import nl.vu.cs.dynamite.reasoner.support.Utils;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.Tuples;
-import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples.Row;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

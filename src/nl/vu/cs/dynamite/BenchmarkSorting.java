@@ -1,0 +1,120 @@
+package nl.vu.cs.dynamite;
+
+import nl.vu.cs.ajira.Ajira;
+import nl.vu.cs.ajira.actions.ActionConf;
+import nl.vu.cs.ajira.actions.ActionFactory;
+import nl.vu.cs.ajira.actions.ActionSequence;
+import nl.vu.cs.ajira.actions.CollectToNode;
+import nl.vu.cs.ajira.actions.PartitionToNodes;
+import nl.vu.cs.ajira.actions.ReadFromFiles;
+import nl.vu.cs.ajira.actions.RemoveDuplicates;
+import nl.vu.cs.ajira.actions.WriteToFiles;
+import nl.vu.cs.ajira.data.types.TString;
+import nl.vu.cs.ajira.submissions.Job;
+import nl.vu.cs.ajira.submissions.Submission;
+import nl.vu.cs.ajira.utils.Configuration;
+import nl.vu.cs.ajira.utils.Consts;
+import nl.vu.cs.dynamite.parse.TripleParser;
+
+public class BenchmarkSorting {
+
+	private static String storage = "files";
+	private static boolean ibis = false;
+	private static int nProcThreads = 1;
+
+	private static void parseArgs(String[] args) {
+		for (int i = 2; i < args.length; ++i) {
+			String param = args[i];
+
+			if (param.equals("--ibis-server")) {
+				ibis = true;
+			}
+
+			if (param.equals("--storage-engine")) {
+				storage = args[++i];
+			}
+
+			if (param.equals("--procs")) {
+				nProcThreads = Integer.parseInt(args[++i]);
+			}
+		}
+	}
+
+	public static void main(String[] args) throws Exception {
+
+		if (args.length < 2) {
+			System.out
+					.println("Usage: BenchmarkSorting <input dir> <output dir> --storage-engine [berkeley,files] --ibis-server --procs <num>");
+			System.exit(0);
+		}
+
+		parseArgs(args);
+
+		// Launch a simple job
+
+		Ajira arch = new Ajira();
+		Configuration conf = arch.getConfiguration();
+
+		// Init some configuration params of the cluster
+		conf.setBoolean(Consts.START_IBIS, ibis);
+		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
+		// conf.setInt(ReadFromFiles.MINIMUM_SPLIT_SIZE, 30000);
+
+		// Start the cluster
+		arch.startup();
+
+		if (arch.amItheServer()) {
+			// Now we can launch our program
+			Job job = new Job();
+
+			// Set up the program
+			ActionSequence actions = new ActionSequence();
+
+			// Split the input in more chunks, so that the reading
+			// is done in parallel
+			ActionConf c = ActionFactory.getActionConf(ReadFromFiles.class);
+			c.setParamString(ReadFromFiles.S_PATH, args[0]);
+			actions.add(c);
+
+			// Split each line in three strings
+			actions.add(ActionFactory.getActionConf(TripleParser.class));
+
+			// Distribute all the lines
+			c = ActionFactory.getActionConf(PartitionToNodes.class);
+			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
+					TString.class.getName(), TString.class.getName(),
+					TString.class.getName());
+			c.setParamBoolean(PartitionToNodes.B_SORT, true);
+			c.setParamByteArray(PartitionToNodes.IA_SORTING_FIELDS, (byte) 0,
+					(byte) 2);
+			actions.add(c);
+
+			// Remove the duplicates
+			actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+
+			if (storage.equals("files")) {
+				c = ActionFactory.getActionConf(WriteToFiles.class);
+				c.setParamString(WriteToFiles.S_PATH, args[1]);
+				actions.add(c);
+			} else if (storage.equals("berkeley")) {
+				// TODO: Implement
+			} else if (storage.equals("none")) {
+				c = ActionFactory.getActionConf(CollectToNode.class);
+				c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
+						TString.class.getName());
+				actions.add(c);
+			}
+
+			// Launch it!
+			job.setActions(actions);
+			Submission s = arch.waitForCompletion(job);
+			s.printStatistics();
+
+			// Exit
+			arch.shutdown();
+			System.exit(0);
+
+		}
+
+	}
+}

@@ -5,9 +5,9 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.ReasoningContext;
-import nl.vu.cs.querypie.storage.BTreeInterface;
-import nl.vu.cs.querypie.storage.DBType;
-import nl.vu.cs.querypie.storage.WritingSession;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
+import nl.vu.cs.dynamite.storage.DBType;
+import nl.vu.cs.dynamite.storage.WritingSession;
 
 public class DBHandler {
 	public String DBHandlerKey = "__DB_HANLDER_KEY";

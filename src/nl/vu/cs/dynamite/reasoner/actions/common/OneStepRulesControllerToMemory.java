@@ -13,8 +13,8 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.actions.rules.GenericRuleExecutor;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleStepMap;
 
 /**
  * A rules controller that execute a single step of materialization based on the

@@ -17,9 +17,9 @@ import nl.vu.cs.dynamite.reasoner.actions.io.ReadAllInMemoryTriples;
 import nl.vu.cs.dynamite.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
-import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.dynamite.storage.inmemory.TupleStepMap;
 
 public class IncrAddController extends Action {
 	public static void addToChain(int step, boolean firstIteration,

@@ -20,7 +20,7 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.rules.Rule;
-import nl.vu.cs.querypie.storage.inmemory.Tuples;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

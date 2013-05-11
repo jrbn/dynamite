@@ -22,10 +22,10 @@ import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
 import nl.vu.cs.dynamite.reasoner.actions.rules.GenericRuleExecutor;
 import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.Tuples;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples;
 
 public class IncrRulesParallelExecution extends Action {
 	public static void addToChain(int outputStep, ActionSequence actions)

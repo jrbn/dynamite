@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import nl.vu.cs.dynamite.reasoner.support.Utils;
-import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

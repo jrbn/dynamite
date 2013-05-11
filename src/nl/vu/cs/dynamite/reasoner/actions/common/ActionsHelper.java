@@ -30,7 +30,7 @@ import nl.vu.cs.dynamite.reasoner.actions.io.WriteDerivationsAllBtree;
 import nl.vu.cs.dynamite.reasoner.actions.rules.PrecompGenericMap;
 import nl.vu.cs.dynamite.reasoner.actions.rules.PrecompGenericReduce;
 import nl.vu.cs.dynamite.reasoner.actions.rules.PrecomputedRuleExecutor;
-import nl.vu.cs.querypie.storage.TripleFileStorage;
+import nl.vu.cs.dynamite.storage.TripleFileStorage;
 
 public class ActionsHelper {
 

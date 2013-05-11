@@ -16,9 +16,9 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.querypie.storage.BTreeInterface;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSetImpl;
 
 import org.iq80.snappy.SnappyInputStream;
 

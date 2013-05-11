@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Pattern;
 
 public class Ruleset {
 

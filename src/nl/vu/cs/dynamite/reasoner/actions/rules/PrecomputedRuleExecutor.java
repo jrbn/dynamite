@@ -13,10 +13,10 @@ import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.rules.Rule;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.inmemory.Tuples;
-import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples.Row;
 
 public class PrecomputedRuleExecutor extends Action {
 	public static void addToChain(int minimumStep, int outputStep, int ruleId,

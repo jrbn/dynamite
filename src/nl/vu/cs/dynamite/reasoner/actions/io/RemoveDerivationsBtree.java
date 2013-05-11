@@ -15,11 +15,11 @@ import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
-import nl.vu.cs.querypie.storage.BTreeInterface;
-import nl.vu.cs.querypie.storage.DBType;
-import nl.vu.cs.querypie.storage.WritingSession;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
+import nl.vu.cs.dynamite.storage.DBType;
+import nl.vu.cs.dynamite.storage.WritingSession;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleStepMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

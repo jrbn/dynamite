@@ -16,8 +16,8 @@ import nl.vu.cs.dynamite.reasoner.actions.common.OneStepRulesControllerToMemory;
 import nl.vu.cs.dynamite.reasoner.actions.io.RemoveDerivationsBtree;
 import nl.vu.cs.dynamite.reasoner.support.Consts;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSetImpl;
 
 public class IncrRemoveController extends Action {
 	public static void addToChain(boolean firstIteration, boolean countingAlgo,

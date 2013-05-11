@@ -19,8 +19,8 @@ import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.dynamite.io.AppendFileWriter;
 import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
-import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
+import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

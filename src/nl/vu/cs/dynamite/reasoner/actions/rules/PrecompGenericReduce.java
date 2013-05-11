@@ -25,10 +25,10 @@ import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
-import nl.vu.cs.querypie.storage.inmemory.Tuples;
-import nl.vu.cs.querypie.storage.inmemory.Tuples.Row;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples;
+import nl.vu.cs.dynamite.storage.inmemory.Tuples.Row;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

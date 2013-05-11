@@ -9,8 +9,8 @@ import nl.vu.cs.ajira.actions.ActionSequence;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleSetImpl;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSetImpl;
 
 public class WriteInMemory extends Action {
 	public static void addToChain(String inMemoryTriplesKey, ActionSequence actions) throws ActionNotConfiguredException {

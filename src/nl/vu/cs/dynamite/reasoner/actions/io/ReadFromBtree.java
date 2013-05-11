@@ -18,7 +18,7 @@ import nl.vu.cs.ajira.data.types.bytearray.BDataInput;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.InputQuery;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Pattern;
 
 public class ReadFromBtree extends Action {
 	public static void addToChain(Pattern pattern, ActionSequence actions) throws ActionNotConfiguredException {

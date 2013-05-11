@@ -22,8 +22,8 @@ import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.dynamite.reasoner.rules.RuleParser;
 import nl.vu.cs.dynamite.reasoner.rules.Ruleset;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.querypie.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.querypie.storage.mapdb.MapdbLayer;
+import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
+import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

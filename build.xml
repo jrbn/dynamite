@@ -1,65 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="querypie" default="jar" basedir=".">
+<project name="dynamite" default="jar" basedir=".">
 
-	<property name="VERSION" value="0.1" />
-	<property name="BUILD_PATH" value="bin" />
-	<property name="SRC_PATH" value="src" />
-	<property name="LIB_PATH" value="lib" />
-	<property name="JAR_LOCATION" value="./querypie-reasoning-${VERSION}.jar" />
-	
-	<property name="JAR_REMOTE_DIR" value="" />
-	<property name="SCP_PRIVATE_KEY" value="" />
-	<property name="SCP_PASSPHRASE" value="" />
-	<property name="AJIRA_DIR" value="/home/jurbani/ajira" />
-	<property name="QUERYPIE_STORAGE_DIR" value="/home/jurbani/inc_reasoner/querypie-storage/" />
-	<property name="PORT" value="22" />
+    <property name="VERSION" value="0.1" />
+    <property name="BUILD_PATH" value="bin" />
+    <property name="SRC_PATH" value="src" />
+    <property name="LIB_PATH" value="lib" />
+    <property name="JAR_LOCATION" value="./dynamite-${VERSION}.jar" />
+    <property name="FULL_JAR_LOCATION" value="./dynamite-full-${VERSION}.jar" />
 
-	<target name="clean">
-		<delete dir="${BUILD_PATH}" />
-	</target>
+    <property name="JAR_REMOTE_DIR" value="" />
+    <property name="SCP_PRIVATE_KEY" value="" />
+    <property name="SCP_PASSPHRASE" value="" />
+    <property name="PORT" value="22" />
 
-	<target name="init">
-		<mkdir dir="${BUILD_PATH}" />
-	</target>
+    <target name="clean">
+	<delete dir="${BUILD_PATH}" />
+    </target>
 
-	<target name="compile" depends="init" description="">
-		<javac includeantruntime="false" srcdir="${SRC_PATH}" destdir="${BUILD_PATH}" debug="true">
-			<classpath>
-				<fileset dir="${LIB_PATH}">
-					<include name="**/*.jar" />
-				</fileset>
-				<fileset dir="${AJIRA_DIR}/lib">
-					<include name="**/*.jar" />
-				</fileset>
-				<fileset dir="${QUERYPIE_STORAGE_DIR}/lib">
-					<include name="**/*.jar" />
-				</fileset>
-				<fileset dir="${QUERYPIE_STORAGE_DIR}">
-					<include name="*.jar" />
-				</fileset>
-				<fileset dir="${AJIRA_DIR}">
-					<include name="*.jar" />
-				</fileset>
-			</classpath>
-		</javac>
-	</target>
-	
-	<target name="dependencies">
-	     <ant dir="${AJIRA_DIR}" antfile="${AJIRA_DIR}/build.xml" target="jar" />
-	     <ant dir="${QUERYPIE_STORAGE_DIR}" antfile="${QUERYPIE_STORAGE_DIR}/build.xml" target="jar" />	     
-	</target>
+    <target name="init">
+	<mkdir dir="${BUILD_PATH}" />
+    </target>
 
-	<target name="jar" depends="dependencies,compile">
-		<jar destfile="${JAR_LOCATION}">
-			<fileset dir="${BUILD_PATH}"/>
-		</jar>		
-	</target>
+    <target name="compile" depends="init" description="">
+	<javac includeantruntime="false" srcdir="${SRC_PATH}" destdir="${BUILD_PATH}" debug="true">
+	    <classpath>
+		<fileset dir="${LIB_PATH}">
+		    <include name="**/*.jar" />
+		</fileset>
+	    </classpath>
+	</javac>
+    </target>
 
-	<target name="deploy" depends="jar" description="Copy the jar in a specific location">
-		<scp file="${JAR_LOCATION}" todir="${JAR_REMOTE_DIR}" keyfile="${SCP_PRIVATE_KEY}" passphrase="${SCP_PASSPHRASE}" trust="true" port="${PORT}"/>
-		<scp file="${AJIRA_DIR}/ajira-${VERSION}.jar" todir="${JAR_REMOTE_DIR}" keyfile="${SCP_PRIVATE_KEY}" passphrase="${SCP_PASSPHRASE}" trust="true" port="${PORT}"/>
-		<scp file="${QUERYPIE_STORAGE_DIR}/querypie-storage-${VERSION}.jar" todir="${JAR_REMOTE_DIR}" keyfile="${SCP_PRIVATE_KEY}" passphrase="${SCP_PASSPHRASE}" trust="true" port="${PORT}"/>
-	</target>
+    <target name="jar" depends="compile">
+	<jar destfile="${JAR_LOCATION}">
+	    <fileset dir="${BUILD_PATH}"/>
+	</jar>		
+    </target>
+
+    <property name="jar.dir" value="jar" />
+    <property name="depsjar.file" value="${jar.dir}/dynamite-deps.jar" />
+    <property name="manifest.file" value="${jar.dir}/MANIFEST.MF" />
+    <property name="main.class" value="nl.vu.cs.dynamite.Reasoner" />
+
+    <!-- Build-jar target rule: creates a fat-jar/bundle by using 
+    jar-unjar-jar mechanism -->
+    <target name="build-jar" depends="compile">
+	<delete dir="${jar.dir}" />
+	<mkdir dir="${jar.dir}" />
+
+	<!-- Create manifest file with proejct specs inside -->
+	<manifest file="${manifest.file}" >
+	    <attribute name="built-by" value="${user.name}" />
+	    <attribute name="Main-Class" value="${main.class}" />
+	    <attribute name="Class-Path" value="." />
+	</manifest>
+
+	<!-- Jar all the dependencies -->
+	<jar jarfile="${depsjar.file}">
+	    <zipgroupfileset dir="${LIB_PATH}" includes="**/*.jar" />
+	</jar>
+
+	<!-- Wait for packaging -->
+	<sleep seconds="1" />
+
+	<!-- Unjar dependencies + clean signatures + jar the whole projects 
+	     as a fat-jar/bundle -->
+	<jar jarfile="${FULL_JAR_LOCATION}" basedir="${BUILD_PATH}" manifest="${manifest.file}">
+	    <zipfileset src="${depsjar.file}" excludes="META-INF/**/*" />
+	</jar>
+
+	<!-- Delete de dependecies jar -->
+	<delete dir="${jar.dir}" />
+    </target>
+
+    <target name="deploy" depends="build-jar" description="Copy the jar in a specific location">
+	<scp file="${FULL_JAR_LOCATION}" todir="${JAR_REMOTE_DIR}" keyfile="${SCP_PRIVATE_KEY}" passphrase="${SCP_PASSPHRASE}" trust="true" port="${PORT}"/>
+    </target>
 
 </project>

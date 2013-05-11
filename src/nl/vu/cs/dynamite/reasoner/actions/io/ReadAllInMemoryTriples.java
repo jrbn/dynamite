@@ -13,8 +13,8 @@ import nl.vu.cs.ajira.data.types.SimpleData;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
-import nl.vu.cs.querypie.storage.inmemory.TupleSet;
-import nl.vu.cs.querypie.storage.inmemory.TupleStepMap;
+import nl.vu.cs.dynamite.storage.inmemory.TupleSet;
+import nl.vu.cs.dynamite.storage.inmemory.TupleStepMap;
 
 public class ReadAllInMemoryTriples extends Action {
 	public static void addToChain(String inMemoryTriplesKey, ActionSequence actions) throws ActionNotConfiguredException {

@@ -17,8 +17,8 @@ import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.dynamite.ReasoningContext;
 import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.dynamite.reasoner.support.Utils;
-import nl.vu.cs.querypie.storage.Pattern;
-import nl.vu.cs.querypie.storage.Term;
+import nl.vu.cs.dynamite.storage.Pattern;
+import nl.vu.cs.dynamite.storage.Term;
 
 public class GenericRuleExecutor extends Action {
 	public static void addToChain(int minimumStep, int outputStep, ActionSequence actions) throws ActionNotConfiguredException {
