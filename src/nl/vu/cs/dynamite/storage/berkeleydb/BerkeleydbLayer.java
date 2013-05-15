@@ -4,7 +4,7 @@ import java.io.File;
 
 import nl.vu.cs.ajira.Context;
 import nl.vu.cs.ajira.actions.ActionContext;
-import nl.vu.cs.ajira.chains.ChainLocation;
+import nl.vu.cs.ajira.chains.Location;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
@@ -380,9 +380,9 @@ public class BerkeleydbLayer extends InputLayer implements BTreeInterface {
 	}
 
 	@Override
-	public ChainLocation getLocations(Tuple tuple, ActionContext context) {
+	public Location getLocations(Tuple tuple, ActionContext context) {
 		// For now it supports only a local machine.
-		return ChainLocation.THIS_NODE;
+		return Location.THIS_NODE;
 	}
 
 	@Override
