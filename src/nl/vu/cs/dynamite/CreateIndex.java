@@ -149,8 +149,6 @@ public class CreateIndex {
 					String o = args[++i];
 					if (o != null && o.equals("btree")) {
 						outputBtree = "btree";
-					} else if (o != null && o.equals("mapdb")) {
-						outputBtree = "mapdb";
 					}
 				} else {
 					log.warn("Parameter output used incorrectly. Ignored...");
