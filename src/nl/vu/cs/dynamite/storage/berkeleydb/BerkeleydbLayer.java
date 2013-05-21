@@ -58,7 +58,8 @@ public class BerkeleydbLayer extends InputLayer implements BTreeInterface {
 		envConfig.setAllowCreate(true);
 		envConfig.setAllowCreateVoid(true);
 		envConfig.setConfigParam(EnvironmentConfig.LOG_FILE_MAX, "200000000");
-		envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, "false");
+		// envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CLEANER, "false");
+                envConfig.setConfigParam(EnvironmentConfig.EVICTOR_LRU_ONLY, "false");
 		envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_CHECKPOINTER,
 				"false");
 		envConfig.setConfigParam(EnvironmentConfig.ENV_RUN_IN_COMPRESSOR,
