@@ -155,9 +155,9 @@ public class PrecompGenericReduce extends Action {
 					pos_gen_precomps[currentRule][0][1], currentJoinValue);
 			if (set != null) {
 				for (Row row : set) {
-					if (log.isDebugEnabled()) {
+					if (log.isTraceEnabled()) {
 						long k = Utils.decodeLong(key.getArray(), 0);
-						log.debug("Rule " + currentRule
+						log.trace("Rule " + currentRule
 								+ " can derive the triple "
 								+ outputTuples[currentRule][0] + " "
 								+ outputTuples[currentRule][1] + " "
@@ -187,8 +187,8 @@ public class PrecompGenericReduce extends Action {
 						actionOutput.output(outputTuples[currentRule]);
 						counters[currentRule]++;
 
-						if (log.isDebugEnabled()) {
-							log.debug("Rule " + currentRule
+						if (log.isTraceEnabled()) {
+							log.trace("Rule " + currentRule
 									+ " has derived the triple "
 									+ outputTuples[currentRule][0] + " "
 									+ outputTuples[currentRule][1] + " "

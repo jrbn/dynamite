@@ -10,7 +10,6 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.DBType;
@@ -31,9 +30,6 @@ public class BerkeleydbLayer extends InputLayer implements BTreeInterface {
 
 	static final Logger log = LoggerFactory.getLogger(BerkeleydbLayer.class);
 
-	final public static String DB_INPUT = "berkeleydb.inputpath";
-	final public static String COMPRESS_KEYS = "berkeleydb.compress";
-
 	private static Environment env = null;
 	private static Database spo = null;
 	private static Database sop = null;
@@ -49,10 +45,6 @@ public class BerkeleydbLayer extends InputLayer implements BTreeInterface {
 	private boolean compressedKeys;
 	
 	private static int counter = 0;
-
-	public static void setInputDir(Configuration conf, String inputDir) {
-		conf.set(DB_INPUT, inputDir);
-	}
 
 	private void configureEnvironment(EnvironmentConfig envConfig) {
 		envConfig.setAllowCreate(true);
