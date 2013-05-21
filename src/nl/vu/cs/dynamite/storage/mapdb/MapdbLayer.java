@@ -405,7 +405,14 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 			if (counter > 0) {
 				return;
 			}
-
+			spo = null;
+			sop = null;
+			pos = null;
+			pso = null;
+			ops = null;
+			osp = null;
+			t2n = null;
+			n2t = null;
 			if (db != null) {
 				db.commit();
 				db.close();
