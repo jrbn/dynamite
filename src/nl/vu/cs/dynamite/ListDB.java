@@ -22,8 +22,7 @@ import nl.vu.cs.dynamite.reasoner.rules.Rule;
 import nl.vu.cs.dynamite.reasoner.rules.RuleParser;
 import nl.vu.cs.dynamite.reasoner.rules.Ruleset;
 import nl.vu.cs.dynamite.reasoner.support.ParamHandler;
-import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,9 +31,9 @@ public class ListDB {
 	static final Logger log = LoggerFactory.getLogger(ListDB.class);
 
 	private static List<Rule> rules;
-	private static String storage = "btree";
 	private static boolean compressKeys = false;
-	private static Class<? extends InputLayer> storageClass = BerkeleydbLayer.class;
+	private static String storageName = BTreeInterface.defaultStorageBtree;
+	private static Class<? extends InputLayer> storageClass;
 
 	private static int nProcThreads = 4;
 
@@ -43,7 +42,14 @@ public class ListDB {
 			System.out.println("Usage: ListDB <KB_dir> <ruleset> <destination-dir> [ options ]");
 			return;
 		}
+		
 		parseArgs(args);
+		try {
+			storageClass = Class.forName(storageName).asSubclass(InputLayer.class);
+		} catch(Exception e) {
+			log.error("--storage parameter used incorrectly.", e);
+			System.exit(1);
+		}
 
 		try {
 			Ajira arch = new Ajira();
@@ -99,13 +105,8 @@ public class ListDB {
 		}
 
 		Configuration conf = arch.getConfiguration();
-		if (storage.equals("btree")) {
-			storageClass = BerkeleydbLayer.class;
-			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
-			conf.setBoolean(BerkeleydbLayer.COMPRESS_KEYS, compressKeys);
-		} else if (storage.equals("mapdb")) {
-			storageClass = MapdbLayer.class;
-			conf.set(MapdbLayer.DB_INPUT, kbDir);
+		if (kbDir != null) {
+			conf.set(BTreeInterface.DB_INPUT, kbDir);
 		}
 		InputLayer.setDefaultInputLayerClass(storageClass, conf);
 		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
@@ -117,7 +118,7 @@ public class ListDB {
 			if (args[i].equals("--countDerivations")) {
 				ParamHandler.get().setUsingCount(true);
 			} else if (args[i].equals("--storage")) {
-				storage = args[++i];
+				storageName = args[++i];
 			} else if (args[i].equals("--procs")) {
 				nProcThreads = Integer.parseInt(args[++i]);
 			} else if (args[i].equals("--compressKeys")) {

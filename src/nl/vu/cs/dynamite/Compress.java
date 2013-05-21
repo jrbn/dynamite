@@ -31,11 +31,10 @@ import nl.vu.cs.dynamite.compression.ReconstructTriples;
 import nl.vu.cs.dynamite.compression.TriplePartitioner;
 import nl.vu.cs.dynamite.compression.URLsPartitioner;
 import nl.vu.cs.dynamite.parse.TripleParser;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.Dictionary;
 import nl.vu.cs.dynamite.storage.TripleFileStorage;
 import nl.vu.cs.dynamite.storage.Dictionary.FilterOnlyDictionaryFiles;
-import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,6 @@ public class Compress {
 	private int nProcThreads = 4;
 
 	private final int bucketsPerNode = 4;
-	private String storage = "btree";
 
 	private Ajira ajira;
 	private String kbDir = null;
@@ -178,7 +176,7 @@ public class Compress {
 			}
 
 			if (args[i].equals("--storage")) {
-				storage = args[++i];
+				storageClass = args[++i];
 			}
 
 			if (args[i].equals("--btree")) {
@@ -190,6 +188,9 @@ public class Compress {
 	private void run(String[] args) {
 		// Parse eventual optional arguments
 		parseArgs(args);
+		if (kbDir != null && storageClass == null) {
+			storageClass = BTreeInterface.defaultStorageBtree;
+		}
 
 		try {
 			ajira = new Ajira();
@@ -202,13 +203,7 @@ public class Compress {
 			conf.setInt(WebServer.WEBSERVER_PORT, 50080);
 
 			if (kbDir != null) {
-				if (storage.equals("btree")) {
-					storageClass = BerkeleydbLayer.class.getName();
-					conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
-				} else if (storage.equals("mapdb")) {
-					storageClass = MapdbLayer.class.getName();
-					conf.set(MapdbLayer.DB_INPUT, kbDir);
-				}
+				conf.set(BTreeInterface.DB_INPUT, kbDir);
 			}
 
 			ajira.startup();

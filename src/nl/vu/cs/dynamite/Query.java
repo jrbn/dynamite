@@ -19,8 +19,7 @@ import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
 import nl.vu.cs.dynamite.io.AppendFileWriter;
 import nl.vu.cs.dynamite.reasoner.actions.io.ReadFromBtree;
-import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
+import nl.vu.cs.dynamite.storage.BTreeInterface;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +27,8 @@ import org.slf4j.LoggerFactory;
 public class Query {
 	static final Logger log = LoggerFactory.getLogger(Query.class);
 	
-	private static String storage = "btree";
-	private static Class<? extends InputLayer> storageClass = BerkeleydbLayer.class;
+	private static String storage = BTreeInterface.defaultStorageBtree;
+	private static Class<? extends InputLayer> storageClass;
 
 	private static void parseArgs(String[] args) {
 		for (int i = 3; i < args.length; ++i) {
@@ -41,10 +40,17 @@ public class Query {
 	
 	public static void main(String[] args) {
 		if (args.length < 3) {
-			System.out.println("Usage: Query <KB_dir> <query file> <output file> [ --storage ( btree | mapdb ) ]");
+			System.out.println("Usage: Query <KB_dir> <query file> <output file> [ --storage <storageClassName> ]");
 			return;
 		}
 		parseArgs(args);
+		try {
+			storageClass = Class.forName(storage).asSubclass(InputLayer.class);
+		} catch(Exception e) {
+			log.error("--storage parameter used incorrectly.", e);
+			System.exit(1);
+		}
+
 		try {
 			Ajira arch = new Ajira();
 			initAjira(args[0], arch);
@@ -93,13 +99,7 @@ public class Query {
 
 	private static void initAjira(String kbDir, Ajira arch) {
 		Configuration conf = arch.getConfiguration();
-		if (storage.equals("btree")) {
-			storageClass = BerkeleydbLayer.class;
-			conf.set(BerkeleydbLayer.DB_INPUT, kbDir);
-		} else if (storage.equals("mapdb")) {
-			storageClass = MapdbLayer.class;
-			conf.set(MapdbLayer.DB_INPUT, kbDir);
-		}
+		conf.set(BTreeInterface.DB_INPUT, kbDir);
 		InputLayer.setDefaultInputLayerClass(storageClass, conf);
 		conf.setInt(Consts.N_PROC_THREADS, 4);
 	}

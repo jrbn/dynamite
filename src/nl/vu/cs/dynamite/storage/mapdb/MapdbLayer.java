@@ -14,7 +14,6 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.ajira.utils.Utils.BytesComparator;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
@@ -83,8 +82,6 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 	
 	static final Logger log = LoggerFactory.getLogger(MapdbLayer.class);
 
-	final public static String DB_INPUT = "mapdb.inputpath";
-
 	private String inputDir = null;
 	private static DB db = null;
 	private static BTreeMap<byte[], byte[]> spo = null;
@@ -101,10 +98,6 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 	
 	private static int counter = 0;
 
-	public static void setInputDir(Configuration conf, String inputDir) {
-		conf.set(DB_INPUT, inputDir);
-	}
-	
 	private void init(Context context) throws Exception {
 		synchronized(this.getClass()) {
 			if (db == null) {
@@ -126,6 +119,23 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 			if (! isInitialized) {
 				counter++;
 				isInitialized = true;
+				compressedKeys = context.getConfiguration().getBoolean(
+						COMPRESS_KEYS, false);
+				// Check if the database already has a "Config".
+				try {
+					HTreeMap<String, Boolean> c = db.createHashMap("Config", false, null, null);
+					c.put("CompressedKeys", compressedKeys);
+					db.commit();
+				} catch(IllegalArgumentException e) {
+					// Already exists. Look in the "Config" database to see if keys are compressed.
+					// Value overrides user-spec.
+					HTreeMap<String, Boolean> c = db.getHashMap("Config");
+					compressedKeys = c.get("CompressedKeys");
+				}
+
+				if (log.isDebugEnabled()) {
+					log.debug("Compressed keys: " + compressedKeys);
+				}
 			}
 		}
 	}
@@ -133,14 +143,6 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 	@Override
 	protected void load(Context context) throws Exception {
 		init(context);
-
-		// Look in the "Config" database to see if keys are compressed.
-		HTreeMap<String, Boolean> c = db.getHashMap("Config");
-		compressedKeys = c.get("CompressedKeys");
-
-		if (log.isDebugEnabled()) {
-			log.debug("Compressed keys: " + compressedKeys);
-		}
 
 		spo = loadDb(context, DBType.SPO);
 		sop = loadDb(context, DBType.SOP);
