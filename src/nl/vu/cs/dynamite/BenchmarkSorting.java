@@ -85,8 +85,9 @@ public class BenchmarkSorting {
 					TString.class.getName(), TString.class.getName(),
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
-			c.setParamByteArray(PartitionToNodes.IA_SORTING_FIELDS, (byte) 0,
-					(byte) 2);
+                        c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 4);
+			// c.setParamByteArray(PartitionToNodes.IA_SORTING_FIELDS, (byte) 0,
+			// 		(byte) 2);
 			actions.add(c);
 
 			// Remove the duplicates
