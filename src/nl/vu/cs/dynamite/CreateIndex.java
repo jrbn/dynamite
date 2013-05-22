@@ -36,8 +36,6 @@ import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.Dictionary;
 import nl.vu.cs.dynamite.storage.TripleFileStorage;
 import nl.vu.cs.dynamite.storage.Dictionary.FilterOnlyDictionaryFiles;
-import nl.vu.cs.dynamite.storage.berkeleydb.BerkeleydbLayer;
-import nl.vu.cs.dynamite.storage.mapdb.MapdbLayer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +62,7 @@ public class CreateIndex {
 	private String dictionaryOutput = null;
 	private static String filter = null;
 	private boolean onlySchema = false;
-	private Class<? extends BTreeInterface> storageBtree = BerkeleydbLayer.class;
+	private String storageBtreeName = BTreeInterface.defaultStorageBtree;
 
 	private Ajira ajira;
 
@@ -124,7 +122,7 @@ public class CreateIndex {
 		if (outputBtree.equals("btree")) {
 			ActionConf c = ActionFactory.getActionConf(WriteToBtree.class);
 			c.setParamString(WriteToBtree.S_STORAGECLASS,
-					storageBtree.getName());
+					storageBtreeName);
 			c.setParamBoolean(WriteToBtree.B_COUNT, countDerivations);
 			actions.add(c);
 		} else {
@@ -149,8 +147,6 @@ public class CreateIndex {
 					String o = args[++i];
 					if (o != null && o.equals("btree")) {
 						outputBtree = "btree";
-					} else if (o != null && o.equals("mapdb")) {
-						outputBtree = "mapdb";
 					}
 				} else {
 					log.warn("Parameter output used incorrectly. Ignored...");
@@ -158,12 +154,7 @@ public class CreateIndex {
 			}
 
 			if (args[i].equals("--storage")) {
-				try {
-					storageBtree = Class.forName(args[++i]).asSubclass(
-							BTreeInterface.class);
-				} catch (Exception e) {
-					log.warn("Parameter --storage used incorrectly. Ignored...");
-				}
+				storageBtreeName = args[++i];
 			}
 
 			if (args[i].equals("--procs")) {
@@ -222,9 +213,8 @@ public class CreateIndex {
 			conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
 			conf.setInt(Consts.N_MERGE_THREADS, 2);
 			conf.setInt(WebServer.WEBSERVER_PORT, 50080);
-			conf.setBoolean(BerkeleydbLayer.COMPRESS_KEYS, compressKeys);
-			BerkeleydbLayer.setInputDir(conf, output);
-			MapdbLayer.setInputDir(conf, output);
+			conf.setBoolean(BTreeInterface.COMPRESS_KEYS, compressKeys);
+			conf.set(BTreeInterface.DB_INPUT, output);
 
 			ajira.startup();
 
@@ -285,7 +275,7 @@ public class CreateIndex {
 					c = ActionFactory
 							.getActionConf(WriteDictionaryToBtree.class);
 					c.setParamString(WriteDictionaryToBtree.S_STORAGECLASS,
-							storageBtree.getName());
+							storageBtreeName);
 					c.setParamBoolean(WriteDictionaryToBtree.B_TEXT_NUMBER,
 							true);
 					sequence2.add(c);
@@ -300,7 +290,7 @@ public class CreateIndex {
 					c.setParamBoolean(WriteDictionaryToBtree.B_TEXT_NUMBER,
 							false);
 					c.setParamString(WriteDictionaryToBtree.S_STORAGECLASS,
-							storageBtree.getName());
+							storageBtreeName);
 					sequence.add(c);
 					sequence.add(ActionFactory.getActionConf(BlockFlow.class));
 

@@ -18,7 +18,7 @@ import nl.vu.cs.dynamite.parse.TripleParser;
 
 public class BenchmarkSorting {
 
-	private static String storage = "files";
+	private static String output = "files";
 	private static boolean ibis = false;
 	private static int nProcThreads = 1;
 
@@ -30,8 +30,8 @@ public class BenchmarkSorting {
 				ibis = true;
 			}
 
-			if (param.equals("--storage-engine")) {
-				storage = args[++i];
+			if (param.equals("--output")) {
+				output = args[++i];
 			}
 
 			if (param.equals("--procs")) {
@@ -44,7 +44,7 @@ public class BenchmarkSorting {
 
 		if (args.length < 2) {
 			System.out
-					.println("Usage: BenchmarkSorting <input dir> <output dir> --storage-engine [berkeley,files] --ibis-server --procs <num>");
+					.println("Usage: BenchmarkSorting <input dir> <output dir> --output [btree,files,none] --ibis-server --procs <num>");
 			System.exit(0);
 		}
 
@@ -86,20 +86,20 @@ public class BenchmarkSorting {
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
                         c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 4);
-			// c.setParamByteArray(PartitionToNodes.IA_SORTING_FIELDS, (byte) 0,
-			// 		(byte) 2);
+			c.setParamByteArray(PartitionToNodes.IA_SORTING_FIELDS, (byte) 0, (byte) 1,
+					(byte) 2);
 			actions.add(c);
 
 			// Remove the duplicates
 			actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
 
-			if (storage.equals("files")) {
+			if (output.equals("files")) {
 				c = ActionFactory.getActionConf(WriteToFiles.class);
 				c.setParamString(WriteToFiles.S_PATH, args[1]);
 				actions.add(c);
-			} else if (storage.equals("berkeley")) {
+			} else if (output.equals("btree")) {
 				// TODO: Implement
-			} else if (storage.equals("none")) {
+			} else if (output.equals("none")) {
 				c = ActionFactory.getActionConf(CollectToNode.class);
 				c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
 						TString.class.getName());

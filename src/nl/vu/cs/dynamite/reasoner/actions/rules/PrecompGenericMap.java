@@ -135,8 +135,8 @@ public class PrecompGenericMap extends Action {
 				int currentStep = ((TInt) tuple.get(3)).getValue();
 
 				if (currentStep < minimumStep && schemaStep < minimumStep) {
-					if (log.isDebugEnabled()) {
-						log.debug("The input triple " + tuple
+					if (log.isTraceEnabled()) {
+						log.trace("The input triple " + tuple
 								+ " is not eligible for rule=" + r + ". JP="
 								+ t.getIdDatatype() + " CS=" + currentStep
 								+ " SS=" + schemaStep + " MS=" + minimumStep);
@@ -159,9 +159,9 @@ public class PrecompGenericMap extends Action {
 							tuple.get(positions_to_check[r][0]));
 				}
 
-				if (log.isDebugEnabled()) {
+				if (log.isTraceEnabled()) {
 					TByteArray key = (TByteArray) outputTuple.get(0);
-					log.debug("The input triple " + tuple
+					log.trace("The input triple " + tuple
 							+ " has outputed the following tuple "
 							+ Utils.decodeLong(key.getArray(), 0) + "("
 							+ key.getArray().length + ") " + valid + " - "

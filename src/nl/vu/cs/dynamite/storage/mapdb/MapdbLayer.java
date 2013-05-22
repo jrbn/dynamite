@@ -1,6 +1,9 @@
 package nl.vu.cs.dynamite.storage.mapdb;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 import nl.vu.cs.ajira.Context;
@@ -11,24 +14,73 @@ import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.datalayer.InputLayer;
 import nl.vu.cs.ajira.datalayer.TupleIterator;
-import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Utils;
+import nl.vu.cs.ajira.utils.Utils.BytesComparator;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.DBType;
 import nl.vu.cs.dynamite.storage.WritingSession;
 
+import org.mapdb.BTreeKeySerializer;
 import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
+import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MapdbLayer extends InputLayer implements BTreeInterface {
 
-	static final Logger log = LoggerFactory.getLogger(MapdbLayer.class);
+	private static class ByteArraySerializer extends BTreeKeySerializer<byte[]> implements Serializer<byte[]>, java.io.Serializable {
 
-	final public static String DB_INPUT = "mapdb.inputpath";
+		@Override
+		public byte[] deserialize(DataInput in, int available) throws IOException {
+			int n = in.readByte();
+			if (n == -1) {
+				return null;
+			}
+			byte[] b = new byte[n];
+			if (n > 0) {
+				in.readFully(b);
+			}
+			return b;
+		}
+
+		@Override
+		public void serialize(DataOutput out, byte[] b) throws IOException {
+			if (b == null) {
+				out.writeByte(-1);
+			} else {
+				out.writeByte(b.length);
+				if (b.length > 0) {
+					out.write(b);
+				}	
+			}
+		}
+		
+		@Override
+		public void serialize(DataOutput out, int start, int end, Object[] keys) throws IOException {
+			for (int i = start; i < end; i++) {
+				byte[] b = ((byte[]) keys[i]);
+				serialize(out, b);
+			}
+		}
+
+		@Override
+		public Object[] deserialize(DataInput in, int start, int end, int size) throws IOException {
+			Object[] ret = new Object[size];
+			for (int i = start; i < end; i++) {
+				ret[i] = deserialize(in, 0);
+			}
+			return ret;
+		}
+	}
+
+	private static final ByteArraySerializer serializer = new ByteArraySerializer();
+	
+	private static final BytesComparator cmp = new BytesComparator();
+	
+	static final Logger log = LoggerFactory.getLogger(MapdbLayer.class);
 
 	private String inputDir = null;
 	private static DB db = null;
@@ -46,10 +98,6 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 	
 	private static int counter = 0;
 
-	public static void setInputDir(Configuration conf, String inputDir) {
-		conf.set(DB_INPUT, inputDir);
-	}
-	
 	private void init(Context context) throws Exception {
 		synchronized(this.getClass()) {
 			if (db == null) {
@@ -71,6 +119,23 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 			if (! isInitialized) {
 				counter++;
 				isInitialized = true;
+				compressedKeys = context.getConfiguration().getBoolean(
+						COMPRESS_KEYS, false);
+				// Check if the database already has a "Config".
+				try {
+					HTreeMap<String, Boolean> c = db.createHashMap("Config", false, null, null);
+					c.put("CompressedKeys", compressedKeys);
+					db.commit();
+				} catch(IllegalArgumentException e) {
+					// Already exists. Look in the "Config" database to see if keys are compressed.
+					// Value overrides user-spec.
+					HTreeMap<String, Boolean> c = db.getHashMap("Config");
+					compressedKeys = c.get("CompressedKeys");
+				}
+
+				if (log.isDebugEnabled()) {
+					log.debug("Compressed keys: " + compressedKeys);
+				}
 			}
 		}
 	}
@@ -78,14 +143,6 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 	@Override
 	protected void load(Context context) throws Exception {
 		init(context);
-
-		// Look in the "Config" database to see if keys are compressed.
-		HTreeMap<String, Boolean> c = db.getHashMap("Config");
-		compressedKeys = c.get("CompressedKeys");
-
-		if (log.isDebugEnabled()) {
-			log.debug("Compressed keys: " + compressedKeys);
-		}
 
 		spo = loadDb(context, DBType.SPO);
 		sop = loadDb(context, DBType.SOP);
@@ -235,7 +292,12 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 		synchronized (MapdbLayer.class) {
 			BTreeMap<byte[], byte[]> database = fromDbToObj(dbType);
 			if (database == null) {
-				database = db.getTreeMap(fromDbToName(dbType));
+				try {
+					database = db.createTreeMap(fromDbToName(dbType), 64, false, false, serializer, serializer, cmp);
+				} catch(IllegalArgumentException e) {
+					// it already exists
+					database = db.getTreeMap(fromDbToName(dbType));
+				}
 				initDatabase(dbType, database);
 			}
 			return database;
@@ -345,7 +407,14 @@ public class MapdbLayer extends InputLayer implements BTreeInterface {
 			if (counter > 0) {
 				return;
 			}
-
+			spo = null;
+			sop = null;
+			pos = null;
+			pso = null;
+			ops = null;
+			osp = null;
+			t2n = null;
+			n2t = null;
 			if (db != null) {
 				db.commit();
 				db.close();
