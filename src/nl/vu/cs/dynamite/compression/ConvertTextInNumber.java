@@ -33,8 +33,7 @@ public class ConvertTextInNumber extends Action {
 	public static final int S_DIR_OUTPUT = 0;
 	public static final int I_NPARTITIONS_PER_NODE = 1;
 	public static final int S_STORAGECLASS = 2;
-
-	private static final int reservedSpace = 200;
+	public static final int RESERVED_SPACE = 200;
 
 	long counter, countInput;
 	protected TString uri;
@@ -103,7 +102,7 @@ public class ConvertTextInNumber extends Action {
 			start = counter = Long.valueOf(line);
 			r.close();
 		} else {
-			counter = start = currentPartition + reservedSpace;
+			counter = start = currentPartition + RESERVED_SPACE;
 		}
 
 		// Store the dictionary entries in a local file.

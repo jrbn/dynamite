@@ -34,6 +34,7 @@ public class ProcessCommonURIs extends Action {
 
 	int samplingThreshold;
 	String outputDictDir;
+	int maxSize;
 
 	long counter, counterAssigned;
 	String currentURI;
@@ -44,8 +45,8 @@ public class ProcessCommonURIs extends Action {
 	@Override
 	public void registerActionParameters(ActionConf conf) {
 		conf.registerParameter(S_DIR_OUTPUT, "S_DIR_OUTPUT", null, true);
-		conf.registerParameter(I_SAMPLING_THRESHOLD, "I_SAMPLING_THRESHOLD", null,
-				true);
+		conf.registerParameter(I_SAMPLING_THRESHOLD, "I_SAMPLING_THRESHOLD",
+				null, true);
 	}
 
 	@Override
@@ -55,7 +56,8 @@ public class ProcessCommonURIs extends Action {
 
 		currentURI = null;
 		counter = 0;
-		counterAssigned = 100; // Starting points
+		counterAssigned = 100; // Starting point
+		maxSize = ConvertTextInNumber.RESERVED_SPACE - (int) counterAssigned;
 
 		// If directory exists then we read the last counter
 		File f = new File(outputDictDir);
@@ -74,7 +76,8 @@ public class ProcessCommonURIs extends Action {
 	}
 
 	private void potentiallyAddPopularURI() {
-		if (currentURI != null && counter > samplingThreshold) {
+		if (currentURI != null && counter > samplingThreshold
+				&& popularURIs.size() < maxSize) {
 			popularURIs.put(currentURI, counterAssigned++);
 		}
 	}

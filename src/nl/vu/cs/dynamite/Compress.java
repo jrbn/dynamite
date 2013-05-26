@@ -33,8 +33,8 @@ import nl.vu.cs.dynamite.compression.URLsPartitioner;
 import nl.vu.cs.dynamite.parse.TripleParser;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.Dictionary;
-import nl.vu.cs.dynamite.storage.TripleFileStorage;
 import nl.vu.cs.dynamite.storage.Dictionary.FilterOnlyDictionaryFiles;
+import nl.vu.cs.dynamite.storage.TripleFileStorage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public class Compress {
 	private void compress(ActionSequence actions, String dictOutput,
 			String output) throws Exception {
 
-		if (kbDir == null) {
+		if (kbDir == null && !new File(dictOutput).exists()) {
 			// Sample for compression
 			sampleForCompression(actions, dictOutput);
 		}
@@ -287,6 +287,7 @@ public class Compress {
 		c = ActionFactory.getActionConf(CollectToNode.class);
 		c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
 				TString.class.getName());
+		c.setParamBoolean(CollectToNode.B_SORT, true);
 		actions.add(c);
 
 		// Process the common URIs
