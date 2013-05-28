@@ -57,6 +57,7 @@ public class Compress {
 	private int samplingThreshold = 1000;
 	private boolean ibis = false;
 	private int nProcThreads = 4;
+        private boolean sampling = true;
 
 	private final int bucketsPerNode = 4;
 
@@ -67,7 +68,7 @@ public class Compress {
 	private void compress(ActionSequence actions, String dictOutput,
 			String output) throws Exception {
 
-		if (kbDir == null && !new File(dictOutput).exists()) {
+		if (sampling && kbDir == null && !new File(dictOutput).exists()) {
 			// Sample for compression
 			sampleForCompression(actions, dictOutput);
 		}
@@ -170,6 +171,14 @@ public class Compress {
 			if (args[i].equals("--samplingPercentage")) {
 				samplingPercentage = Integer.valueOf(args[++i]);
 			}
+
+                        if (args[i].equals("--no-sampling")) {
+                            sampling = false;
+                        }
+
+                        if (args[i].equals("--sampling")) {
+                            sampling = true;
+                        }
 
 			if (args[i].equals("--procs")) {
 				nProcThreads = Integer.parseInt(args[++i]);
