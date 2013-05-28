@@ -14,6 +14,7 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
+
 // import nl.vu.cs.dynamite.parse.TripleParser;
 
 public class BenchmarkSorting {
@@ -82,10 +83,10 @@ public class BenchmarkSorting {
 			// Distribute all the lines
 			c = ActionFactory.getActionConf(PartitionToNodes.class);
 			c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
-					// TString.class.getName(), TString.class.getName(),
+			// TString.class.getName(), TString.class.getName(),
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
-			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 4);
+			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 32);
 			actions.add(c);
 
 			// Remove the duplicates
