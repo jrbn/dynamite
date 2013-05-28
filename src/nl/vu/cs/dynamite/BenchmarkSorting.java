@@ -86,7 +86,9 @@ public class BenchmarkSorting {
 			// TString.class.getName(), TString.class.getName(),
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
-			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 32);
+			int nNodes = arch.getNumberNodes();
+			int nPartitionsPerNode = nNodes > 32 ? 1 : 32 / nNodes;	// Assumes nNodes is a power of 2.
+			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nPartitionsPerNode);
 			actions.add(c);
 
 			// Remove the duplicates
