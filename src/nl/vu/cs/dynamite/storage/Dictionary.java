@@ -172,6 +172,11 @@ public class Dictionary {
 		f.setMinimumIntegerDigits(5);
 		f.setGroupingUsed(false);
 		filename += f.format(unique_prefix);
+		
+		File fDir = new File(dir);
+		if (!fDir.exists() || !fDir.isDirectory()) {
+			fDir.mkdirs();
+		}
 
 		// Write the URIs in a file in the output dir
 		stream = new DataOutputStream(new SnappyOutputStream(
