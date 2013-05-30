@@ -57,7 +57,7 @@ public class Compress {
 	private int samplingThreshold = 1000;
 	private boolean ibis = false;
 	private int nProcThreads = 4;
-        private boolean sampling = true;
+	private boolean sampling = true;
 
 	private final int bucketsPerNode = 4;
 

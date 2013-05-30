@@ -13,9 +13,10 @@ public class URLsPartitioner extends Partitioner {
 	@Override
 	public int partition(Tuple tuple) {
 		TString url = (TString) tuple.get(0);
-		if (url.getValue().charAt(0) != '#')
-			return (url.hashCode() & Integer.MAX_VALUE) % npartitions;
-		else
-			return r.nextInt(npartitions);
+		if (url.getValue().charAt(0) != '#') {
+			int hash = url.hashCode();
+			return (hash ^ (hash >> 5)) % npartitions;
+		}
+		return r.nextInt(npartitions);
 	}
 }
