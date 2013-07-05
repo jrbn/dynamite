@@ -35,10 +35,10 @@ class DebuggingUtils {
 	private static String printDerivationsToString(InputLayer db, ActionContext context) {
 		String result = separator;
 		Tuple query = TupleFactory.newTuple(new TLong(-1), new TLong(-1), new TLong(-1));
-		TupleIterator it = db.getIterator(query, context);
-		Tuple tuple = TupleFactory.newTuple();
-		int count = 0;
 		try {
+			TupleIterator it = db.getIterator(query, context);
+			Tuple tuple = TupleFactory.newTuple();
+			int count = 0;
 			while (it.isReady() && it.nextTuple()) {
 				result = result.concat(String.valueOf(++count));
 				result = result.concat("\t");

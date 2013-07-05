@@ -84,13 +84,13 @@ public class SchemaManager {
 		}
 
 		Tuple t = TupleFactory.newTuple(query);
-		TupleIterator itr = kb.getIterator(t, context);
 		Tuple row = TupleFactory.newTuple(new TLong(), new TLong(),
 				new TLong(), new TInt());
 
 		List<Tuple> resultList = new ArrayList<Tuple>();
 		List<Integer> steps = new ArrayList<Integer>();
 		try {
+			TupleIterator itr = kb.getIterator(t, context);
 			while (itr != null && itr.isReady() && itr.nextTuple()) {
 				itr.getTuple(row);
 				TLong[] signature = new TLong[nVars];
