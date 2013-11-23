@@ -11,6 +11,7 @@ import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TString;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.DBType;
@@ -25,7 +26,7 @@ public class DeconstructTriples extends Action {
 	static Logger log = LoggerFactory.getLogger(DeconstructTriples.class);
 
 	public static final int I_NPARTITIONS_PER_NODE = 0;
-	
+
 	public static final int S_STORAGECLASS = 1;
 
 	protected TString[] triple = new TString[3];
@@ -37,14 +38,15 @@ public class DeconstructTriples extends Action {
 	private int incr;
 	protected Map<String, Long> predefinedTerms = null;
 
+	private Tuple tuple = TupleFactory.newTuple(url, tripleId, position);
 	private BTreeInterface in = null;
 	private WritingSession t2n = null;
 	private int[] decodePosition = new int[1];
 
 	@Override
 	public void registerActionParameters(ActionConf conf) {
-		conf.registerParameter(I_NPARTITIONS_PER_NODE, "I_NPARTITIONS_PER_NODE", 1,
-				false);
+		conf.registerParameter(I_NPARTITIONS_PER_NODE,
+				"I_NPARTITIONS_PER_NODE", 1, false);
 		conf.registerParameter(S_STORAGECLASS, "S_STORAGECLASS", null, false);
 	}
 
@@ -66,12 +68,12 @@ public class DeconstructTriples extends Action {
 		predefinedTerms.putAll(StandardTerms.getTextToNumber());
 		String storageClass = getParamString(S_STORAGECLASS);
 		if (storageClass != null) {
-			in  = Class.forName(getParamString(S_STORAGECLASS))
+			in = Class.forName(getParamString(S_STORAGECLASS))
 					.asSubclass(BTreeInterface.class).newInstance();
-			t2n = in.openWritingSession(context, DBType.T2N); 
+			t2n = in.openWritingSession(context, DBType.T2N);
 		}
 	}
-	
+
 	private void processString(String s) {
 		if (predefinedTerms.containsKey(s)) {
 			url.setValue("#" + predefinedTerms.get(s));
@@ -100,30 +102,17 @@ public class DeconstructTriples extends Action {
 		tripleId.setValue(counter);
 		counter += incr;
 
-		if (predefinedTerms.containsKey(triple[0].getValue())) {
-			url.setValue("#" + predefinedTerms.get(triple[0].getValue()));
-		} else {
-			processString(triple[0].getValue());
-		}
+		processString(triple[0].getValue());
 		position.setValue(1);
-		output.output(url, tripleId, position);
+		output.output(tuple);
 
-		if (predefinedTerms.containsKey(triple[1].getValue())) {
-			url.setValue("#" + predefinedTerms.get(triple[1].getValue()));
-		} else {
-			processString(triple[1].getValue());
-		}
+		processString(triple[1].getValue());
 		position.setValue(2);
-		output.output(url, tripleId, position);
+		output.output(tuple);
 
-		if (predefinedTerms.containsKey(triple[2].getValue())) {
-			url.setValue("#" + predefinedTerms.get(triple[2].getValue()));
-		} else {
-			processString(triple[2].getValue());
-		}
+		processString(triple[2].getValue());
 		position.setValue(3);
-		output.output(url, tripleId, position);
-
+		output.output(tuple);
 	}
 
 	@Override
