@@ -46,7 +46,7 @@ public class Compress {
 	public static void main(String[] args) {
 		if (args.length < 3) {
 			System.out
-					.println("USAGETRALALLA: Compress [input] [output] [output dictionary] --samplingPercentage (default 1%) --samplingThreshold (default: 1000) ]");
+					.println("USAGE: Compress [input] [output] [output dictionary] --samplingPercentage (default 1%) --samplingThreshold (default: 1000) ]");
 			return;
 		}
 
