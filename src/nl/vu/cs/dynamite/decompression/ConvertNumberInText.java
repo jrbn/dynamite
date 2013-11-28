@@ -10,7 +10,7 @@ import nl.vu.cs.ajira.data.types.Tuple;
 
 public class ConvertNumberInText extends Action {
 
-	private TString textValue;
+	private TString textValue = new TString(null);
 
 	@Override
 	public void startProcess(ActionContext context) throws Exception {
@@ -23,7 +23,7 @@ public class ConvertNumberInText extends Action {
 
 		switch (flag.getValue()) {
 		case 0:
-			textValue = (TString) inputTuple.get(2);
+			textValue.setValue(((TString) inputTuple.get(4)).getValue());
 			break;
 		case 1:
 			TByte position = (TByte) inputTuple.get(2);
@@ -33,7 +33,7 @@ public class ConvertNumberInText extends Action {
 		case 2:
 			tripleID = (TLong) inputTuple.get(0);
 			position = (TByte) inputTuple.get(2);
-			textValue = (TString) inputTuple.get(3);
+			textValue.setValue(((TString) inputTuple.get(4)).getValue());
 			output.output(tripleID, position, textValue);
 			break;
 		}

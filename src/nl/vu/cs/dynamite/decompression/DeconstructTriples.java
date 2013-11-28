@@ -27,6 +27,8 @@ public class DeconstructTriples extends Action {
 	private static final TByte SUBJ = new TByte(0);
 	private static final TByte PRED = new TByte(1);
 	private static final TByte OBJ = new TByte(2);
+	private static final TLong NONE = new TLong(-1);
+	private static final TString NULL = new TString(null);
 
 	private TString txtValue;
 	private Map<Long, String> commonValues;
@@ -50,6 +52,7 @@ public class DeconstructTriples extends Action {
 		commonValues.putAll(StandardTerms.getNumberToText());
 
 		statsTriples = statsDict = 0;
+		txtValue = new TString(null);
 	}
 
 	@Override
@@ -69,25 +72,28 @@ public class DeconstructTriples extends Action {
 
 			if (commonValues.containsKey(triple[0].getValue())) {
 				txtValue.setValue(commonValues.get(triple[0].getValue()));
-				outputTuple.set(tripleId, ALREADY_CONVERTED, SUBJ, txtValue);
+				outputTuple.set(tripleId, ALREADY_CONVERTED, SUBJ, NONE,
+						txtValue);
 			} else {
-				outputTuple.set(triple[0], TRIPLE, SUBJ, tripleId);
+				outputTuple.set(triple[0], TRIPLE, SUBJ, tripleId, NULL);
 			}
 			output.output(outputTuple);
 
 			if (commonValues.containsKey(triple[1].getValue())) {
 				txtValue.setValue(commonValues.get(triple[1].getValue()));
-				outputTuple.set(tripleId, ALREADY_CONVERTED, PRED, txtValue);
+				outputTuple.set(tripleId, ALREADY_CONVERTED, PRED, NONE,
+						txtValue);
 			} else {
-				outputTuple.set(triple[1], TRIPLE, PRED, tripleId);
+				outputTuple.set(triple[1], TRIPLE, PRED, tripleId, NULL);
 			}
 			output.output(outputTuple);
 
 			if (commonValues.containsKey(triple[2].getValue())) {
 				txtValue.setValue(commonValues.get(triple[2].getValue()));
-				outputTuple.set(tripleId, ALREADY_CONVERTED, OBJ, txtValue);
+				outputTuple.set(tripleId, ALREADY_CONVERTED, OBJ, NONE,
+						txtValue);
 			} else {
-				outputTuple.set(triple[2], TRIPLE, OBJ, tripleId);
+				outputTuple.set(triple[2], TRIPLE, OBJ, tripleId, NULL);
 			}
 			output.output(outputTuple);
 
@@ -96,7 +102,7 @@ public class DeconstructTriples extends Action {
 			txtValue = (TString) inputTuple.get(1);
 			statsDict++;
 			if (!commonValues.containsKey(triple[0].getValue())) {
-				outputTuple.set(triple[0], DICT, txtValue);
+				outputTuple.set(triple[0], DICT, OBJ, NONE, txtValue);
 				output.output(outputTuple);
 			}
 		}
