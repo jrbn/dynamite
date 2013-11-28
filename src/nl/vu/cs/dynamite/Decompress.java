@@ -133,9 +133,10 @@ public class Decompress {
 		actions.add(c);
 		// Nothing comes out of this part of the split.
 
-		c = ActionFactory.getActionConf(Sample.class);
-		c.setParamInt(Sample.I_SAMPLE_RATE, 101);
-		actions.add(c);
+		/*
+		 * c = ActionFactory.getActionConf(Sample.class);
+		 * c.setParamInt(Sample.I_SAMPLE_RATE, 101); actions.add(c);
+		 */
 		// Delivers: <TLong, TLong, TLong>
 	}
 
@@ -185,6 +186,9 @@ public class Decompress {
 		list.add(ActionFactory.getActionConf(ProcessCommonTextURIs.class));
 		// Nothing comes out of this split
 
+		// A dummy action to catch the Split. If you remove this, the
+		// application hangs. Bug? Maybe a split cannot end behind
+		// the last action of a branch. TODO: Check!
 		c = ActionFactory.getActionConf(Sample.class);
 		c.setParamInt(Sample.I_SAMPLE_RATE, 101);
 		list.add(c);
