@@ -16,6 +16,7 @@ import nl.vu.cs.ajira.data.types.TByte;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TString;
 import nl.vu.cs.ajira.data.types.Tuple;
+import nl.vu.cs.ajira.data.types.TupleFactory;
 import nl.vu.cs.ajira.utils.Utils;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
 import nl.vu.cs.dynamite.storage.DBType;
@@ -36,16 +37,20 @@ public class ConvertTextInNumber extends Action {
 	public static final int RESERVED_SPACE = 200;
 
 	long counter, countInput;
-	protected TString uri;
-	protected TLong tripleId;
-	protected TByte position;
+	protected String uri;
+	protected TLong tripleId = new TLong();
+	protected TByte position = new TByte();
 	TLong compressedId = new TLong();
+	private Tuple tuple = TupleFactory.newTuple(tripleId, compressedId,
+			position);
 
 	Dictionary dict = null;
 	String pathFile = null;
 	String previousUri;
 	long unique_count, start;
 	int incr, partitions, currentPartition;
+	long tid;
+	int pos;
 
 	private BTreeInterface in = null;
 	private WritingSession t2n = null;
@@ -59,12 +64,10 @@ public class ConvertTextInNumber extends Action {
 
 		String s = getParamString(S_STORAGECLASS);
 		if (s != null) {
-			if (s != null) {
-				in = Class.forName(getParamString(S_STORAGECLASS))
-						.asSubclass(BTreeInterface.class).newInstance();
-				t2n = in.openWritingSession(context, DBType.T2N);
-				n2t = in.openWritingSession(context, DBType.N2T);
-			}
+			in = Class.forName(getParamString(S_STORAGECLASS))
+					.asSubclass(BTreeInterface.class).newInstance();
+			t2n = in.openWritingSession(context, DBType.T2N);
+			n2t = in.openWritingSession(context, DBType.N2T);
 		}
 	}
 
@@ -112,9 +115,9 @@ public class ConvertTextInNumber extends Action {
 	}
 
 	protected void getDetails(Tuple tuple) throws Exception {
-		uri = (TString) tuple.get(0);
-		tripleId = (TLong) tuple.get(1);
-		position = (TByte) tuple.get(2);
+		uri = ((TString) tuple.get(0)).getValue();
+		tripleId.setValue(tid = ((TLong) tuple.get(1)).getValue());
+		position.setValue(pos = ((TByte) tuple.get(2)).getValue());
 	}
 
 	@Override
@@ -124,16 +127,15 @@ public class ConvertTextInNumber extends Action {
 		try {
 			getDetails(inputTuple);
 
-			if (uri.getValue().charAt(0) == '#') {
+			if (uri.charAt(0) == '#') {
 				// It is already converted. Simply return it.
-				compressedId
-						.setValue(Long.valueOf(uri.getValue().substring(1)));
+				compressedId.setValue(Long.valueOf(uri.substring(1)));
 			} else {
 				// Replace the first entry
-				if (previousUri == null || !uri.getValue().equals(previousUri)) {
-					previousUri = uri.getValue();
-					if (position.getValue() == 0) {
-						compressedId.setValue(tripleId.getValue());
+				if (previousUri == null || !uri.equals(previousUri)) {
+					previousUri = uri;
+					if (pos == 0) {
+						compressedId.setValue(tid);
 						return; // Do not output such tuple
 					} else {
 						counter += incr;
@@ -155,7 +157,7 @@ public class ConvertTextInNumber extends Action {
 				}
 			}
 
-			output.output(tripleId, compressedId, position);
+			output.output(tuple);
 		} catch (Exception e) {
 			log.error("Error", e);
 		}
