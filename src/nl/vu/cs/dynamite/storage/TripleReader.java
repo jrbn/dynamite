@@ -1,6 +1,5 @@
 package nl.vu.cs.dynamite.storage;
 
-import java.io.File;
 import java.io.IOException;
 
 import nl.vu.cs.ajira.data.types.TLong;
@@ -15,10 +14,6 @@ public class TripleReader extends DefaultFileReader {
 	static final Logger log = LoggerFactory.getLogger(TripleReader.class);
 
 	TLong[] triple = { new TLong(), new TLong(), new TLong() };
-
-	public TripleReader(File file) throws Exception {
-		super.init(file);
-	}
 
 	@Override
 	public boolean next() throws IOException {

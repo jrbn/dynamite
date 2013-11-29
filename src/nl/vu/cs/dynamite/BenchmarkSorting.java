@@ -59,6 +59,7 @@ public class BenchmarkSorting {
 		// Init some configuration params of the cluster
 		conf.setBoolean(Consts.START_IBIS, ibis);
 		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
+		conf.setInt(Consts.N_MERGE_THREADS, 2);
 		// conf.setInt(ReadFromFiles.MINIMUM_SPLIT_SIZE, 30000);
 
 		// Start the cluster
@@ -87,8 +88,12 @@ public class BenchmarkSorting {
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
 			int nNodes = arch.getNumberNodes();
-			int nPartitionsPerNode = nNodes > 32 ? 1 : 32 / nNodes;	// Assumes nNodes is a power of 2.
-			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nPartitionsPerNode);
+			int nPartitionsPerNode = nNodes > 32 ? 1 : 32 / nNodes; // Assumes
+																	// nNodes is
+																	// a power
+																	// of 2.
+			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE,
+					nPartitionsPerNode);
 			actions.add(c);
 
 			// Remove the duplicates
