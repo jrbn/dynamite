@@ -22,6 +22,7 @@ public class BenchmarkSorting {
 	private static String output = "files";
 	private static boolean ibis = false;
 	private static int nProcThreads = 1;
+	private static boolean fullSort = false;
 
 	private static void parseArgs(String[] args) {
 		for (int i = 2; i < args.length; ++i) {
@@ -37,6 +38,10 @@ public class BenchmarkSorting {
 
 			if (param.equals("--procs")) {
 				nProcThreads = Integer.parseInt(args[++i]);
+			}
+
+			if (param.equals("--full")) {
+				fullSort = true;
 			}
 		}
 	}
@@ -98,6 +103,16 @@ public class BenchmarkSorting {
 
 			// Remove the duplicates
 			actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+
+			// If full sorting, collect to one node.
+			if (fullSort) {
+				c = ActionFactory.getActionConf(CollectToNode.class);
+				c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
+				// TString.class.getName(), TString.class.getName(),
+						TString.class.getName());
+				c.setParamBoolean(PartitionToNodes.B_SORT, true);
+				actions.add(c);
+			}
 
 			if (output.equals("files")) {
 				c = ActionFactory.getActionConf(WriteToFiles.class);
