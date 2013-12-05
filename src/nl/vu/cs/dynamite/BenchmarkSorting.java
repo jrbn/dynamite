@@ -9,6 +9,7 @@ import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.ReadFromFiles;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.WriteToFiles;
+import nl.vu.cs.ajira.actions.support.LocalPartitioner;
 import nl.vu.cs.ajira.data.types.TString;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
@@ -106,11 +107,24 @@ public class BenchmarkSorting {
 
 			// If full sorting, collect to one node.
 			if (fullSort) {
+
+				if (nPartitionsPerNode > 1) {
+					c = ActionFactory.getActionConf(PartitionToNodes.class);
+					c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
+					// TString.class.getName(), TString.class.getName(),
+							TString.class.getName());
+					c.setParamBoolean(PartitionToNodes.B_SORT, true);
+					c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 1);
+					c.setParamString(PartitionToNodes.S_PARTITIONER,
+							LocalPartitioner.class.getName());
+					actions.add(c);
+				}
+
 				c = ActionFactory.getActionConf(CollectToNode.class);
 				c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
 				// TString.class.getName(), TString.class.getName(),
 						TString.class.getName());
-				c.setParamBoolean(PartitionToNodes.B_SORT, true);
+				c.setParamBoolean(CollectToNode.B_SORT, true);
 				actions.add(c);
 			}
 
