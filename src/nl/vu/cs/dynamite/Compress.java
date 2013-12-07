@@ -68,7 +68,7 @@ public class Compress {
 	private void compress(ActionSequence actions, String dictOutput,
 			String output) throws Exception {
 
-		if (sampling && kbDir == null && !new File(dictOutput).exists()) {
+		if (sampling && kbDir == null && new File(dictOutput).list().length == 0) {
 			// Sample for compression
 			sampleForCompression(actions, dictOutput);
 		}
