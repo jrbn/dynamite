@@ -9,6 +9,8 @@ public class URLsPartitioner extends Partitioner {
 	@Override
 	public int partition(Tuple tuple) {
 		TLong value = (TLong) tuple.get(0);
-		return (int) ((value.getValue() >> 48) % npartitions);
+		// return (int) ((value.getValue() >> 48) % npartitions); ????? Values
+		// don't seem to be that high :-) --Ceriel
+		return ((int) (value.getValue() >> 4) & 0xffff) % npartitions;
 	}
 }

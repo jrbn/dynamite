@@ -9,6 +9,7 @@ import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.ReadFromFiles;
 import nl.vu.cs.ajira.actions.RemoveDuplicates;
 import nl.vu.cs.ajira.actions.WriteToFiles;
+import nl.vu.cs.ajira.actions.support.LocalPartitioner;
 import nl.vu.cs.ajira.data.types.TString;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
@@ -22,6 +23,7 @@ public class BenchmarkSorting {
 	private static String output = "files";
 	private static boolean ibis = false;
 	private static int nProcThreads = 1;
+	private static boolean fullSort = false;
 
 	private static void parseArgs(String[] args) {
 		for (int i = 2; i < args.length; ++i) {
@@ -37,6 +39,10 @@ public class BenchmarkSorting {
 
 			if (param.equals("--procs")) {
 				nProcThreads = Integer.parseInt(args[++i]);
+			}
+
+			if (param.equals("--full")) {
+				fullSort = true;
 			}
 		}
 	}
@@ -59,6 +65,7 @@ public class BenchmarkSorting {
 		// Init some configuration params of the cluster
 		conf.setBoolean(Consts.START_IBIS, ibis);
 		conf.setInt(Consts.N_PROC_THREADS, nProcThreads);
+		conf.setInt(Consts.N_MERGE_THREADS, 2);
 		// conf.setInt(ReadFromFiles.MINIMUM_SPLIT_SIZE, 30000);
 
 		// Start the cluster
@@ -87,12 +94,39 @@ public class BenchmarkSorting {
 					TString.class.getName());
 			c.setParamBoolean(PartitionToNodes.B_SORT, true);
 			int nNodes = arch.getNumberNodes();
-			int nPartitionsPerNode = nNodes > 32 ? 1 : 32 / nNodes;	// Assumes nNodes is a power of 2.
-			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, nPartitionsPerNode);
+			int nPartitionsPerNode = nNodes > 32 ? 1 : 32 / nNodes; // Assumes
+																	// nNodes is
+																	// a power
+																	// of 2.
+			c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE,
+					nPartitionsPerNode);
 			actions.add(c);
 
 			// Remove the duplicates
 			actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
+
+			// If full sorting, collect to one node.
+			if (fullSort) {
+
+				if (nPartitionsPerNode > 1) {
+					c = ActionFactory.getActionConf(PartitionToNodes.class);
+					c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
+					// TString.class.getName(), TString.class.getName(),
+							TString.class.getName());
+					c.setParamBoolean(PartitionToNodes.B_SORT, true);
+					c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, 1);
+					c.setParamString(PartitionToNodes.S_PARTITIONER,
+							LocalPartitioner.class.getName());
+					actions.add(c);
+				}
+
+				c = ActionFactory.getActionConf(CollectToNode.class);
+				c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
+				// TString.class.getName(), TString.class.getName(),
+						TString.class.getName());
+				c.setParamBoolean(CollectToNode.B_SORT, true);
+				actions.add(c);
+			}
 
 			if (output.equals("files")) {
 				c = ActionFactory.getActionConf(WriteToFiles.class);
