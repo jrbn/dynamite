@@ -16,7 +16,7 @@ public class ReconstructTriples extends Action {
 
 	TLong tTripleID = new TLong();
 	TByte tPosition = new TByte();
-	TString[] tripleOutput = new TString[3];
+	TString[] tripleOutput = { new TString(), new TString(), new TString() };
 	Tuple outputTuple = TupleFactory.newTuple();
 
 	@Override
@@ -30,7 +30,9 @@ public class ReconstructTriples extends Action {
 			ActionOutput output) throws Exception {
 		tTripleID = (TLong) inputTuple.get(0);
 		tPosition = (TByte) inputTuple.get(1);
-		tripleOutput[currentPosition++] = (TString) inputTuple.get(2);
+		tripleOutput[currentPosition++].
+			setValue(((TString)inputTuple.get(2)).getValue());
+		
 		if (tripleID == -1) {
 			tripleID = tTripleID.getValue();
 			if (tripleID == -1) {
