@@ -124,6 +124,7 @@ public class ConvertTextInNumber extends Action {
 	public void process(Tuple inputTuple, ActionContext context,
 			ActionOutput output) throws Exception {
 		countInput++;
+		System.out.println("Convert text in number" + inputTuple);
 		try {
 			getDetails(inputTuple);
 

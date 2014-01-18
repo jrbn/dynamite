@@ -144,8 +144,6 @@ public class NewCompress {
 				((TInt) t2.get(5)).getValue());
 	}
 
-	// TODO add set and get methods to simple data such that
-	// they can be used without casting to tint, tlong etc,
 	private static final void divide(Tuple t, int s) {
 		int i = 1;
 		TLong tripleId = (TLong) t.get(i++);
@@ -263,7 +261,6 @@ public class NewCompress {
 	
 	private static final void kmeans(ActionSequence actions, String dictionary,
 			String output) throws ActionNotConfiguredException {
-		System.out.println("kmeans");
 		// Find the closest center
 		actions.add(ActionFactory.getActionConf(FindClosestCenter.class));
 
@@ -513,8 +510,6 @@ public class NewCompress {
 		@Override
 		public void stopProcess(ActionContext context, ActionOutput actionOutput)
 				throws Exception {
-			
-
 			if (context.isPrincipalBranch()) {
 				for (int i = 0; i < NUMBER_OF_CENTERS; i++) {
 					TByte pos = new TByte(r.nextInt(2)+1);
@@ -647,7 +642,6 @@ public class NewCompress {
 				if (newCenter == null) {
 					newCenter = TupleFactory.newTuple();
 					aTuple.copyTo(newCenter);
-					
 				} else {
 					sum(newCenter, aTuple);
 				}
@@ -789,18 +783,17 @@ public class NewCompress {
 				kmeans(actions, dictionary, outputDir);
 			} else {
 				System.out.println("end the cycle");
-				// Add this split to the main branch
-				action = ActionFactory.getActionConf(Split.class);
-				action.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 1);
+				
+				// This is optional
+				action = ActionFactory.getActionConf(WriteToFiles.class);
+				action.setParamString(WriteToFiles.S_PATH, "kmeans");
 				actions.add(action);
 				
-				action = ActionFactory.getActionConf(WriteToFiles.class);
-				action.setParamString(WriteToFiles.S_PATH, outputDir);
-				actions.add(action);
+				
 				
 				// Rebuild the tuples for compression
-				ActionConf c = ActionFactory.getActionConf(BuildTupleForCompression.class);
-				actions.add(c);
+				action = ActionFactory.getActionConf(BuildTupleForCompression.class);
+				actions.add(action);
 				
 				compressCont(actions, dictionary, outputDir);
 			}

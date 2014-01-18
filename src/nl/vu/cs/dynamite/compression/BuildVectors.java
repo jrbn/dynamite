@@ -119,18 +119,15 @@ public class BuildVectors extends Action {
 		position.setValue(1);
 		hashObject.setValue(triple[2].getValue().hashCode());
 		output.output(tuple);
-		System.out.println(tuple);
 		hashObject.setValue(0);
 
 		processString(triple[1].getValue());
 		position.setValue(2);
 		output.output(tuple);
-		System.out.println(tuple);
 
 		processString(triple[2].getValue());
 		position.setValue(3);
 		output.output(tuple);
-		System.out.println(tuple);
 	}
 
 	@Override

@@ -201,7 +201,6 @@ public class Decompress {
 	}
 
 	private void run(String[] args) {
-
 		// Parse eventual optional arguments
 		parseArgs(args);
 
