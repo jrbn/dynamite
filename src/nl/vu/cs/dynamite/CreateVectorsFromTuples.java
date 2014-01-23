@@ -19,7 +19,6 @@ import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
-import nl.vu.cs.dynamite.NewCompress.GenerateRandomCentroidsAndStartKmeans;
 import nl.vu.cs.dynamite.compression.BuildVectors;
 import nl.vu.cs.dynamite.compression.DeconstructSampleTriples;
 import nl.vu.cs.dynamite.compression.DeconstructTriples;

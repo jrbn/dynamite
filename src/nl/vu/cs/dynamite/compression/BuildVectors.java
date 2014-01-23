@@ -1,6 +1,7 @@
 package nl.vu.cs.dynamite.compression;
 
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,21 +85,30 @@ public class BuildVectors extends Action {
 		if (predefinedTerms.containsKey(s)) {
 			url.setValue("#" + predefinedTerms.get(s));
 		} else {
-			URL urlFormat = new URL(s.substring(1, s.length()-1));
-			
-			url.setValue(s);
-			hashDomain.setValue(urlFormat.getHost().hashCode());
-			hashPath.setValue(urlFormat.getPath().hashCode());
-			
-			if (t2n != null) {
-				byte[] key = s.getBytes();
-				byte[] value;
-				if ((value = t2n.get(key, key.length)) != null) {
-					decodePosition[0] = 0;
-					long v = Utils.decodePackedLong(value, decodePosition);
-					url.setValue("#" + v);
+			try {
+				URI urlFormat = new URI(s.substring(1, s.length()-1));
+				url.setValue(s);
+				if(urlFormat.getHost() == null) {
+					url.setValue("");
+				} else {
+					hashDomain.setValue(urlFormat.getHost().hashCode());
+					hashPath.setValue(urlFormat.getPath().hashCode());
+
+					if (t2n != null) {
+						byte[] key = s.getBytes();
+						byte[] value;
+						if ((value = t2n.get(key, key.length)) != null) {
+							decodePosition[0] = 0;
+							long v = Utils.decodePackedLong(value, decodePosition);
+							url.setValue("#" + v);
+						}
+					}
 				}
+			} catch (URISyntaxException e) {
+				url.setValue("");
 			}
+			
+			
 		}
 	}
 
@@ -112,20 +122,27 @@ public class BuildVectors extends Action {
 
 		tripleId.setValue(counter);
 		counter += incr;
-
-		//System.out.println(triple[0] + " " + triple[1] + " " + triple[2]);
 		
 		processString(triple[0].getValue());
+		if (url.getValue().equals("")) {
+			return;
+		}
 		position.setValue(1);
 		hashObject.setValue(triple[2].getValue().hashCode());
 		output.output(tuple);
 		hashObject.setValue(0);
 
 		processString(triple[1].getValue());
+		if (url.getValue().equals("")) {
+			return;
+		}
 		position.setValue(2);
 		output.output(tuple);
 
 		processString(triple[2].getValue());
+		if (url.getValue().equals("")) {
+			return;
+		}
 		position.setValue(3);
 		output.output(tuple);
 	}

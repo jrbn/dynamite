@@ -2,7 +2,6 @@ package nl.vu.cs.dynamite;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,45 +15,30 @@ import nl.vu.cs.ajira.actions.ActionContext;
 import nl.vu.cs.ajira.actions.ActionFactory;
 import nl.vu.cs.ajira.actions.ActionOutput;
 import nl.vu.cs.ajira.actions.ActionSequence;
-import nl.vu.cs.ajira.actions.Branch;
 import nl.vu.cs.ajira.actions.CollectToNode;
 import nl.vu.cs.ajira.actions.GroupBy;
 import nl.vu.cs.ajira.actions.PartitionToNodes;
 import nl.vu.cs.ajira.actions.ReadFromBucket;
 import nl.vu.cs.ajira.actions.ReadFromFiles;
-import nl.vu.cs.ajira.actions.RemoveDuplicates;
-import nl.vu.cs.ajira.actions.Sample;
-import nl.vu.cs.ajira.actions.Split;
 import nl.vu.cs.ajira.actions.WriteToBucket;
 import nl.vu.cs.ajira.actions.WriteToFiles;
 import nl.vu.cs.ajira.data.types.TBag;
 import nl.vu.cs.ajira.data.types.TByte;
-import nl.vu.cs.ajira.data.types.TDoubleArray;
 import nl.vu.cs.ajira.data.types.TInt;
 import nl.vu.cs.ajira.data.types.TLong;
 import nl.vu.cs.ajira.data.types.TString;
 import nl.vu.cs.ajira.data.types.Tuple;
 import nl.vu.cs.ajira.data.types.TupleFactory;
-import nl.vu.cs.ajira.examples.KMeans.ParseVectors;
 import nl.vu.cs.ajira.exceptions.ActionNotConfiguredException;
 import nl.vu.cs.ajira.mgmt.WebServer;
 import nl.vu.cs.ajira.submissions.Job;
 import nl.vu.cs.ajira.submissions.Submission;
 import nl.vu.cs.ajira.utils.Configuration;
 import nl.vu.cs.ajira.utils.Consts;
-import nl.vu.cs.dynamite.compression.BuildVectors;
 import nl.vu.cs.dynamite.compression.ConvertTextInNumber;
-import nl.vu.cs.dynamite.compression.DeconstructSampleTriples;
-import nl.vu.cs.dynamite.compression.DeconstructTriples;
-import nl.vu.cs.dynamite.compression.ProcessCommonURIs;
-import nl.vu.cs.dynamite.compression.ProcessDictionaryEntries;
 import nl.vu.cs.dynamite.compression.ReconstructTriples;
 import nl.vu.cs.dynamite.compression.TriplePartitioner;
-import nl.vu.cs.dynamite.compression.URLsPartitioner;
-import nl.vu.cs.dynamite.parse.TripleParser;
 import nl.vu.cs.dynamite.storage.BTreeInterface;
-import nl.vu.cs.dynamite.storage.Dictionary;
-import nl.vu.cs.dynamite.storage.Dictionary.FilterOnlyDictionaryFiles;
 import nl.vu.cs.dynamite.storage.TripleFileStorage;
 
 import org.slf4j.Logger;
@@ -62,30 +46,26 @@ import org.slf4j.LoggerFactory;
 
 public class NewCompress {
 
-	private static Logger log = LoggerFactory.getLogger(Compress.class);
+	private static Logger log = LoggerFactory.getLogger(NewCompress.class);
 
 	public static final String CENTERS = "KMeansMapper.centers";
 	public static final String NEW_CENTERS = "KMeansMapper.newcenters";
 	private static final int PARTITIONS_PER_NODE = 4;
-	private static final int NUMBER_OF_CENTERS = 10;
-	private static final int TUPLE_SIZE = 6;
-	private static final int CONVERGENCE_THRESHOLD = 40;
+	private static int NUMBER_OF_CENTERS;
+	private static int CONVERGENCE_THRESHOLD;
 	
 	public static void main(String[] args) {
-		if (args.length < 3) {
+		if (args.length < 5) {
 			System.out
-					.println("USAGE: Compress [input] [output] [output dictionary] --samplingPercentage (default 1%) --samplingThreshold (default: 1000) ]");
+					.println("USAGE: Compress [vectors folder] [output folder] [numer of centers] [convergence threshold]");
 			return;
 		}
 
 		new NewCompress().run(args);
 	}
 
-	private int samplingPercentage = 1;
-	private int samplingThreshold = 1000;
 	private boolean ibis = false;
 	private int nProcThreads = 4;
-	private boolean sampling = true;
 
 	private static final int bucketsPerNode = 4;
 
@@ -96,7 +76,7 @@ public class NewCompress {
 	// support methods
 	private static final double euclideanDistance(Tuple t1, Tuple t2) {
 		int i = 1;
-		double sum = 0, diff;
+		double sum = 0;
 		
 		long diffTripleId = ((TLong) t1.get(i)).getValue() -
 				((TLong) t2.get(i++)).getValue();
@@ -160,72 +140,8 @@ public class NewCompress {
 		
 		t.set(t.get(0), tripleId, position, domainHash, pathHash, objectHash);
 	}
-	
-	private void compress(ActionSequence actions, String dictOutput,
-			String output) throws Exception {
 
-		if (sampling && kbDir == null && new File(dictOutput).list().length == 0) {
-			// Sample for compression
-			sampleForCompression(actions, dictOutput);
-		}
-
-		// Partition the triples across the nodes
-		ActionConf c = ActionFactory.getActionConf(PartitionToNodes.class);
-		c.setParamStringArray(PartitionToNodes.SA_TUPLE_FIELDS,
-				TString.class.getName(), TString.class.getName(),
-				TString.class.getName());
-		c.setParamBoolean(PartitionToNodes.B_SORT, true);
-		c.setParamInt(PartitionToNodes.I_NPARTITIONS_PER_NODE, bucketsPerNode);
-		actions.add(c);
-
-		// Remove the duplicates
-		actions.add(ActionFactory.getActionConf(RemoveDuplicates.class));
-
-		
-		// TODO change BuildVectors to support tuples from dictionary
-		/*
-		if (kbDir == null) {
-			// Branch to read also the existing dictionary
-			File dictDir = new File(dictOutput);
-			if (dictDir.exists() && dictDir.listFiles().length > 0) {
-				c = ActionFactory.getActionConf(ReadFromFiles.class);
-				c.setParamString(ReadFromFiles.S_PATH, dictOutput);
-				c.setParamString(ReadFromFiles.S_FILE_FILTER,
-						FilterOnlyDictionaryFiles.class.getName());
-				c.setParamString(ReadFromFiles.S_CUSTOM_READER,
-						Dictionary.Reader.class.getName());
-				ActionSequence list = new ActionSequence();
-				list.add(c);
-
-				list.add(ActionFactory
-						.getActionConf(ProcessDictionaryEntries.class));
-
-				ActionConf branch = ActionFactory.getActionConf(Branch.class);
-				branch.setParamWritable(Branch.W_BRANCH, list);
-				actions.add(branch);
-			}
-		}
-		*/
-
-		// kmeans starts here
-		c = ActionFactory.getActionConf(BuildVectors.class);
-		c.setParamInt(DeconstructTriples.I_NPARTITIONS_PER_NODE, bucketsPerNode);
-		c.setParamString(BuildVectors.S_STORAGECLASS, storageClass);
-		actions.add(c);
-		
-		c = ActionFactory.getActionConf(WriteToFiles.class);
-		c.setParamString(WriteToFiles.S_PATH, "temp");
-		actions.add(c);
-		
-		c = ActionFactory.getActionConf(GenerateRandomCentroidsAndStartKmeans.class);
-		c.setParamString(GenerateRandomCentroidsAndStartKmeans.S_OUTPUT_DIR,
-			output);
-		c.setParamString(GenerateRandomCentroidsAndStartKmeans.S_DICTIONARY,
-			dictOutput);
-		actions.add(c);
-	}
-
-	public static void compressCont(ActionSequence actions, String dictionary,
+	public static void compress(ActionSequence actions, String dictionary,
 			String output) throws Exception {
 		// Convert text in numbers
 		ActionConf c = ActionFactory.getActionConf(ConvertTextInNumber.class);
@@ -307,22 +223,6 @@ public class NewCompress {
 				ibis = true;
 			}
 
-			if (args[i].equals("--samplingThreshold")) {
-				samplingThreshold = Integer.valueOf(args[++i]);
-			}
-
-			if (args[i].equals("--samplingPercentage")) {
-				samplingPercentage = Integer.valueOf(args[++i]);
-			}
-
-                        if (args[i].equals("--no-sampling")) {
-                            sampling = false;
-                        }
-
-                        if (args[i].equals("--sampling")) {
-                            sampling = true;
-                        }
-
 			if (args[i].equals("--procs")) {
 				nProcThreads = Integer.parseInt(args[++i]);
 			}
@@ -367,6 +267,8 @@ public class NewCompress {
 				String input = args[0];
 				String output = args[1];
 				String dictDir = args[2];
+				NUMBER_OF_CENTERS = Integer.parseInt(args[3]);
+				CONVERGENCE_THRESHOLD = Integer.parseInt(args[4]);
 
 				// Verify the output dir exists
 				File f = new File(output);
@@ -387,17 +289,17 @@ public class NewCompress {
 
 				// Set up the program
 				ActionSequence actions = new ActionSequence();
+				// Read the input files
+				ActionConf action = ActionFactory
+						.getActionConf(ReadFromFiles.class);
+				action.setParamString(ReadFromFiles.S_PATH, input);
+				actions.add(action);
 
-				// Split the input in more chunks, so that the reading
-				// is done in parallel
-				ActionConf c = ActionFactory.getActionConf(ReadFromFiles.class);
-				c.setParamString(ReadFromFiles.S_PATH, input);
-				actions.add(c);
-
-				// Parse the triples in three strings
-				actions.add(ActionFactory.getActionConf(TripleParser.class));
-
-				compress(actions, dictDir, output);
+				// Parse the textual lines into vectors
+				actions.add(ActionFactory.getActionConf(ParseVectors.class));
+				
+				// Start the k-means procedure with a branch
+				kmeans(actions, dictDir, output);
 
 				job.setActions(actions);
 				Submission s = ajira.waitForCompletion(job);
@@ -416,37 +318,6 @@ public class NewCompress {
 			log.error("Failed execution", e);
 			System.exit(1);
 		}
-	}
-
-	private void sampleForCompression(ActionSequence actions, String dictOutput)
-			throws Exception {
-
-		// Add this split to the main branch
-		ActionConf c = ActionFactory.getActionConf(Split.class);
-		c.setParamInt(Split.I_RECONNECT_AFTER_ACTIONS, 4);
-		actions.add(c);
-
-		// Sample x% percent of the triples
-		c = ActionFactory.getActionConf(Sample.class);
-		c.setParamInt(Sample.I_SAMPLE_RATE, samplingPercentage);
-		actions.add(c);
-
-		// Deconstruct these triples in list of URIs
-		c = ActionFactory.getActionConf(DeconstructSampleTriples.class);
-		actions.add(c);
-
-		// Collect them in one node
-		c = ActionFactory.getActionConf(CollectToNode.class);
-		c.setParamStringArray(CollectToNode.SA_TUPLE_FIELDS,
-				TString.class.getName());
-		c.setParamBoolean(CollectToNode.B_SORT, true);
-		actions.add(c);
-
-		// Process the common URIs
-		c = ActionFactory.getActionConf(ProcessCommonURIs.class);
-		c.setParamString(ProcessCommonURIs.S_DIR_OUTPUT, dictOutput);
-		c.setParamInt(ProcessCommonURIs.I_SAMPLING_THRESHOLD, samplingThreshold);
-		actions.add(c);
 	}
 	
 	/* Parse a vector encodend in a string */
@@ -477,89 +348,36 @@ public class NewCompress {
 		}
 	}
 	
-	public static class GenerateRandomCentroidsAndStartKmeans extends Action {
-		public static final int S_OUTPUT_DIR = 0;
-		public static final int S_DICTIONARY = 1;
-		private Map<Integer, Tuple> centers;
-		private String outputDir;
-		private String dictionary;
-		int counter;
-		Random r;
-
-		@Override
-		protected void registerActionParameters(ActionConf conf) {
-			conf.registerParameter(S_OUTPUT_DIR, "", null, true);
-			conf.registerParameter(S_DICTIONARY, "", null, true);
-		}
-
-		@Override
-		public void startProcess(ActionContext context) throws Exception {
-			centers = new HashMap<Integer, Tuple>();
-			outputDir = getParamString(S_OUTPUT_DIR);
-			dictionary = getParamString(S_DICTIONARY);
-			counter = 0;
-			r = new Random();
-		}
-
-		@Override
-		public void process(Tuple tuple, ActionContext context,
-				ActionOutput actionOutput) throws Exception {
-		}
-			
-
-		@Override
-		public void stopProcess(ActionContext context, ActionOutput actionOutput)
-				throws Exception {
-			if (context.isPrincipalBranch()) {
-				for (int i = 0; i < NUMBER_OF_CENTERS; i++) {
-					TByte pos = new TByte(r.nextInt(2)+1);
-					TLong tripleId = new TLong((long)r.nextInt(Integer.MAX_VALUE));
-					TInt hashDomain = new TInt(r.nextInt(Integer.MAX_VALUE));
-					TInt hashPath = new TInt(r.nextInt(Integer.MAX_VALUE));
-					TInt hashObject = new TInt(0);
-					if(pos.getValue() == 1) {
-						hashObject.setValue(r.nextInt(Integer.MAX_VALUE));
-					}
-					Tuple center = TupleFactory.newTuple(new TString(), tripleId, pos,
-							hashDomain, hashPath, hashObject);
-					centers.put(counter++, center);
-					System.out.println(center);
-				}
-				
-				context.putObjectInCache(CENTERS, centers);
-				context.broadcastCacheObjects(CENTERS);
-				
-				ActionSequence actions = new ActionSequence();
-				
-				// Read the input files
-				ActionConf action = ActionFactory
-						.getActionConf(ReadFromFiles.class);
-				action.setParamString(ReadFromFiles.S_PATH, "temp");
-				actions.add(action);
-
-				// Parse the textual lines into vectors
-				actions.add(ActionFactory.getActionConf(ParseVectors.class));
-				
-				// Start the k-means procedure with a branch
-				kmeans(actions, dictionary, outputDir);
-				actionOutput.branch(actions);
-			}
-
-			outputDir = null;
-			dictionary = null;
-			centers = null;
-		}
-	}
-	
 	/* For each vector, find the closest center */
 	public static class FindClosestCenter extends Action {
-
 		private Set<Map.Entry<Integer, Tuple>> centers = null;
 		private final TInt key = new TInt();
 
 		@SuppressWarnings("unchecked")
 		@Override
 		public void startProcess(ActionContext context) throws Exception {
+			if (context.getCounter("K-Means iterations") == 0) {
+				Random r = new Random();
+				Map<Integer, Tuple> centers = new HashMap<Integer,Tuple>();
+				int counter = 0;
+				for (int i = 0; i < NUMBER_OF_CENTERS; i++) {
+					TByte pos = new TByte(r.nextInt(2)+1);
+					TLong tripleId = new TLong((long)r.nextInt(1000000));
+					TInt hashDomain = new TInt(r.nextInt(1000000));
+					TInt hashPath = new TInt(r.nextInt(1000000));
+					TInt hashObject = new TInt(0);
+					if(pos.getValue() == 1) {
+						hashObject.setValue(r.nextInt(1000000));
+					}
+					Tuple center = TupleFactory.newTuple(new TString(), tripleId, pos,
+							hashDomain, hashPath, hashObject);
+					//System.out.println(center);
+					centers.put(counter++, center);
+				}
+				
+				context.putObjectInCache(CENTERS, centers);
+				context.broadcastCacheObjects(CENTERS);
+			}
 			centers = ((Map<Integer, Tuple>) context
 					.getObjectFromCache(CENTERS)).entrySet();
 		}
@@ -568,26 +386,31 @@ public class NewCompress {
 		public void process(Tuple t, ActionContext context,
 				ActionOutput actionOutput) throws Exception {
 			int tupleSize = t.getNElements();
+			//System.out.println("input " + t);
 			Tuple tuple = TupleFactory.newTuple(t.get(tupleSize-6), t.get(tupleSize-5),
 					t.get(tupleSize-4), t.get(tupleSize-3),
 					t.get(tupleSize-2), t.get(tupleSize-1));
+			//System.out.println("transform" + tuple);
 			Tuple nearest = null;
-			double nearestDistance = Double.MAX_VALUE;
+			double nearestDistance = 0;
 			int index = -1;
 			for (Map.Entry<Integer, Tuple> c : centers) {
 				double dist = euclideanDistance(tuple, c.getValue());
+				//System.out.println(dist + " dist to " + c.getKey());
 				if (nearest == null) {
 					nearest = c.getValue();
 					nearestDistance = dist;
 					index = c.getKey();
 				} else {
 					if (nearestDistance > dist) {
+						//System.out.println("nearest " + nearestDistance + " dist " + dist);
 						nearest = c.getValue();
 						nearestDistance = dist;
 						index = c.getKey();
 					}
 				}
 			}
+		    //System.out.println("nearest distance " + nearestDistance + "at index" + index);
 			key.setValue(index);
 			Tuple output = TupleFactory.newTuple(key, tuple.get(0),
 					tuple.get(1), tuple.get(2), tuple.get(3), tuple.get(4),
@@ -750,8 +573,7 @@ public class NewCompress {
 					}
 				}
 			}
-			System.out.println("dist");
-			System.out.println(distance);
+			System.out.println("Distance " + distance);
 			boolean changed = distance > CONVERGENCE_THRESHOLD;
 			if (changed) {
 				// Update the new centers
@@ -779,23 +601,13 @@ public class NewCompress {
 
 			if (changed) {
 				// Restart the cycle
-				System.out.println("restart the cycle");
 				kmeans(actions, dictionary, outputDir);
 			} else {
-				System.out.println("end the cycle");
-				
-				// This is optional
-				action = ActionFactory.getActionConf(WriteToFiles.class);
-				action.setParamString(WriteToFiles.S_PATH, "kmeans");
-				actions.add(action);
-				
-				
-				
 				// Rebuild the tuples for compression
 				action = ActionFactory.getActionConf(BuildTupleForCompression.class);
 				actions.add(action);
 				
-				compressCont(actions, dictionary, outputDir);
+				compress(actions, dictionary, outputDir);
 			}
 			actionOutput.branch(actions);
 		}
