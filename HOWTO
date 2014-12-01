@@ -1,0 +1,128 @@
+Getting started:
+
+The experiments consist of a number of commands to launch in a sequence.
+Dynamite uses slfj4 as logging interface and logback as implementation.
+Therefore, if you want to filter out all debug messages, simply add a
+logback.xml file with default logging value set to warning.
+Please check logback documentation for more info.
+
+In general, three operations are required to perform (full or incremental)
+reasoning. First we need to compress the input (using dictionary encoding),
+then we perform reasoning and finally we can decompress the output.
+We consider a collection of RDF triples in N-Triples format as initial
+input and final output of the system.
+
+In the following commands, we indicate generic paths with the notation <dir-etc>.
+These placeholders should be replaced with actual paths.
+
+During the reasoning process sometimes it is better to access the knowledge
+base using the b-trees, while in other cases it is better to access the raw
+files. Therefore, we store the knowledge base in three locations:
+<output-dir-with-files> contains a plain dump of the knowledge base as files,
+<output-dir-with-dictionary> contains the dictionary table to convert all
+triples from numbers to text and <output-dir-with-btree> contains a copy
+of the knowledge base stored as sequence of btree.
+
+We tested these commands using a copy of 1 lubm university.
+The directory 'updates' in the github repository contains some examples
+of updates/removals that we can use with the commands below.
+
+--- Series of commands to start the computation ---
+
+---------- COMPRESSION --------------------
+
+0) compile all the code with the command 'ant build-jar'.
+   This should work out-of-the-box on a reasonable system will all
+   development tools (ant, java-jdk, etc.).
+
+1) The first step consists of compressing all the input triples
+   load them in the B-Tree database. This can be done with the two commands.
+
+1a)
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Compress \
+	<input-dir-with-ntriples-files> <output-dir-files> \
+	<output-dir-with-dictionary>
+
+  This commands performs dictionary encoding on the dataset.
+  It outputs a list of files with pairs <text,number> in the dict. directory
+  and triples of numbers in the output directory.
+
+1b)
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.CreateIndex \
+	<output-dir-files> <output-dir-with-btree> --output btree \
+	--saveDictionaryIn <output-dir-with-dictionary> --countDerivations
+
+   This programs takes the output of the output of 1a)
+   (i.e. <output-dir-files and <output-dir-with-dictionary>)
+   and copies everything in the b-trees (output-dir-with-btree). 
+   Note the --countDerivations flag, which is needed to associate a count
+   with each entry in the b-tree.
+
+----------- REASONING -----------------
+
+2) Now all the input data is properly encoded and loaded. At this point
+   we can invoke reasoning. The first operation consists of performing a
+   full closure. This task is performed with two commands:
+
+2a)
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Reasoner \
+	    <output-dir-with-btree> ruleset/rdfs.rules \
+	    --writeCopyAt <output-dir-files> --countDerivations \
+	    --lastStepFile <output-step-file>
+
+   This program uses all data stored in <output-dir-with-btree> and
+   <output-dir-files> and performs a full closure. All output is stored
+   *as files* in <output-dir-files> (all files that contained
+   inferred triples have a prefix that starts with '_count').
+   <output-step-file> will contain the number of "reasoning steps"
+   needed to compute the closure.
+
+2b)
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.CreateIndex \
+	<output-dir-files> <output-dir-with-btree> \
+	--output btree --filter _count --countDerivations
+
+   The previous step has stored the full closure on files. With this
+   command we load the closure in the b-trees. In this way, we have the
+   input+closure stored both as plain files, and indexed with 6 b-trees.
+
+3) Perform incremental reasoning. Two options: additions and removals.
+   Regardless of the operations, first the triples to add/remove must
+   be compressed with dictionary-encoding. This can be done with the command:
+
+3a)
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Compress \
+	<input-dir-incr-ntriples> <output-dir-files-incr> \
+	<output-dir-with-dictionary> --btree <output-dir-with-btree>
+
+   This command compresses the increment (stored as N-triples files
+   in <input-dir-incr-ntriples>) using the existing dictionary
+   (stored in <output-dir-with-btree>). The output consists of a
+   set of compressed triples stored in <output-dir-files-incr> and
+   possibly new dictionary entries, stored in <output-dir-with-dictionary>).
+
+3b)
+   additions:
+
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Reasoner \
+	<output-dir-with-btree> ruleset/rdfs.rules \
+	--writeCopyAt <output-dir-files> --add <output-dir-files-incr> \
+	--countDerivations --lastStepFile <output-step-file>
+
+3c)
+   removals:
+
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Reasoner \
+	<output-dir-with-btree> ruleset/rdfs.rules \
+	--writeCopyAt <output-dir-files> --remove <output-dir-files-incr> \
+	--countDerivations --lastStepFile <output-step-file>
+
+---------- DECOMPRESSION --------------
+
+4) Finally, the output can be decompressed. When done, the directory
+   <dir-with-reasoning-output...> will contain all the inferred triples
+   (and the original input) in N-Triples format.
+
+   java -Xmx2G -cp dynamite-full-0.1.jar nl.vu.cs.dynamite.Decompress \
+	<output-dir-files> <output-dir-with-dictionary> \
+	<dir-with-reasoning-output-as-ntriples>
